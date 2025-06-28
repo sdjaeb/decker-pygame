@@ -9,3 +9,7 @@ venv/
 .venv/
 
 .ruff_cache/
+
+*.egg-info/
+build/
+dist/

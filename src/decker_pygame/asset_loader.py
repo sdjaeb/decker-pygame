@@ -2,15 +2,22 @@ from pathlib import Path
 
 import pygame
 
-from decker_pygame.settings import ACTIVE_IMAGE_SIZE, PROGRAM_ICON_SHEET
+from decker_pygame.settings import GFX
 
 
 def load_image(path: str | Path, colorkey: pygame.Color | None = None) -> pygame.Surface:
     """Loads an image, converting it for performance."""
+    path_obj = Path(path)
+    if not path_obj.is_file():
+        print(f"Error: Asset not found at path: {path_obj.resolve()}")
+        print("Please ensure all game assets from 'DeckerSource_1_12' have been copied correctly.")
+        raise FileNotFoundError(f"Asset not found: {path_obj.resolve()}")
+
     try:
-        image = pygame.image.load(path).convert()
+        # Use the Path object for loading
+        image = pygame.image.load(path_obj).convert()
     except pygame.error as e:
-        print(f"Unable to load image: {path}")
+        print(f"Pygame error while loading image: {path_obj}")
         raise SystemExit(e) from e
 
     if colorkey:
@@ -39,14 +46,3 @@ def load_image_sheet(
             images.append(image)
 
     return images
-
-
-# --- Pre-loaded Game Assets ---
-# The original game uses a single bitmap for all program icons.
-# The color magenta (255, 0, 255) is used for transparency.
-PROGRAM_ICONS = load_image_sheet(
-    PROGRAM_ICON_SHEET,
-    ACTIVE_IMAGE_SIZE,
-    ACTIVE_IMAGE_SIZE,
-    colorkey=(255, 0, 255),
-)

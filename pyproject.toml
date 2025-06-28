@@ -1,9 +1,11 @@
 [project]
 name = "decker-pygame"
 version = "0.1.0"
-description = "A Python port of the Decker Cyberspace RPG."
+description = "A modern Python port of the classic 2001 Cyberspace RPG, Decker."
 authors = [{ name = "Gemini Code Assist" }]
 requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "pygame-ce",
 ]
@@ -11,9 +13,24 @@ dependencies = [
 [project.scripts]
 decker = "decker_pygame.main:main"
 
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pytest",
+    "pytest-cov",
+    "pre-commit",
+]
+
 [tool.ruff]
 select = ["E", "F", "I"]
 line-length = 88
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
