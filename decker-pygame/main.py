@@ -2,37 +2,35 @@ import sys
 
 import pygame
 
+from decker_pygame.asset_loader import PROGRAM_ICONS
 from decker_pygame.components.active_bar import ActiveBar
+from decker_pygame.settings import (
+    BLACK,
+    FPS,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    TITLE,
+)
 
-# --- Constants ---
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
 
-# --- Colors ---
-BLACK = (0, 0, 0)
+class Game:
+    """Encapsulates the main game logic and loop."""
 
+    def __init__(self) -> None:
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.display.set_caption(TITLE)
+        self.clock = pygame.time.Clock()
+        self.is_running = True
+        self.all_sprites = pygame.sprite.Group()
 
-def main() -> None:
-    """The main function for the Decker game."""
-    pygame.init()
+    def _setup(self) -> None:
+        """Create game objects and setup initial state."""
+        active_bar = ActiveBar(position=(10, 10), image_list=PROGRAM_ICONS)
+        self.all_sprites.add(active_bar)
 
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Decker-Pygame")
-    clock = pygame.time.Clock()
+        # --- Example Usage: Activate some programs ---
 
-    # --- Asset Loading (Placeholders) ---
-    # The original C++ code uses a CImageList. We will simulate this with a
-    # list of placeholder surfaces until we port the asset loading.
-    placeholder_icons = []
-    for i in range(10):  # Assuming 10 possible program icons
-        icon = pygame.Surface([16, 16])
-        icon.fill((i * 25, 255 - (i * 25), (i * 10) % 255))
-        pygame.draw.rect(icon, BLACK, icon.get_rect(), 1)  # border
-        placeholder_icons.append(icon)
-
-    # --- Game Object Creation ---
-    all_sprites = pygame.sprite.Group()
 
     active_bar = ActiveBar(position=(10, 10), image_list=placeholder_icons)
     all_sprites.add(active_bar)

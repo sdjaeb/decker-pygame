@@ -1,9 +1,6 @@
 import pygame
 
-# Constants from ActiveBar.h and ActiveBar.cpp
-MAX_ACTIVE = 6
-ACTIVE_IMAGE_SIZE = 16
-WHITE = (255, 255, 255)
+from decker_pygame.settings import ACTIVE_IMAGE_SIZE, MAX_ACTIVE, UI_FACE
 
 
 class ActiveBar(pygame.sprite.Sprite):
@@ -51,10 +48,12 @@ class ActiveBar(pygame.sprite.Sprite):
         Redraws the active bar surface based on the current state.
         This is the equivalent of OnPaint in the original C++ code.
         """
-        self.image.fill(WHITE)
+        self.image.fill(UI_FACE)
 
         for i in range(MAX_ACTIVE):
             if self._active_slots[i]:
                 icon = self._image_list[self._image_indices[i]]
-                dest_rect = pygame.Rect(i * ACTIVE_IMAGE_SIZE, 0, ACTIVE_IMAGE_SIZE, ACTIVE_IMAGE_SIZE)
+                dest_rect = pygame.Rect(
+                    i * ACTIVE_IMAGE_SIZE, 0, ACTIVE_IMAGE_SIZE, ACTIVE_IMAGE_SIZE
+                )
                 self.image.blit(icon, dest_rect)
