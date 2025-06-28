@@ -1,0 +1,19 @@
+[project]
+name = "decker-pygame"
+version = "0.1.0"
+description = "A Python port of the Decker Cyberspace RPG."
+authors = [{ name = "Gemini Code Assist" }]
+requires-python = ">=3.13"
+dependencies = [
+    "pygame-ce",
+]
+
+[project.scripts]
+decker = "decker_pygame.main:main"
+
+[tool.ruff]
+select = ["E", "F", "I"]
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
