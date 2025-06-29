@@ -24,6 +24,4 @@ repos:
         types: [python]
         pass_filenames: false
         args:
-          - "--cov=src/decker_pygame"
-          - "--cov-report=term-missing"
           - "--cov-fail-under=100"

@@ -18,12 +18,23 @@ dev = [
     "ruff",
     "pytest",
     "pytest-cov",
+    "pytest-mock",
     "pre-commit",
 ]
 
 [tool.ruff]
-select = ["E", "F", "I"]
 line-length = 88
+exclude = [
+    "typings/",
+]
+
+[tool.ruff.lint]
+# E = pycodestyle errors, W = pycodestyle warnings, F = Pyflakes
+# I = isort (import sorting)
+# B = flake8-bugbear (finds likely bugs)
+# C90 = mccabe (complexity checks)
+# UP = pyupgrade (finds outdated syntax)
+select = ["E", "W", "F", "I", "B", "C90", "UP"]
 
 [tool.ruff.format]
 quote-style = "double"

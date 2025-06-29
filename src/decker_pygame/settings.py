@@ -1,5 +1,5 @@
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 # --- Game Settings ---
 SCREEN_WIDTH = 800
@@ -20,15 +20,14 @@ BLACK = (0, 0, 0)
 UI_FACE = (212, 208, 200)
 # --- Asset Configurations ---
 
+
 @dataclass(frozen=True)
 class GraphicsConfig:
-    """A dataclass to hold paths to all graphics assets."""
-    # Path to the program icons spritesheet, identified from asset file list.
-    program_icon_sheet: Path = RES_DIR / "software_il.bmp"
+    """A container for graphics-related settings."""
 
-    # ActiveBar component settings
-    active_bar_image_size: int = 16
-    active_bar_max_slots: int = 6
+    asset_folder: Path = ASSETS_DIR
+    active_bar_image_size: int = 48
+    active_bar_max_slots: int = 8
 
 
 # Global instance of the graphics configuration
