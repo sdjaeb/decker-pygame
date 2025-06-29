@@ -56,3 +56,10 @@ To run the test suite manually at any time:
 ```bash
 pytest
 ```
+
+## Asset Management
+
+This project uses a structured `assets` directory. Game-ready assets are organized into subdirectories like `program_bmps/` and `sounds/`.
+
+The `unused-assets/` directory contains the original, unsorted assets from the C++ project. As assets are integrated into the game, they should be moved from `unused-assets/` to the appropriate location within `assets/`.
+```
