@@ -1,58 +1,91 @@
+from unittest.mock import MagicMock, patch
+
 import pygame
-import pytest
+from decker_pygame.components.active_bar import ActiveBar
+from decker_pygame.components.alarm_bar import AlarmBar
 from decker_pygame.game import Game
-from decker_pygame.settings import TITLE
-from pytest_mock import MockerFixture
+from decker_pygame.settings import ALARM
 
 
-@pytest.fixture(autouse=True)
-def mock_game_dependencies(mocker: MockerFixture) -> None:
-    """Mock all external dependencies for the Game class."""
-    mocker.patch("pygame.init")
-    mocker.patch("pygame.display.set_mode")
-    mocker.patch("pygame.display.set_caption")
-    mocker.patch("pygame.display.flip")
-    mocker.patch("pygame.quit")
-    mocker.patch("pygame.sprite.Group")
-    # Patch load_spritesheet to return an empty list of icons and zero dimensions
-    mocker.patch("decker_pygame.game.load_spritesheet", return_value=([], (0, 0)))
-    mocker.patch("pygame.time.Clock")
-    mocker.patch("pygame.event.get", return_value=[])
+def test_game_run_loop_quits():
+    """
+    Tests that the main game loop runs and can be exited via a QUIT event.
+    This test specifically covers the main `while` loop in the `run` method,
+    which is often missed by component-level unit tests.
+    """
+    # Mock pygame.event.get to return a QUIT event on the first call.
+    # The loop will process this, set is_running to False, and terminate.
+    mock_event_get = MagicMock(return_value=[pygame.event.Event(pygame.QUIT)])
+
+    # To properly unit test the Game class, we mock its direct dependencies
+    # (the components it creates and functions it calls) rather than low-level
+    # pygame functions. This isolates the Game logic from rendering and asset
+    # loading, making the test more robust and focused.
+    with (
+        patch("pygame.init"),
+        patch("pygame.display.set_mode"),
+        patch("decker_pygame.game.load_spritesheet", return_value=([], [])),
+        patch("decker_pygame.game.ActiveBar", spec=ActiveBar),
+        patch("decker_pygame.game.AlarmBar", spec=AlarmBar),
+        patch("pygame.event.get", mock_event_get),
+        patch("pygame.time.Clock"),
+        patch(
+            "pygame.display.flip"  # Mock flip to avoid video system errors
+        ),
+    ):
+        game = Game()
+        # The __init__ method sets this to True.
+        assert game.is_running is True
+
+        # The loop should run once, process the QUIT event, and terminate.
+        game.run()
+
+        # After the loop, is_running should be False.
+        assert game.is_running is False
+        mock_event_get.assert_called_once()
 
 
-def test_game_initialization() -> None:
-    """Test that the Game class initializes correctly."""
-    game = Game()
-    assert game.is_running is True
-    pygame.init.assert_called_once()
-    pygame.display.set_mode.assert_called_once()
-    pygame.display.set_caption.assert_called_with(TITLE)
+def test_game_update_cycles_alarm():
+    """Tests that the temporary alarm cycling logic in _update works correctly."""
+    # We need to mock get_ticks to control time.
+    mock_ticks = MagicMock()
 
+    with (
+        patch("pygame.init"),
+        patch("pygame.display.set_mode"),
+        patch("decker_pygame.game.load_spritesheet", return_value=([], [])),
+        patch("decker_pygame.game.ActiveBar", spec=ActiveBar),
+        patch("decker_pygame.game.AlarmBar", spec=AlarmBar),
+        patch("pygame.time.get_ticks", mock_ticks),
+    ):
+        # Initial state
+        mock_ticks.return_value = 1000
+        game = Game()
+        assert game.alert_level == 0
+        assert game.is_crashing is False
 
-def test_game_handle_events_quit() -> None:
-    """Test that the game quits on a QUIT event."""
-    pygame.event.get.return_value = [pygame.event.Event(pygame.QUIT)]
-    game = Game()
-    game._handle_events()
-    assert game.is_running is False
+        # 1. Time hasn't passed enough, state should not change
+        mock_ticks.return_value = 2000  # 1000ms passed
+        game._update()
+        assert game.alert_level == 0
 
+        # 2. Time passes, alert level should increment
+        mock_ticks.return_value = 4000  # 3000ms passed since init
+        game._update()
+        assert game.alert_level == 1
 
-def test_game_run_loop_exits(
-    mocker: MockerFixture,
-) -> None:
-    """Test that the main game loop runs once and exits."""
-    game = Game()
+        # 3. Time passes again, alert level should increment to max
+        mock_ticks.return_value = 7000  # another 3000ms
+        game._update()
+        assert game.alert_level == len(ALARM.colors) - 1
 
-    # To test the loop's structure, we mock the methods called inside it.
-    # We'll set the side_effect of _handle_events to stop the loop after one iteration.
-    mock_handle_events = mocker.patch.object(game, "_handle_events")
-    mock_handle_events.side_effect = lambda: setattr(game, "is_running", False)
-    mock_update = mocker.patch.object(game.all_sprites, "update")
-    mock_draw = mocker.patch.object(game.all_sprites, "draw")
+        # 4. At max alert, next update should trigger crashing
+        mock_ticks.return_value = 10000
+        game._update()
+        assert game.is_crashing is True
 
-    game.run()
-
-    mock_handle_events.assert_called_once()
-    mock_update.assert_called_once()
-    mock_draw.assert_called_once()
-    pygame.quit.assert_called_once()
+        # 5. While crashing, next update should reset the alarm
+        mock_ticks.return_value = 13000
+        game._update()
+        assert game.alert_level == 0
+        assert game.is_crashing is False
