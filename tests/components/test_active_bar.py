@@ -1,12 +1,13 @@
 import os
+from collections.abc import Iterator
+
 import pygame
 import pytest
-from typing import Iterator
-
 from decker_pygame.components.active_bar import ActiveBar
 from decker_pygame.settings import GFX, UI_FACE
 
 # --- Test Fixtures ---
+
 
 @pytest.fixture(scope="module")
 def pygame_display() -> Iterator[None]:
@@ -41,6 +42,7 @@ def active_bar(mock_icon_surfaces: list[pygame.Surface]) -> ActiveBar:
 
 
 # --- Test Cases ---
+
 
 def test_initialization(active_bar: ActiveBar):
     """Verify that the ActiveBar is initialized with correct default values."""
@@ -79,7 +81,11 @@ def test_set_active_program_invalid_slot(active_bar: ActiveBar, invalid_slot: in
 
 @pytest.mark.parametrize(
     "slot_index, image_index",
-    [(0, 0), (GFX.active_bar_max_slots - 1, 1), (3, 2)],  # Test first, last, and a middle slot
+    [
+        (0, 0),
+        (GFX.active_bar_max_slots - 1, 1),
+        (3, 2),
+    ],  # Test first, last, and a middle slot
 )
 def test_update_draws_active_icon(
     active_bar: ActiveBar,
@@ -87,7 +93,7 @@ def test_update_draws_active_icon(
     slot_index: int,
     image_index: int,
 ):
-    """Verify that the update method correctly draws an active icon onto the bar's surface."""
+    """Verify the update method draws an active icon on the bar's surface."""
     icon_color = mock_icon_surfaces[image_index].get_at((0, 0))
 
     active_bar.set_active_program(slot_index, image_index)

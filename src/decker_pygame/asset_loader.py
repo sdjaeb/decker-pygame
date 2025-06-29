@@ -1,48 +1,36 @@
 from pathlib import Path
 
 import pygame
-
 from decker_pygame.settings import GFX
 
 
-def load_image(path: str | Path, colorkey: pygame.Color | None = None) -> pygame.Surface:
-    """Loads an image, converting it for performance."""
-    path_obj = Path(path)
-    if not path_obj.is_file():
-        print(f"Error: Asset not found at path: {path_obj.resolve()}")
-        print("Please ensure all game assets from 'DeckerSource_1_12' have been copied correctly.")
-        raise FileNotFoundError(f"Asset not found: {path_obj.resolve()}")
-
-    try:
-        # Use the Path object for loading
-        image = pygame.image.load(path_obj).convert()
-    except pygame.error as e:
-        print(f"Pygame error while loading image: {path_obj}")
-        raise SystemExit(e) from e
-
-    if colorkey:
-        image.set_colorkey(colorkey)
-
-    return image
-
-
-def load_image_sheet(
-    path: str | Path, width: int, height: int, colorkey: pygame.Color | None = None
+def load_images(
+    subdirectory: str,
+    size: tuple[int, int] | None = None,
+    base_path: Path | None = None,
 ) -> list[pygame.Surface]:
-    """Loads a spritesheet and slices it into a list of surfaces."""
-    sheet = load_image(path, colorkey)
-    sheet_width, sheet_height = sheet.get_size()
-    cols = sheet_width // width
-    rows = sheet_height // height
+    """
+    Loads all images from a subdirectory within the main asset folder.
+
+    Args:
+        subdirectory: The name of the folder within the assets directory.
+        size: An optional (width, height) tuple to scale the images to.
+        base_path: The base path to the assets folder, for testing purposes.
+
+    Returns:
+        A list of loaded and optionally resized pygame.Surface objects,
+        sorted by filename.
+    """
+    if base_path is None:
+        base_path = GFX.asset_folder
+    asset_path = base_path / subdirectory
+    image_extensions = {".png", ".jpg", ".jpeg", ".bmp"}
     images = []
 
-    for row_index in range(rows):
-        for col_index in range(cols):
-            rect = pygame.Rect(col_index * width, row_index * height, width, height)
-            image = pygame.Surface(rect.size).convert()
-            image.blit(sheet, (0, 0), rect)
-            if colorkey:
-                image.set_colorkey(colorkey)
+    for file_path in sorted(asset_path.iterdir()):
+        if file_path.suffix.lower() in image_extensions:
+            image = pygame.image.load(str(file_path)).convert_alpha()  # type: ignore[attr-defined]
+            if size:
+                image = pygame.transform.scale(image, size)  # type: ignore[attr-defined]
             images.append(image)
-
     return images

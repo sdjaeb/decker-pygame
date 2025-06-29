@@ -1,6 +1,5 @@
 import pygame
 import pygame.sprite
-
 from decker_pygame.settings import GFX, UI_FACE
 
 
@@ -9,6 +8,7 @@ class ActiveBar(pygame.sprite.Sprite):
     Represents the active programs bar, showing icons for active software.
     Ported from ActiveBar.cpp and ActiveBar.h.
     """
+
     image: pygame.Surface
     rect: pygame.Rect
     _image_list: list[pygame.Surface]
