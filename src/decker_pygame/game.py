@@ -1,7 +1,9 @@
 import pygame
 from decker_pygame.asset_loader import load_spritesheet
 from decker_pygame.components.active_bar import ActiveBar
+from decker_pygame.components.alarm_bar import AlarmBar
 from decker_pygame.settings import (
+    ALARM,
     BLACK,
     FPS,
     GFX,
@@ -20,6 +22,7 @@ class Game:
     is_running: bool
     all_sprites: pygame.sprite.Group
     active_bar: ActiveBar
+    alarm_bar: AlarmBar
 
     def __init__(self) -> None:
         pygame.init()
@@ -28,6 +31,12 @@ class Game:
         self.clock = pygame.time.Clock()
         self.is_running = True
         self.all_sprites = pygame.sprite.Group()
+
+        # --- Temporary state for demonstration ---
+        self.alert_level = 0
+        self.is_crashing = False
+        self.last_alarm_update = pygame.time.get_ticks()
+        # -----------------------------------------
         self._load_assets()
 
     def _load_assets(self) -> None:
@@ -49,17 +58,39 @@ class Game:
         self.active_bar = ActiveBar(position=(0, 0), image_list=program_icons)
         self.all_sprites.add(self.active_bar)
 
+        # Position from DeckerSource_1_12/MatrixView.cpp
+        self.alarm_bar = AlarmBar(position=(206, 342))
+        self.all_sprites.add(self.alarm_bar)
+
     def _handle_events(self) -> None:
         """Process user input and other events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
 
+    def _update(self) -> None:
+        """Update game state."""
+        # --- Temporary logic to cycle alarm state for demonstration ---
+        now = pygame.time.get_ticks()
+        if now - self.last_alarm_update > 2000:  # every 2 seconds
+            self.last_alarm_update = now
+            if self.is_crashing:
+                self.is_crashing = False
+                self.alert_level = 0
+            elif self.alert_level == len(ALARM.colors) - 1:
+                self.is_crashing = True
+            else:
+                self.alert_level += 1
+        # ----------------------------------------------------------
+
+        self.all_sprites.update()
+        self.alarm_bar.update_state(self.alert_level, self.is_crashing)
+
     def run(self) -> None:
         """The main game loop."""
         while self.is_running:
             self._handle_events()
-            self.all_sprites.update()
+            self._update()
 
             self.screen.fill(BLACK)
             self.all_sprites.draw(self.screen)

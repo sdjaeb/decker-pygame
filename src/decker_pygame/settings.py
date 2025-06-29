@@ -1,29 +1,46 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-# --- Game Settings ---
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-FPS = 60
-TITLE = "Decker-Pygame"
-
-# --- Paths ---
-# Use Path for cross-platform compatibility
-ASSETS_DIR = Path(__file__).resolve().parent.parent.parent / "assets"
-DEFAULT_GRAPHICS_DIR = ASSETS_DIR / "DefaultGraphics"
-RES_DIR = ASSETS_DIR / "res"
-
 # --- Asset Subdirectory Names ---
 PROGRAM_BMPS_DIR_NAME = "program_bmps"
 SOUNDS_DIR_NAME = "sounds"
 
+# --- Asset Configurations ---
+# (Classes are alphabetized below)
+
 # --- Colors ---
 BLACK = (0, 0, 0)
-# The original C++ code used GetSysColor(COLOR_3DFACE), which is a light gray.
-# RGB(212, 208, 200) is a common equivalent.
-UI_FACE = (212, 208, 200)
+DK_GREEN = (0, 128, 0)
+PURPLE = (128, 0, 128)
+RED = (255, 0, 0)
 TRANSPARENT_COLOR = BLACK
-# --- Asset Configurations ---
+UI_FACE = (212, 208, 200)
+YELLOW = (255, 255, 0)
+
+# --- Game Settings ---
+FPS = 60
+SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 800
+TITLE = "Decker-Pygame"
+
+# --- Paths ---
+ASSETS_DIR = Path(__file__).resolve().parent.parent.parent / "assets"
+DEFAULT_GRAPHICS_DIR = ASSETS_DIR / "DefaultGraphics"
+RES_DIR = ASSETS_DIR / "res"
+
+
+@dataclass(frozen=True)
+class AlarmConfig:
+    """A container for alarm-bar-related settings."""
+
+    width: int = 84
+    height: int = 8
+    colors: tuple[tuple[int, int, int], ...] = (DK_GREEN, YELLOW, RED)
+    crash_color: tuple[int, int, int] = PURPLE
+
+
+# Global instance of the alarm configuration
+ALARM = AlarmConfig()
 
 
 @dataclass(frozen=True)
