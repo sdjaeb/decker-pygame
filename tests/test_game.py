@@ -14,7 +14,8 @@ def mock_game_dependencies(mocker: MockerFixture) -> None:
     mocker.patch("pygame.display.flip")
     mocker.patch("pygame.quit")
     mocker.patch("pygame.sprite.Group")
-    mocker.patch("decker_pygame.game.load_images", return_value=[])
+    # Patch load_spritesheet to return an empty list of icons and zero dimensions
+    mocker.patch("decker_pygame.game.load_spritesheet", return_value=([], (0, 0)))
     mocker.patch("pygame.time.Clock")
     mocker.patch("pygame.event.get", return_value=[])
 

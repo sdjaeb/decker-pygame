@@ -1,7 +1,15 @@
 import pygame
-from decker_pygame.asset_loader import load_images
+from decker_pygame.asset_loader import load_spritesheet
 from decker_pygame.components.active_bar import ActiveBar
-from decker_pygame.settings import GFX, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE
+from decker_pygame.settings import (
+    BLACK,
+    FPS,
+    GFX,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    TITLE,
+    TRANSPARENT_COLOR,
+)
 
 
 class Game:
@@ -24,9 +32,20 @@ class Game:
 
     def _load_assets(self) -> None:
         """Load game assets and create initial game objects."""
-        program_icons = load_images(
-            "programs", (GFX.active_bar_image_size, GFX.active_bar_image_size)
+        # Load icons at their native source size
+        native_icons, _ = load_spritesheet(
+            GFX.program_icon_sheet,
+            sprite_width=GFX.program_icon_source_size,
+            sprite_height=GFX.program_icon_source_size,
+            colorkey=TRANSPARENT_COLOR,
         )
+
+        # Scale the icons up to the size required by the UI components
+        target_size = (GFX.active_bar_image_size, GFX.active_bar_image_size)
+        program_icons = [
+            pygame.transform.scale(icon, target_size) for icon in native_icons
+        ]
+
         self.active_bar = ActiveBar(position=(0, 0), image_list=program_icons)
         self.all_sprites.add(self.active_bar)
 
@@ -42,10 +61,10 @@ class Game:
             self._handle_events()
             self.all_sprites.update()
 
-            self.screen.fill((0, 0, 0))  # Black background
+            self.screen.fill(BLACK)
             self.all_sprites.draw(self.screen)
 
             pygame.display.flip()
-            self.clock.tick(60)  # Limit frame rate to 60 FPS
+            self.clock.tick(FPS)
 
         pygame.quit()
