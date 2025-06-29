@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pygame
 from decker_pygame.settings import GFX
+from pygame.typing import ColorLike
 
 
 def load_images(
@@ -39,7 +40,7 @@ def load_spritesheet(
     sprite_width: int,
     sprite_height: int,
     base_path: Path | None = None,
-    colorkey: pygame.Color | None = None,
+    colorkey: ColorLike | None = None,
 ) -> tuple[list[pygame.Surface], tuple[int, int]]:
     """
     Loads images from a spritesheet by introspecting its dimensions.

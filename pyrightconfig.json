@@ -1,8 +1,5 @@
 {
   "typeCheckingMode": "basic",
-  "extraPaths": [
-    "src",
-    "../pygame-ce/src"
-  ],
+  "extraPaths": ["src"],
   "stubPath": "typings"
 }

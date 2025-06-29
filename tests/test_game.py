@@ -43,11 +43,16 @@ def test_game_run_loop_exits(
     """Test that the main game loop runs once and exits."""
     game = Game()
 
-    # Make the loop run only once by setting is_running to False when events are handled
-    mocker.patch.object(
-        game, "_handle_events", side_effect=lambda: setattr(game, "is_running", False)
-    )
+    # To test the loop's structure, we mock the methods called inside it.
+    # We'll set the side_effect of _handle_events to stop the loop after one iteration.
+    mock_handle_events = mocker.patch.object(game, "_handle_events")
+    mock_handle_events.side_effect = lambda: setattr(game, "is_running", False)
+    mock_update = mocker.patch.object(game.all_sprites, "update")
+    mock_draw = mocker.patch.object(game.all_sprites, "draw")
 
     game.run()
-    game._handle_events.assert_called_once()
+
+    mock_handle_events.assert_called_once()
+    mock_update.assert_called_once()
+    mock_draw.assert_called_once()
     pygame.quit.assert_called_once()
