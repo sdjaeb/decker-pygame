@@ -21,9 +21,7 @@ def load_images(
         A list of loaded and optionally resized pygame.Surface objects,
         sorted by filename.
     """
-    if base_path is None:
-        base_path = GFX.asset_folder
-    asset_path = base_path / subdirectory
+    asset_path = (base_path or GFX.asset_folder) / subdirectory
     image_extensions = {".png", ".jpg", ".jpeg", ".bmp"}
     images = []
 

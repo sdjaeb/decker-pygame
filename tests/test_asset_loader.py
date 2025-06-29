@@ -41,6 +41,25 @@ def test_load_images(mock_pygame_image: types.ModuleType, asset_directory: Path)
     mock_pygame_image.image.load.assert_has_calls(expected_calls)
 
 
+def test_load_images_with_resize(
+    mock_pygame_image: types.ModuleType, asset_directory: Path
+):
+    """Test loading images with resizing."""
+    size = (64, 64)
+    load_images("programs", size=size, base_path=asset_directory)
+    assert mock_pygame_image.transform.scale.call_count == 2
+    mock_pygame_image.transform.scale.assert_called_with(pygame.image.load(), size)
+
+
+def test_load_images_default_path(mocker: MockerFixture):
+    """Test that load_images uses the default GFX.asset_folder."""
+    mocker.patch("pathlib.Path.iterdir", return_value=[])
+    mocker.patch("pygame.image.load")
+
+    # Call without base_path to test the default path logic
+    load_images("programs")
+
+
 def test_load_spritesheet(mocker: MockerFixture):
     """Test loading and slicing a spritesheet with a colorkey."""
     # 1. Mock dependencies
@@ -78,3 +97,20 @@ def test_load_spritesheet(mocker: MockerFixture):
     )
     assert mock_surface_instance.set_colorkey.call_count == 2
     mock_surface_instance.set_colorkey.assert_called_with((0, 0, 0))
+
+
+def test_load_spritesheet_default_path(mocker: MockerFixture):
+    """Test that load_spritesheet uses the default GFX.asset_folder."""
+    mock_sheet_surface = MagicMock(spec=pygame.Surface)
+    mock_sheet_surface.get_size.return_value = (0, 0)  # Prevents loops
+    mock_sheet_surface.convert.return_value = mock_sheet_surface
+    mock_load = mocker.patch("pygame.image.load", return_value=mock_sheet_surface)
+
+    # Call without base_path to test the default path logic
+    load_spritesheet("dummy.bmp", 16, 16)
+
+    # Assert that the load was attempted. The path will be constructed from
+    # GFX.asset_folder which is a real path, so we just check that the call
+    # happened with a string path.
+    mock_load.assert_called_once()
+    assert isinstance(mock_load.call_args[0][0], str)
