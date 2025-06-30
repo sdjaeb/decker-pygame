@@ -4,8 +4,9 @@ from unittest.mock import MagicMock, call
 
 import pygame
 import pytest
-from decker_pygame.asset_loader import load_images, load_spritesheet
 from pytest_mock import MockerFixture
+
+from decker_pygame.asset_loader import load_images, load_spritesheet
 
 
 @pytest.fixture

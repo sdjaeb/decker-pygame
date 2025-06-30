@@ -1,8 +1,9 @@
 import pytest
+from pydantic import ValidationError
+
 from decker_pygame.model.area import Area
 from decker_pygame.model.character import Character
 from decker_pygame.model.contract import Contract
-from pydantic import ValidationError
 
 
 def test_character_creation_defaults():

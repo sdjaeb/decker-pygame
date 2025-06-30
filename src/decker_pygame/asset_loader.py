@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import pygame
-from decker_pygame.settings import GFX
 from pygame.typing import ColorLike
+
+from decker_pygame.settings import GFX
 
 
 def load_images(
