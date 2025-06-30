@@ -1,6 +1,6 @@
 # Decker-Pygame
 
-![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)
+![Python Version](https://img.shields.io/badge/python-3.13+-blue.svg)
 ![License](https://img.shields.io/badge/License-LGPL_v2.1-blue.svg)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -12,7 +12,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.13+
 - [uv](https://github.com/astral-sh/uv) (recommended for environment and package management)
 
 ### Installation
@@ -48,6 +48,46 @@ pre-commit install
 ```
 
 Now, `ruff` will automatically format your code and `pytest` will run the test suite on every commit, ensuring 100% test coverage is maintained.
+
+### Committing Changes
+
+This project follows the Conventional Commits specification. To help create compliant commit messages, we use `commitizen`.
+
+Instead of `git commit`, use the following command:
+
+```bash
+cz commit
+```
+
+`commitizen` will prompt you through the process of creating a great commit message. The `pre-commit` hook will ensure that all commits adhere to this standard.
+
+#### What if a pre-commit hook fails?
+
+If a hook fails (e.g., due to a linting error or a failing test), the commit will be aborted. However, your carefully crafted commit message is not lost.
+
+1.  **Fix the issues** reported by the pre-commit hook in your code.
+2.  **Stage the fixes** using `git add .`.
+3.  **Commit again** using the standard `git commit` command:
+    ```bash
+    git commit
+    ```
+4.  Your text editor will open with your previous commit message already populated. Simply save and close the editor to finalize the commit.
+
+### Releasing a New Version
+
+When you are ready to release a new version, `commitizen` can automatically:
+
+1.  Determine the correct new version number based on your commit history (following Semantic Versioning).
+2.  Update the version in `pyproject.toml`.
+3.  Create a new `CHANGELOG.md` file or append the changes to the existing one.
+4.  Commit the version change and changelog.
+5.  Create a new git tag with the version number.
+
+To do all of this, run the following command:
+
+```bash
+cz bump --changelog
+```
 
 ### Running Tests Manually
 
