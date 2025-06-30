@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pygame
+
 from decker_pygame.components.active_bar import ActiveBar
 from decker_pygame.components.alarm_bar import AlarmBar
 from decker_pygame.game import Game

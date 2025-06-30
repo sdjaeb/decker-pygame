@@ -1,4 +1,5 @@
 import pygame
+
 from decker_pygame.asset_loader import load_spritesheet
 from decker_pygame.components.active_bar import ActiveBar
 from decker_pygame.components.alarm_bar import AlarmBar

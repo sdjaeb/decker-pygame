@@ -1,4 +1,5 @@
 import pygame
+
 from decker_pygame.settings import ALARM
 
 

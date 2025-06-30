@@ -1,5 +1,6 @@
-from decker_pygame.main import main
 from pytest_mock import MockerFixture
+
+from decker_pygame.main import main
 
 
 def test_main_function(mocker: MockerFixture) -> None:

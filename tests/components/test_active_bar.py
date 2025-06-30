@@ -1,4 +1,5 @@
 import pygame
+
 from decker_pygame.components.active_bar import ActiveBar
 from decker_pygame.settings import GFX, UI_FACE
 
