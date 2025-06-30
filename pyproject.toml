@@ -1,13 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "decker-pygame"
-version = "0.1.0"
+version = "0.1.0" # This will be managed by commitizen
 description = "A modern Python port of the classic 2001 Cyberspace RPG, Decker."
 authors = [{ name = "Gemini Code Assist" }]
 requires-python = ">=3.13"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
-    "pygame-ce",
+    "pygame-ce>=2.5.0",
+    "pydantic>=2.0",
 ]
 
 [project.scripts]
@@ -20,6 +25,7 @@ dev = [
     "pytest-cov",
     "pytest-mock",
     "pre-commit",
+    "commitizen",
 ]
 
 [tool.ruff]
@@ -45,3 +51,13 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_files = [
+    "pyproject.toml:project.version"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/sdjaeb/decker-pygame"
