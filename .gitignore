@@ -1,17 +1,50 @@
-# Python
+# Byte-compiled / optimized / C extensions
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
+*.so
+
+# Distribution / packaging
+build/
+dist/
+downloads/
+eggs/
+*.egg-info/
+sdist/
+wheels/
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Virtual Environments & Environment Variables
 env/
 venv/
 .venv/
+.env
+.env.*
 
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
 .ruff_cache/
 
-*.egg-info/
-build/
-dist/
+# Test & Coverage reports
+.coverage
+.coverage.*
+htmlcov/
 
+# Project-specific
 DeckerSource_1_12/
+
+# IDE / Editor directories
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Thumbs.db

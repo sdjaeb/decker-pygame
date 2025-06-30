@@ -28,9 +28,9 @@ def load_images(
 
     for file_path in sorted(asset_path.iterdir()):
         if file_path.suffix.lower() in image_extensions:
-            image = pygame.image.load(str(file_path)).convert_alpha()  # type: ignore[attr-defined]
+            image = pygame.image.load(str(file_path)).convert_alpha()
             if size:
-                image = pygame.transform.scale(image, size)  # type: ignore[attr-defined]
+                image = pygame.transform.scale(image, size)
             images.append(image)
     return images
 
