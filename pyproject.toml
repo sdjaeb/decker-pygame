@@ -11,8 +11,9 @@ requires-python = ">=3.13"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
-    "pygame-ce>=2.5.0",
     "pydantic>=2.0",
+    "pydantic-settings>=2.0.0",
+    "pygame-ce>=2.5.0",
 ]
 
 [project.scripts]
@@ -20,12 +21,13 @@ decker = "decker_pygame.main:main"
 
 [project.optional-dependencies]
 dev = [
-    "ruff",
+    "commitizen",
+    "mypy",
+    "pre-commit",
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pre-commit",
-    "commitizen",
+    "ruff",
 ]
 
 [tool.ruff]
@@ -59,3 +61,15 @@ version_provider = "pep621"
 
 [project.urls]
 "Homepage" = "https://github.com/sdjaeb/decker-pygame"
+
+[tool.mypy]
+python_version = "3.13"
+# Tell mypy where to find source code and custom type stubs
+mypy_path = ["src", "typings"]
+strict = true
+explicit_package_bases = true
+
+# Pygame is a C-extension module, so we need to tell mypy to not worry about its internals
+[[tool.mypy.overrides]]
+module = "pygame.*"
+ignore_missing_imports = true
