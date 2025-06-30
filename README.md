@@ -73,20 +73,24 @@ If a hook fails (e.g., due to a linting error or a failing test), the commit wil
     ```
 4.  Your text editor will open with your previous commit message already populated. Simply save and close the editor to finalize the commit.
 
-### Releasing a New Version
+### Automated Releases (CI/CD)
 
-When you are ready to release a new version, `commitizen` can automatically:
+This project uses GitHub Actions to automate the release process. On every merge to the `main` branch, a CI/CD workflow automatically:
 
 1.  Determine the correct new version number based on your commit history (following Semantic Versioning).
 2.  Update the version in `pyproject.toml`.
-3.  Create a new `CHANGELOG.md` file or append the changes to the existing one.
-4.  Commit the version change and changelog.
-5.  Create a new git tag with the version number.
+3.  Appends the latest changes to `CHANGELOG.md`.
+4.  Commits the version change and changelog, and pushes it back to `main`.
+5.  Creates a new git tag with the version number.
 
-To do all of this, run the following command:
+**Important:** After your pull request is merged, the `main` branch on GitHub will be updated with a new release commit. To keep your local repository in sync, you should:
 
 ```bash
-cz bump --changelog
+# Switch to your local main branch
+git checkout main
+
+# Pull the latest changes, including the new release commit and tag
+git pull
 ```
 
 ### Running Tests Manually
