@@ -19,4 +19,5 @@ repos:
     hooks:
       - id: mypy
         pass_filenames: false
+        args: ["src"]
         additional_dependencies: [ "pydantic", "pydantic-settings" ]
