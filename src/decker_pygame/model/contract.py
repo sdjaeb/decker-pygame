@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, conint
+from typing import Annotated
+
+from pydantic import BaseModel, Field
 
 
 class Contract(BaseModel):
@@ -11,5 +13,5 @@ class Contract(BaseModel):
     target_area_id: int
     objectives: list[str] = Field(default_factory=list)
     # Ensure reward credits are also non-negative
-    reward_credits: conint(ge=0) = 0
+    reward_credits: Annotated[int, Field(ge=0)] = 0
     is_completed: bool = False
