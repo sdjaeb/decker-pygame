@@ -20,7 +20,7 @@ class Game:
     screen: pygame.Surface
     clock: pygame.time.Clock
     is_running: bool
-    all_sprites: pygame.sprite.Group
+    all_sprites: pygame.sprite.Group[pygame.sprite.Sprite]
     active_bar: ActiveBar
     alarm_bar: AlarmBar
 
@@ -30,7 +30,7 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
         self.is_running = True
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
 
         # --- Temporary state for demonstration ---
         self.alert_level = 0

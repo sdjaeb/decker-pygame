@@ -23,6 +23,7 @@ decker = "decker_pygame.main:main"
 dev = [
     "commitizen",
     "mypy",
+    "numpy",
     "pre-commit",
     "pytest",
     "pytest-cov",
@@ -68,8 +69,10 @@ python_version = "3.13"
 mypy_path = ["src", "typings"]
 strict = true
 explicit_package_bases = true
+plugins = ["pydantic.mypy"]
 
 # Pygame is a C-extension module, so we need to tell mypy to not worry about its internals
 [[tool.mypy.overrides]]
 module = "pygame.*"
 ignore_missing_imports = true
+ignore_errors = true
