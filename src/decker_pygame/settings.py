@@ -27,8 +27,10 @@ UI_FACE = Color(192, 192, 192)  # A standard grey
 # --- File Paths & Assets ---
 # Using a class as a namespace for graphics settings
 class GfxSettings:
+    """A namespace for graphics-related settings and asset paths."""
+
     asset_folder: Path = Path(__file__).resolve().parent.parent.parent / "assets"
-    program_icon_sheet: str = "programs.bmp"
+    program_icon_sheet: str = "program_bmps/software_il.bmp"
     program_icon_source_size: int = 16
     active_bar_image_size: int = 32
     active_bar_max_slots: int = 8
