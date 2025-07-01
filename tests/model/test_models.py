@@ -4,6 +4,8 @@ from pydantic import ValidationError
 from decker_pygame.model.area import Area
 from decker_pygame.model.character import Character
 from decker_pygame.model.contract import Contract
+from decker_pygame.model.enums import ProgramType
+from decker_pygame.model.program import Program
 
 
 def test_character_creation_defaults():
@@ -17,12 +19,21 @@ def test_character_creation_defaults():
 
 def test_character_creation_with_values():
     """Tests that a Character can be created with specific values."""
+    program1 = Program(
+        name="Hammer", type=ProgramType.ATTACK, size=10, cost=500, description="..."
+    )
+    program2 = Program(
+        name="Shield", type=ProgramType.DEFENSE, size=5, cost=300, description="..."
+    )
+
     skills = {"hacking": 5, "electronics": 3}
-    inventory = [101, 203]
-    char = Character(name="Jax", skills=skills, inventory=inventory, credits=5000)
+    char = Character(
+        name="Jax", skills=skills, inventory=[program1, program2], credits=5000
+    )
     assert char.name == "Jax"
     assert char.skills == {"hacking": 5, "electronics": 3}
-    assert char.inventory == [101, 203]
+    assert len(char.inventory) == 2
+    assert char.inventory[0].name == "Hammer"
     assert char.credits == 5000
 
 
