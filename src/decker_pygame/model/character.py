@@ -1,6 +1,6 @@
-from typing import Annotated
-
 from pydantic import BaseModel, Field
+
+from decker_pygame.model.program import Program
 
 
 class Character(BaseModel):
@@ -8,6 +8,5 @@ class Character(BaseModel):
 
     name: str
     skills: dict[str, int] = Field(default_factory=dict)
-    inventory: list[int] = Field(default_factory=list)  # Assuming item IDs
-    # Use Annotated and Field to ensure credits are non-negative
-    credits: Annotated[int, Field(ge=0)] = 0
+    inventory: list[Program] = Field(default_factory=list)
+    credits: int = Field(default=0, ge=0)

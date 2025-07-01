@@ -2,13 +2,13 @@
 
 ## TL;DR: File Grouping and Porting Priority
 
-| Group                        | Files (examples)                                                                 | Importance |
-|------------------------------|----------------------------------------------------------------------------------|------------|
-| **Core Data Models / Logic** | Area, Character, Contract, Ice, Node, Program, Shop, ShopItem, Source, System, Global | 1 (Highest) |
-| **UI Components / Widgets**  | ActiveBar, AlarmBar, ClockView, CustomButton, HealthBar, ImageArray, MapView, etc. | 2          |
-| **Dialogs / Screens**        | BuildDialog, CharDataDialog, ContractDataDialog, DeckDataDialog, EntryDlg, etc.  | 3          |
-| **Main Application / Engine**| Decker, DeckerGraphics, DeckerSound, DSFile, StdAfx                             | 1          |
-| **Utility / Support**        | Global                                                                           | 2-3        |
+| Group                        | Files (examples)                                                                 | Importance | Status      |
+|------------------------------|----------------------------------------------------------------------------------|------------|-------------|
+| **Core Data Models / Logic** | Area, Character, Contract, Ice, Node, Program, Shop, ShopItem, Source, System, Global | 1 (Highest) | In Progress |
+| **UI Components / Widgets**  | ActiveBar, AlarmBar, ClockView, CustomButton, HealthBar, ImageArray, MapView, etc. | 2          | To Do       |
+| **Dialogs / Screens**        | BuildDialog, CharDataDialog, ContractDataDialog, DeckDataDialog, EntryDlg, etc.  | 3          | To Do       |
+| **Main Application / Engine**| Decker, DeckerGraphics, DeckerSound, DSFile, StdAfx                             | 1          | In Progress |
+| **Utility / Support**        | Global                                                                           | 2-3        | In Progress |
 
 ---
 
@@ -17,19 +17,19 @@
 ### 1. Core Data Models / Game Logic (**Highest Importance**)
 These files define the fundamental data structures and logic for the game. They are the backbone of the application and should be ported first, as most other components depend on them.
 
-- **Area.cpp/h**: Represents locations or regions in the game.
-- **Character.cpp/h**: Player and NPC data, stats, inventory, etc.
-- **Contract.cpp/h**: Missions or jobs available to the player.
-- **Ice.cpp/h**: Security programs (Intrusion Countermeasures Electronics).
-- **Node.cpp/h**: Network nodes or locations.
-- **Program.cpp/h**: Hacking programs/tools.
-- **Shop.cpp/h**: In-game shops.
-- **ShopItem.cpp/h**: Items available for purchase.
-- **Source.cpp/h**: Likely represents data sources or lootable objects.
-- **System.cpp/h**: Underlying system logic or world state.
-- **Global.cpp/h**: Global variables, constants, or helpers.
+- **Area.cpp/h**: Represents locations or regions in the game. (`Ported`)
+- **Character.cpp/h**: Player and NPC data, stats, inventory, etc. (`Ported`)
+- **Contract.cpp/h**: Missions or jobs available to the player. (`Ported`)
+- **Ice.cpp/h**: Security programs (Intrusion Countermeasures Electronics). (`Ported`)
+- **Node.cpp/h**: Network nodes or locations. (`Ported`)
+- **Program.cpp/h**: Hacking programs/tools. (`Ported`)
+- **Shop.cpp/h**: In-game shops. (`Ported`)
+- **ShopItem.cpp/h**: Items available for purchase. (`Ported`)
+- **Source.cpp/h**: Likely represents data sources or lootable objects. (`Ported`)
+- **System.cpp/h**: Underlying system logic or world state. (`Ported`)
+- **Global.cpp/h**: Global variables, constants, or helpers. (`Partially Ported to utils.py`)
 
-**Porting Priority:** 1 (Highest)
+**Porting Priority:** 1 (Highest) - **Largely Complete**
 
 ---
 

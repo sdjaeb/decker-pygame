@@ -1,58 +1,57 @@
-from dataclasses import dataclass
+"""
+Global settings and constants for the game.
+
+This file centralizes configuration values that were likely in Global.h/cpp,
+making them easy to adjust.
+"""
+
 from pathlib import Path
 
-# --- Asset Subdirectory Names ---
-PROGRAM_BMPS_DIR_NAME = "program_bmps"
-SOUNDS_DIR_NAME = "sounds"
+from pygame.color import Color
 
-# --- Asset Configurations ---
-# (Classes are alphabetized below)
+# --- General ---
+TITLE = "Decker"
+FPS = 60
+
+# --- Screen Dimensions ---
+SCREEN_WIDTH = 1024
+SCREEN_HEIGHT = 768
 
 # --- Colors ---
-BLACK = (0, 0, 0)
-DK_GREEN = (0, 128, 0)
-PURPLE = (128, 0, 128)
-RED = (255, 0, 0)
-TRANSPARENT_COLOR = BLACK
-UI_FACE = (212, 208, 200)
-YELLOW = (255, 255, 0)
-
-# --- Game Settings ---
-FPS = 60
-SCREEN_HEIGHT = 600
-SCREEN_WIDTH = 800
-TITLE = "Decker-Pygame"
-
-# --- Paths ---
-ASSETS_DIR = Path(__file__).resolve().parent.parent.parent / "assets"
-DEFAULT_GRAPHICS_DIR = ASSETS_DIR / "DefaultGraphics"
-RES_DIR = ASSETS_DIR / "res"
+BLACK = Color(0, 0, 0)
+WHITE = Color(255, 255, 255)
+TRANSPARENT_COLOR = Color(255, 0, 255)  # A common magenta colorkey
+UI_FACE = Color(192, 192, 192)  # A standard grey
 
 
-@dataclass(frozen=True)
-class AlarmConfig:
-    """A container for alarm-bar-related settings."""
-
-    width: int = 84
-    height: int = 8
-    colors: tuple[tuple[int, int, int], ...] = (DK_GREEN, YELLOW, RED)
-    crash_color: tuple[int, int, int] = PURPLE
-
-
-# Global instance of the alarm configuration
-ALARM = AlarmConfig()
-
-
-@dataclass(frozen=True)
-class GraphicsConfig:
-    """A container for graphics-related settings."""
-
-    asset_folder: Path = ASSETS_DIR
+# --- File Paths & Assets ---
+# Using a class as a namespace for graphics settings
+class GfxSettings:
+    asset_folder: Path = Path(__file__).resolve().parent.parent.parent / "assets"
+    program_icon_sheet: str = "programs.bmp"
     program_icon_source_size: int = 16
-    active_bar_image_size: int = 48
+    active_bar_image_size: int = 32
     active_bar_max_slots: int = 8
-    program_icon_sheet: str = f"{PROGRAM_BMPS_DIR_NAME}/software_il.bmp"
 
 
-# Global instance of the graphics configuration
-GFX = GraphicsConfig()
+GFX = GfxSettings()
+
+
+# --- UI Component Settings ---
+# Using a class as a namespace for alarm settings
+class AlarmSettings:
+    width: int = 200
+    height: int = 20
+    colors: list[Color] = [
+        Color(0, 255, 0),  # Green
+        Color(255, 255, 0),  # Yellow
+        Color(255, 165, 0),  # Orange
+        Color(255, 0, 0),  # Red
+    ]
+    crash_color: Color = Color(0, 0, 255)  # Blue
+
+
+ALARM = AlarmSettings()
+
+# --- Gameplay Constants ---
+MAX_ALERT_LEVEL = 100.0
