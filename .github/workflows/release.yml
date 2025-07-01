@@ -20,9 +20,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # This is crucial for commitizen to analyze the full git history
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT to bypass branch protection rules for the release commit.
+          token: ${{ secrets.PAT }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
