@@ -6,6 +6,13 @@
 
 A game development project built with the modern Pygame Community Edition.
 
+## 📖 About the Project
+
+This project is a modern Python port of the classic 2003 freeware Windows game, **Decker**. The goal is to recreate the original game's experience using modern development practices, a clean architecture, and the Pygame library.
+
+- **Original Game Source:** [Decker on SourceForge](https://sourceforge.net/projects/decker/)
+- **Playable Online Version:** [Decker (web port by @palparepa)](https://palparepa.github.io/decker/)
+
 ## 🚀 Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -38,6 +45,13 @@ These instructions will get you a copy of the project up and running on your loc
 ## 🧑‍💻 Development
 
 This project uses a suite of modern Python tools to ensure code quality and consistency.
+
+### Architecture
+
+The codebase is structured following the principles of **Domain-Driven Design (DDD)** to ensure a clean separation of concerns and a focus on the core game logic.
+
+- **[Implementation Guidelines](./docs/architecture/ddd_implementation_guide.md):** The rules and patterns we follow for DDD.
+- **[DDD Concepts in Our Codebase](./docs/architecture/ddd_concepts.md):** A guide mapping DDD theory to specific files in this project.
 
 ### Pre-commit Hooks
 

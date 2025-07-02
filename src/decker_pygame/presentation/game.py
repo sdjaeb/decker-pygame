@@ -1,10 +1,11 @@
 import pygame
 
-from decker_pygame.asset_loader import load_spritesheet
-from decker_pygame.components.active_bar import ActiveBar
-from decker_pygame.components.alarm_bar import AlarmBar
+from decker_pygame.application.services import PlayerService
+from decker_pygame.domain.model import PlayerId
+from decker_pygame.presentation.asset_loader import load_spritesheet
+from decker_pygame.presentation.components.active_bar import ActiveBar
+from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.settings import (
-    ALARM,
     BLACK,
     FPS,
     GFX,
@@ -25,19 +26,16 @@ class Game:
     active_bar: ActiveBar
     alarm_bar: AlarmBar
 
-    def __init__(self) -> None:
+    def __init__(self, player_service: PlayerService, player_id: PlayerId) -> None:
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
         self.is_running = True
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
+        self.player_service = player_service
+        self.player_id = player_id
 
-        # --- Temporary state for demonstration ---
-        self.alert_level = 0
-        self.is_crashing = False
-        self.last_alarm_update = pygame.time.get_ticks()
-        # -----------------------------------------
         self._load_assets()
 
     def _load_assets(self) -> None:
@@ -71,21 +69,12 @@ class Game:
 
     def _update(self) -> None:
         """Update game state."""
-        # --- Temporary logic to cycle alarm state for demonstration ---
-        now = pygame.time.get_ticks()
-        if now - self.last_alarm_update > 2000:  # every 2 seconds
-            self.last_alarm_update = now
-            if self.is_crashing:
-                self.is_crashing = False
-                self.alert_level = 0
-            elif self.alert_level == len(ALARM.colors) - 1:
-                self.is_crashing = True
-            else:
-                self.alert_level += 1
-        # ----------------------------------------------------------
+        # In the future, we will get player state from the service:
+        # player = self.player_service.get_player(self.player_id)
+        # self.alarm_bar.update_state(player.alert_level, player.is_crashing)
 
         self.all_sprites.update()
-        self.alarm_bar.update_state(self.alert_level, self.is_crashing)
+        # self.alarm_bar.update_state(0, False) # Example placeholder
 
     def run(self) -> None:
         """The main game loop."""
