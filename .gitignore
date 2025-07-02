@@ -48,3 +48,6 @@ DeckerSource_1_12/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# Misc
+tmp/

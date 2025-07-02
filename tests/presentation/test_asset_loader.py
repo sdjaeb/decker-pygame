@@ -6,7 +6,7 @@ import pygame
 import pytest
 from pytest_mock import MockerFixture
 
-from decker_pygame.asset_loader import load_images, load_spritesheet
+from decker_pygame.presentation.asset_loader import load_images, load_spritesheet
 
 
 @pytest.fixture
@@ -48,8 +48,10 @@ def test_load_images_with_resize(
     """Test loading images with resizing."""
     size = (64, 64)
     load_images("programs", size=size, base_path=asset_directory)
-    assert mock_pygame_image.transform.scale.call_count == 2
-    mock_pygame_image.transform.scale.assert_called_with(pygame.image.load(), size)
+    assert mock_pygame_image.transform.scale.call_count == 2  # Two images loaded
+    mock_pygame_image.transform.scale.assert_called_with(
+        mock_pygame_image.image.load.return_value, size
+    )
 
 
 def test_load_images_default_path(mocker: MockerFixture):

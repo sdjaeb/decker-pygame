@@ -2,9 +2,9 @@
 
 ## TL;DR: File Grouping and Porting Priority
 
-| Group                        | Files (examples)                                                                 | Importance | Status      |
-|------------------------------|----------------------------------------------------------------------------------|------------|-------------|
-| **Core Data Models / Logic** | Area, Character, Contract, Ice, Node, Program, Shop, ShopItem, Source, System, Global | 1 (Highest) | In Progress |
+| Group                        | Files (examples)                                                                 | Importance | Status      | Notes                                                                                             |
+|------------------------------|----------------------------------------------------------------------------------|------------|-------------|---------------------------------------------------------------------------------------------------|
+| **Core Data Models / Logic** | Area, Character, Contract, Ice, Node, Program, Shop, ShopItem, Source, System, Global | 1 (Highest) | In Progress | Ported into the `domain`, `application`, and `infrastructure` layers of our DDD architecture. |
 | **UI Components / Widgets**  | ActiveBar, AlarmBar, ClockView, CustomButton, HealthBar, ImageArray, MapView, etc. | 2          | To Do       |
 | **Dialogs / Screens**        | BuildDialog, CharDataDialog, ContractDataDialog, DeckDataDialog, EntryDlg, etc.  | 3          | To Do       |
 | **Main Application / Engine**| Decker, DeckerGraphics, DeckerSound, DSFile, StdAfx                             | 1          | In Progress |
@@ -14,7 +14,7 @@
 
 ## Detailed Breakdown
 
-### 1. Core Data Models / Game Logic (**Highest Importance**)
+### 1. Core Data Models / Game Logic (**Highest Importance**) - Ported to DDD
 These files define the fundamental data structures and logic for the game. They are the backbone of the application and should be ported first, as most other components depend on them.
 
 - **Area.cpp/h**: Represents locations or regions in the game. (`Ported`)
@@ -29,7 +29,13 @@ These files define the fundamental data structures and logic for the game. They 
 - **System.cpp/h**: Underlying system logic or world state. (`Ported`)
 - **Global.cpp/h**: Global variables, constants, or helpers. (`Partially Ported to utils.py`)
 
-**Porting Priority:** 1 (Highest) - **Largely Complete**
+**Porting Status:** Largely Complete.
+
+**Architectural Notes:** The logic from these core C++ files has been refactored into our new Domain-Driven Design architecture.
+- **Core rules and state** (e.g., `Player` data) are now **Aggregates** in `src/decker_pygame/domain/model.py`.
+- **Use cases** (e.g., creating a character) are handled by **Application Services** in `src/decker_pygame/application/services.py`.
+- **Persistence** (saving/loading) is managed by **Repositories** defined in `src/decker_pygame/domain/repositories.py` and implemented in `src/decker_pygame/infrastructure/persistence.py`.
+- This separation ensures our core game logic is independent of UI or data storage details.
 
 ---
 

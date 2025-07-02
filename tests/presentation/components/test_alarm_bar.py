@@ -1,6 +1,6 @@
 import pygame
 
-from decker_pygame.components.alarm_bar import AlarmBar
+from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.settings import ALARM
 
 
