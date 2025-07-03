@@ -1,11 +1,13 @@
+# player_service.py
+
 import uuid
 
-from decker_pygame.domain.model import Player, PlayerId
-from decker_pygame.domain.repositories import PlayerRepository
+from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
 
 
 class PlayerService:
-    def __init__(self, player_repo: PlayerRepository):
+    def __init__(self, player_repo: PlayerRepositoryInterface) -> None:
         self.player_repo = player_repo
         # In a real system, an event dispatcher would also be injected here.
 

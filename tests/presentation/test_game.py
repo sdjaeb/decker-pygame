@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.services import PlayerService
-from decker_pygame.domain.model import PlayerId
+from decker_pygame.application.player_service import PlayerService
+from decker_pygame.domain.player import PlayerId
 from decker_pygame.presentation.game import Game
 
 

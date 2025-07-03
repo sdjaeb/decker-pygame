@@ -1,18 +1,17 @@
 import json
 import os
-import uuid
 
-from decker_pygame.domain.model import Player, PlayerId
-from decker_pygame.domain.repositories import PlayerRepository
+from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
 
 
-class JsonFilePlayerRepository(PlayerRepository):
+class JsonFilePlayerRepository(PlayerRepositoryInterface):
     """
     A concrete repository that persists Player aggregates to JSON files.
     Each player is stored in a separate file named after its ID.
     """
 
-    def __init__(self, base_path: str):
+    def __init__(self, base_path: str) -> None:
         self._base_path = base_path
         os.makedirs(self._base_path, exist_ok=True)
 
@@ -40,6 +39,4 @@ class JsonFilePlayerRepository(PlayerRepository):
         # This is a key DDD concept: repositories restore objects to their
         # last known state without running business logic (which is in factories
         # or methods).
-        return Player(
-            id=PlayerId(uuid.UUID(data["id"])), name=data["name"], health=data["health"]
-        )
+        return Player(id=player_id, name=data["name"], health=data["health"])

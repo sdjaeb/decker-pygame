@@ -9,7 +9,7 @@ PlayerId = NewType("PlayerId", uuid.UUID)
 class Player:
     """The Player aggregate root."""
 
-    def __init__(self, id: PlayerId, name: str, health: int):
+    def __init__(self, id: PlayerId, name: str, health: int) -> None:
         self.id = id
         self.name = name
         self.health = health
@@ -20,8 +20,10 @@ class Player:
         """Factory to create a new player, raising a domain event."""
         player = Player(id=player_id, name=name, health=initial_health)
         player._events.append(
-            PlayerCreated(  # type: ignore [arg-type]
-                player_id=player.id, name=player.name, initial_health=player.health
+            PlayerCreated(
+                player_id=player.id,
+                name=player.name,
+                initial_health=player.health,  # type: ignore[arg-type]
             )
         )
         return player

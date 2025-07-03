@@ -1,9 +1,9 @@
 import abc
 
-from decker_pygame.domain.model import Player, PlayerId
+from decker_pygame.domain.player import Player, PlayerId
 
 
-class PlayerRepository(abc.ABC):
+class PlayerRepositoryInterface(abc.ABC):
     @abc.abstractmethod
     def get(self, player_id: PlayerId) -> Player | None:
         raise NotImplementedError

@@ -1,7 +1,7 @@
 import uuid
 
 from decker_pygame.domain.events import PlayerCreated
-from decker_pygame.domain.model import Player, PlayerId
+from decker_pygame.domain.player import Player, PlayerId
 
 
 def test_player_equality():

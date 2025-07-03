@@ -1,7 +1,3 @@
-# from decker_pygame.domain.model.area import Area
-# from decker_pygame.domain.contract import Contract
-
-
 from decker_pygame.model.area import Area
 from decker_pygame.model.contract import Contract
 
