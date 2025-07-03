@@ -1,7 +1,8 @@
 import json
 import os
 
-from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.domain.ids import PlayerId
+from decker_pygame.domain.player import Player
 from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
 
 
@@ -24,7 +25,7 @@ class JsonFilePlayerRepository(PlayerRepositoryInterface):
             "name": player.name,
             "health": player.health,
         }
-        with open(self._get_path(player.id), "w") as f:
+        with open(self._get_path(PlayerId(player.id)), "w") as f:
             json.dump(player_dict, f, indent=4)
 
     def get(self, player_id: PlayerId) -> Player | None:

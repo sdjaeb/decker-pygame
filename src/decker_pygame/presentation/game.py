@@ -1,7 +1,7 @@
 import pygame
 
 from decker_pygame.application.player_service import PlayerService
-from decker_pygame.domain.player import PlayerId
+from decker_pygame.domain.ids import PlayerId
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar

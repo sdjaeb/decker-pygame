@@ -1,6 +1,7 @@
 import abc
 
-from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.domain.ids import PlayerId
+from decker_pygame.domain.player import Player
 
 
 class PlayerRepositoryInterface(abc.ABC):

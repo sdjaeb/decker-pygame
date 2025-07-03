@@ -1,19 +1,15 @@
-import uuid
-from typing import Any, NewType
-
-from decker_pygame.domain.events import Event, PlayerCreated
-
-PlayerId = NewType("PlayerId", uuid.UUID)
+from decker_pygame.domain.aggregate import AggregateRoot
+from decker_pygame.domain.events import PlayerCreated
+from decker_pygame.domain.ids import AggregateId, PlayerId
 
 
-class Player:
+class Player(AggregateRoot):
     """The Player aggregate root."""
 
     def __init__(self, id: PlayerId, name: str, health: int) -> None:
-        self.id = id
+        super().__init__(id=AggregateId(id))
         self.name = name
         self.health = health
-        self._events: list[Event] = []
 
     @staticmethod
     def create(player_id: PlayerId, name: str, initial_health: int) -> "Player":
@@ -21,22 +17,9 @@ class Player:
         player = Player(id=player_id, name=name, health=initial_health)
         player._events.append(
             PlayerCreated(
-                player_id=player.id,
+                player_id=PlayerId(player.id),
                 name=player.name,
-                initial_health=player.health,  # type: ignore[arg-type]
+                initial_health=player.health,
             )
         )
         return player
-
-    @property
-    def events(self) -> list[Event]:
-        return list(self._events)
-
-    def clear_events(self) -> None:
-        self._events.clear()
-
-    def __eq__(self, other: Any) -> bool:
-        return isinstance(other, Player) and self.id == other.id
-
-    def __hash__(self) -> int:
-        return hash(self.id)

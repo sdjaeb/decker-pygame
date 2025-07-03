@@ -2,7 +2,8 @@
 
 import uuid
 
-from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.domain.ids import PlayerId
+from decker_pygame.domain.player import Player
 from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
 
 
@@ -20,4 +21,4 @@ class PlayerService:
 
         self.player_repo.save(player)
         # self.event_dispatcher.dispatch(player.events)
-        return player.id
+        return PlayerId(player.id)

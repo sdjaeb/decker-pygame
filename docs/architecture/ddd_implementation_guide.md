@@ -32,6 +32,7 @@ An Aggregate is a cluster of domain objects that we treat as a single transactio
 **Rules:**
 - **Reference by Root:** External objects can only hold a reference to the Aggregate Root.
 - **Enforce Invariants:** The Root is responsible for ensuring the aggregate is always in a valid state.
+- **Reference by ID:** An Aggregate Root should refer to other aggregates by their ID, not by holding a direct object reference. This keeps aggregates small and loosely coupled.
 - **Transactional Consistency:** All changes within an aggregate are committed together.
 
 ### 2.3. Domain Events
@@ -51,7 +52,7 @@ The layers are connected at the application's entry point (the "Composition Root
 The `main` function is responsible for:
 1.  Instantiating concrete infrastructure components (e.g., `JsonFilePlayerRepository`).
 2.  Instantiating application services and injecting the infrastructure components into them (e.g., `PlayerService(repo)`).
-3.  Instantiating the main presentation object (e.g., the `Game` class) and injecting the application services into it (e.g., `Game(player_service)`).
+3.  Instantiating the main presentation object (e.g., the `Game` class) and injecting the application services into it.
 
 This pattern, known as **Dependency Injection**, ensures that high-level components (like `Game`) depend on abstractions (`PlayerService`), not on concrete details. This makes the system flexible, maintainable, and highly testable.
 
