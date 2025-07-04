@@ -21,6 +21,7 @@ The heart of the application. Contains all core game rules and logic, with zero 
 
 - **Aggregates & Entities:** `domain/player.py`, `domain/character.py`, etc.
 - **Domain Events:** `domain/events.py` (`PlayerCreated` class)
+- **DDD Base Classes:** `domain/ddd/entity.py`, `domain/ddd/aggregate.py`
 - **Repository Interfaces:** `domain/player_repository_interface.py` (`PlayerRepository` abstract class)
 
 ### Application Layer
@@ -51,14 +52,14 @@ The user-facing part of the application. It's responsible for rendering the game
 A conceptual boundary around a cluster of related objects that are treated as a single unit for data changes. The entry point to an Aggregate is always an **Aggregate Root**, which is a specific type of Entity.
 
 - **Concept:** The `Player` is the central figure for many game actions. The `Area` manages which `Contract`s are available within it.
-- **Implementation:** The `Player` class in `domain/player.py` and the `Area` class in `domain/area.py` are Aggregate Roots.
+- **Implementation:** The `Player` class in `domain/player.py` and the `Area` class in `domain/area.py` are Aggregate Roots. They inherit from the `AggregateRoot` base class in `domain/ddd/aggregate.py`.
 
 ### Entity
 
 An object with a distinct, continuous identity. Two entities are not the same just because their attributes are identical.
 
-- **Concept:** A `Player` is an entity. Even if two players have the same name and health, they are different individuals.
-- **Implementation:** The `Player` class has a unique `id` of type `PlayerId`. All of our Aggregate Roots are also Entities.
+- **Concept:** A `Contract` is a job with a unique identity, but it doesn't manage other objects.
+- **Implementation:** The `Contract` class in `domain/contract.py` is a simple Entity. All entities inherit from the `Entity` base class in `domain/ddd/entity.py`.
 
 ### Value Object
 

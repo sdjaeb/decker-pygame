@@ -1,4 +1,4 @@
-from decker_pygame.domain.aggregate import AggregateRoot
+from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.events import CharacterCreated
 from decker_pygame.domain.ids import AggregateId, CharacterId
 from decker_pygame.domain.program import Program

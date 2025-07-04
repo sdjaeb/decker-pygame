@@ -1,4 +1,4 @@
-from decker_pygame.domain.entity import Entity
+from decker_pygame.domain.ddd.entity import Entity
 from decker_pygame.domain.ids import AreaId, ContractId
 
 

@@ -17,6 +17,7 @@ We separate our code into layers. **Dependencies must only point inwards.**
 
 1.  **Domain Layer (Core):** Contains the business logic, rules, and state. It has **zero** dependencies on other layers.
     -   *Building Blocks:* Aggregates, Entities, Value Objects, Domain Events, Repository Interfaces.
+    -   *Base Classes:* The foundational `Entity` and `AggregateRoot` classes live in the `domain/ddd/` sub-package.
 2.  **Application Layer:** Orchestrates domain objects to execute use cases.
     -   *Building Blocks:* Application Services, Data Transfer Objects (DTOs).
 3.  **Infrastructure Layer:** Implements the technical details for interfaces defined in inner layers.

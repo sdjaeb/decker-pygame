@@ -1,5 +1,5 @@
-from decker_pygame.domain.aggregate import AggregateRoot
 from decker_pygame.domain.contract import Contract
+from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.ids import AggregateId, AreaId, ContractId
 
 
