@@ -1,9 +1,6 @@
 import pygame
 
-from decker_pygame.presentation.components.active_bar import (
-    ActiveBar,
-    SimpleActiveBar,
-)
+from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.settings import GFX, UI_FACE
 
 
@@ -128,7 +125,7 @@ class TestActiveBar:
 
         pygame.quit()
 
-    def test_active_bar_eq_and_hash_repr(self):
+    def test_active_bar_eq_and_hash_repr(self, mocker):
         import pygame
 
         from decker_pygame.presentation.components.active_bar import ActiveBar
@@ -144,44 +141,5 @@ class TestActiveBar:
         assert bar1 != bar2
         assert hash(bar1) == hash(bar1)
         assert isinstance(repr(bar1), str)
-
-        pygame.quit()
-
-    def test_simple_active_bar_eq_hash_repr(self):
-        from decker_pygame.presentation.components.active_bar import SimpleActiveBar
-
-        bar1 = SimpleActiveBar(0, 0, 10, 10)
-        bar2 = SimpleActiveBar(0, 0, 10, 10)
-        # __eq__ and __hash__ (object identity)
-        assert bar1 == bar1
-        assert bar1 != bar2
-        assert isinstance(hash(bar1), int)
-        # __repr__
-        assert isinstance(repr(bar1), str)
-
-    def test_simple_active_bar_update_and_draw(self, mocker):
-        """Tests the update and draw methods of SimpleActiveBar."""
-        pygame.init()
-        mocker.patch("pygame.draw.rect")
-        mock_surface = mocker.Mock(spec=pygame.Surface)
-
-        bar = SimpleActiveBar(x=10, y=20, width=200, height=20)
-        assert bar.value == 0
-
-        # Test update
-        bar.update(50)
-        assert bar.value == 50
-
-        # Test draw
-        bar.draw(mock_surface)
-        # It should draw a rect 50% of the width
-        expected_rect = (10, 20, 100, 20)
-        pygame.draw.rect.assert_called_with(mock_surface, (0, 255, 0), expected_rect)
-
-        # Test update with another value
-        bar.update(75)
-        bar.draw(mock_surface)
-        expected_rect_2 = (10, 20, 150, 20)
-        pygame.draw.rect.assert_called_with(mock_surface, (0, 255, 0), expected_rect_2)
 
         pygame.quit()
