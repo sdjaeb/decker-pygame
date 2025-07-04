@@ -1,7 +1,7 @@
 import pygame
 
-from decker_pygame.application.services import PlayerService
-from decker_pygame.domain.model import PlayerId
+from decker_pygame.application.player_service import PlayerService
+from decker_pygame.domain.ids import PlayerId
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
@@ -17,7 +17,7 @@ from decker_pygame.settings import (
 
 
 class Game:
-    """Encapsulates the main game loop and state."""
+    """Main game loop and presentation logic."""
 
     screen: pygame.Surface
     clock: pygame.time.Clock
@@ -27,6 +27,13 @@ class Game:
     alarm_bar: AlarmBar
 
     def __init__(self, player_service: PlayerService, player_id: PlayerId) -> None:
+        """
+        Initialize the Game.
+
+        Args:
+            player_service (PlayerService): Service for player operations.
+            player_id (PlayerId): The current player's ID.
+        """
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
@@ -39,7 +46,12 @@ class Game:
         self._load_assets()
 
     def _load_assets(self) -> None:
-        """Load game assets and create initial game objects."""
+        """
+        Load game assets (images, sounds, etc).
+
+        Returns:
+            None
+        """
         # Load icons at their native source size
         native_icons, _ = load_spritesheet(
             GFX.program_icon_sheet,
@@ -58,17 +70,27 @@ class Game:
         self.all_sprites.add(self.active_bar)
 
         # Position from DeckerSource_1_12/MatrixView.cpp
-        self.alarm_bar = AlarmBar(position=(206, 342))
+        self.alarm_bar = AlarmBar(206, 342, 200, 50)
         self.all_sprites.add(self.alarm_bar)
 
     def _handle_events(self) -> None:
-        """Process user input and other events."""
+        """
+        Handle user input and system events.
+
+        Returns:
+            None
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
 
     def _update(self) -> None:
-        """Update game state."""
+        """
+        Update game state.
+
+        Returns:
+            None
+        """
         # In the future, we will get player state from the service:
         # player = self.player_service.get_player(self.player_id)
         # self.alarm_bar.update_state(player.alert_level, player.is_crashing)
@@ -77,7 +99,12 @@ class Game:
         # self.alarm_bar.update_state(0, False) # Example placeholder
 
     def run(self) -> None:
-        """The main game loop."""
+        """
+        Run the main game loop.
+
+        Returns:
+            None
+        """
         while self.is_running:
             self._handle_events()
             self._update()

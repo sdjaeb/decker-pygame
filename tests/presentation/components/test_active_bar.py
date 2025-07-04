@@ -124,3 +124,22 @@ class TestActiveBar:
         assert "Invalid program_id 99" in capsys.readouterr().out
 
         pygame.quit()
+
+    def test_active_bar_eq_and_hash_repr(self, mocker):
+        import pygame
+
+        from decker_pygame.presentation.components.active_bar import ActiveBar
+
+        pygame.init()
+        icon_size = 16
+        image_list = [pygame.Surface((icon_size, icon_size)) for _ in range(5)]
+        bar1 = ActiveBar(position=(0, 0), image_list=image_list)
+        bar2 = ActiveBar(position=(0, 0), image_list=image_list)
+
+        # __eq__ and __hash__
+        assert bar1 == bar1
+        assert bar1 != bar2
+        assert hash(bar1) == hash(bar1)
+        assert isinstance(repr(bar1), str)
+
+        pygame.quit()

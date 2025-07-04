@@ -1,8 +1,8 @@
 import os
 import tempfile
 
-from decker_pygame.application.services import PlayerService
-from decker_pygame.infrastructure.persistence import JsonFilePlayerRepository
+from decker_pygame.application.player_service import PlayerService
+from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
 from decker_pygame.presentation.game import Game
 
 

@@ -1,9 +1,9 @@
 import uuid
 from unittest.mock import Mock, patch
 
-from decker_pygame.application.services import PlayerService
-from decker_pygame.domain.model import Player, PlayerId
-from decker_pygame.domain.repositories import PlayerRepository
+from decker_pygame.application.player_service import PlayerService
+from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
 
 
 def test_create_new_player():
@@ -11,7 +11,7 @@ def test_create_new_player():
     Verify the PlayerService correctly orchestrates player creation.
     """
     # Arrange
-    mock_repo = Mock(spec=PlayerRepository)
+    mock_repo = Mock(spec=PlayerRepositoryInterface)
     player_service = PlayerService(player_repo=mock_repo)
     player_name = "Deckard"
 
@@ -20,10 +20,12 @@ def test_create_new_player():
     expected_player_id = PlayerId(test_uuid)
 
     # We need to patch uuid where it's used: in the services module
-    with patch("decker_pygame.application.services.uuid.uuid4", return_value=test_uuid):
+    with patch(
+        "decker_pygame.application.player_service.uuid.uuid4", return_value=test_uuid
+    ):
         # We also patch the Player.create factory
         with patch(
-            "decker_pygame.application.services.Player.create"
+            "decker_pygame.application.player_service.Player.create"
         ) as mock_player_create:
             # Configure the mock that Player.create will return.
             # It must have an `id` attribute to avoid an AttributeError in the service.

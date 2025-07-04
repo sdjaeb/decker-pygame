@@ -1,39 +1,42 @@
-# from decker_pygame.domain.model.area import Area
-# from decker_pygame.domain.contract import Contract
+import uuid
 
-
-from decker_pygame.model.area import Area
-from decker_pygame.model.contract import Contract
+from decker_pygame.domain.area import Area
+from decker_pygame.domain.contract import Contract
+from decker_pygame.domain.ids import AreaId, ContractId
 
 
 def test_area_creation():
     """Tests creating an area with default empty contracts."""
     area = Area(
-        id=1,
+        id=AreaId(uuid.uuid4()),
         name="Downtown",
         description="The neon-drenched heart of the city.",
         security_level=3,
+        contract_ids=[],
     )
     assert area.name == "Downtown"
-    assert area.contracts == []
+    assert area.contract_ids == []
 
 
 def test_area_with_contracts():
     """Tests creating an area with a list of contracts."""
+    area_id = AreaId(uuid.uuid4())
     contract = Contract(
-        id=101,
+        id=ContractId(uuid.uuid4()),
         title="Data Heist",
         client="Anonymous",
-        target_area_id=2,
+        target_area_id=area_id,
         description="...",
         reward_credits=5000,
     )
     area = Area(
-        id=2,
+        id=area_id,
         name="Corporate Plaza",
         description="...",
         security_level=5,
-        contracts=[contract],
+        contract_ids=[],
     )
-    assert len(area.contracts) == 1
-    assert area.contracts[0].title == "Data Heist"
+    area.add_contract(ContractId(contract.id))
+
+    assert len(area.contract_ids) == 1
+    assert area.contract_ids[0] == contract.id

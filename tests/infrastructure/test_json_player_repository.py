@@ -3,8 +3,8 @@ import os
 import tempfile
 import uuid
 
-from decker_pygame.domain.model import Player, PlayerId
-from decker_pygame.infrastructure.persistence import JsonFilePlayerRepository
+from decker_pygame.domain.player import Player, PlayerId
+from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
 
 
 def test_repository_creates_directory_on_init():
@@ -25,33 +25,28 @@ def test_repository_can_save_and_get_player():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         repo = JsonFilePlayerRepository(base_path=tmpdir)
-
-        # Act: Save the player
         repo.save(player)
 
-        # Assert: Check file system and then use the get method
+        # Assert file system state
         expected_file = os.path.join(tmpdir, f"{player_id}.json")
         assert os.path.exists(expected_file)
-
         with open(expected_file) as f:
             data = json.load(f)
             assert data["id"] == str(player_id)
 
+        # Assert repository get method
         retrieved_player = repo.get(player_id)
-
-        assert retrieved_player == player
         assert (
             retrieved_player is not None
-        )  # Ensure retrieved_player is not None before accessing its attributes
+        )  # Ensure it's not None before checking attributes
+        assert retrieved_player == player  # Check equality based on ID
         assert retrieved_player.name == player.name
         assert retrieved_player.health == player.health
 
 
-def test_repository_returns_none_for_non_existent_player():
-    """Verify that get returns None if the player file does not exist."""
+def test_repository_get_returns_none_for_nonexistent_player():
+    """Verify that getting a non-existent player returns None."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo = JsonFilePlayerRepository(base_path=tmpdir)
         non_existent_id = PlayerId(uuid.uuid4())
-
-        retrieved_player = repo.get(non_existent_id)
-        assert retrieved_player is None
+        assert repo.get(non_existent_id) is None

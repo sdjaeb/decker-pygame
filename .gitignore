@@ -14,6 +14,7 @@ eggs/
 sdist/
 wheels/
 *.egg
+pip-wheel-metadata/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -32,11 +33,22 @@ venv/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+.tox/
 
 # Test & Coverage reports
 .coverage
 .coverage.*
 htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Databases
+*.sqlite3
+*.db
 
 # Project-specific
 DeckerSource_1_12/
