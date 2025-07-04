@@ -7,7 +7,7 @@ from decker_pygame.domain.system import System
 def test_system_creation():
     """Tests creating a system."""
     system_id = SystemId(uuid.uuid4())
-    system = System(id=system_id, name="Corporate Mainframe")
+    system = System(id=system_id, name="Corporate Mainframe", node_ids=[])
 
     assert system.id == system_id
     assert system.name == "Corporate Mainframe"

@@ -8,13 +8,26 @@ from decker_pygame.domain.player_repository_interface import PlayerRepositoryInt
 
 
 class PlayerService:
+    """Application service for player-related operations."""
+
     def __init__(self, player_repo: PlayerRepositoryInterface) -> None:
+        """
+        Initialize the PlayerService.
+
+        Args:
+            player_repo (PlayerRepositoryInterface): Repository for player aggregates.
+        """
         self.player_repo = player_repo
-        # In a real system, an event dispatcher would also be injected here.
 
     def create_new_player(self, name: str) -> PlayerId:
         """
-        Creates a new player, saves it, and returns the new player's ID.
+        Create a new player, save it, and return the new player's ID.
+
+        Args:
+            name (str): Name of the new player.
+
+        Returns:
+            PlayerId: The ID of the newly created player.
         """
         player_id = PlayerId(uuid.uuid4())
         player = Player.create(player_id=player_id, name=name, initial_health=100)

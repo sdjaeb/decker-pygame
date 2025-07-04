@@ -7,13 +7,31 @@ class Player(AggregateRoot):
     """The Player aggregate root."""
 
     def __init__(self, id: PlayerId, name: str, health: int) -> None:
+        """
+        Initialize a Player aggregate.
+
+        Args:
+            id (PlayerId): Unique identifier for the player.
+            name (str): The player's name.
+            health (int): The player's starting health.
+        """
         super().__init__(id=AggregateId(id))
         self.name = name
         self.health = health
 
     @staticmethod
     def create(player_id: PlayerId, name: str, initial_health: int) -> "Player":
-        """Factory to create a new player, raising a domain event."""
+        """
+        Factory to create a new player, raising a PlayerCreated domain event.
+
+        Args:
+            player_id (PlayerId): Unique identifier for the new player.
+            name (str): The player's name.
+            initial_health (int): The player's starting health.
+
+        Returns:
+            Player: The newly created Player aggregate.
+        """
         player = Player(id=player_id, name=name, health=initial_health)
         player._events.append(
             PlayerCreated(

@@ -112,3 +112,45 @@ class ActiveBar(pygame.sprite.Sprite):
                 GFX.active_bar_image_size,
             )
             self.image.blit(icon, dest_rect)
+
+
+class SimpleActiveBar:
+    """UI component for displaying the player's active status."""
+
+    def __init__(self, x: int, y: int, width: int, height: int) -> None:
+        """
+        Initialize the ActiveBar.
+
+        Args:
+            x (int): X position.
+            y (int): Y position.
+            width (int): Width of the bar.
+            height (int): Height of the bar.
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.value = 0
+
+    def update(self, value: int) -> None:
+        """
+        Update the bar's value.
+
+        Args:
+            value (int): New value to display.
+        """
+        self.value = value
+
+    def draw(self, surface: pygame.Surface) -> None:
+        """
+        Draw the bar on the given surface.
+
+        Args:
+            surface (pygame.Surface): The surface to draw on.
+        """
+        pygame.draw.rect(
+            surface,
+            (0, 255, 0),
+            (self.x, self.y, int(self.width * (self.value / 100)), self.height),
+        )

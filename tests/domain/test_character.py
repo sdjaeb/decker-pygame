@@ -9,7 +9,9 @@ def test_character_creation_raises_event():
     char_id = CharacterId(uuid.uuid4())
     name = "Test Character"
 
-    char = Character.create(character_id=char_id, name=name)
+    char = Character.create(
+        character_id=char_id, name=name, initial_skills={}, initial_credits=0
+    )
 
     assert len(char.events) == 1
     event = char.events[0]

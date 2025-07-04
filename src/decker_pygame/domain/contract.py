@@ -14,6 +14,17 @@ class Contract(Entity):
         description: str,
         reward_credits: int,
     ) -> None:
+        """
+        Initialize a Contract.
+
+        Args:
+            id (ContractId): Unique identifier for the contract.
+            title (str): Title of the contract.
+            client (str): Client offering the contract.
+            target_area_id (AreaId): Target area for the contract.
+            description (str): Description of the contract.
+            reward_credits (int): Reward for completing the contract.
+        """
         super().__init__(id=id)
         self.title = title
         self.client = client

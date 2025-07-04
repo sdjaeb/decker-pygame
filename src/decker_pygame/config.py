@@ -6,6 +6,11 @@ class Settings(BaseSettings):
     Manages game configuration.
 
     Settings can be loaded from a .env file or environment variables.
+
+    Attributes:
+        screen_width (int): Width of the game window.
+        screen_height (int): Height of the game window.
+        fullscreen (bool): Whether to run in fullscreen mode.
     """
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

@@ -12,6 +12,7 @@ def test_area_creation():
         name="Downtown",
         description="The neon-drenched heart of the city.",
         security_level=3,
+        contract_ids=[],
     )
     assert area.name == "Downtown"
     assert area.contract_ids == []
@@ -33,8 +34,9 @@ def test_area_with_contracts():
         name="Corporate Plaza",
         description="...",
         security_level=5,
+        contract_ids=[],
     )
-    area.add_contract(contract)
+    area.add_contract(ContractId(contract.id))
 
     assert len(area.contract_ids) == 1
     assert area.contract_ids[0] == contract.id
