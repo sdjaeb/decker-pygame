@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.0] - 2025-07-01
+
 ### Feat
 
 - **core**: ported remaining core models
@@ -14,8 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fix
 
 - **cicd**: fix github automation
-
-## [v0.2.0] - 2025-06-30
 
 ### Feat
 
