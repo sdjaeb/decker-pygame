@@ -109,7 +109,11 @@ The flow is as follows:
 2.  **Application Service saves the state:** The Application Service (e.g., `PlayerService`) calls the repository to persist the Aggregate's new state. This is a single, atomic transaction.
 3.  **Application Service dispatches events:** *After* the state has been successfully saved, the Application Service retrieves the list of events from the Aggregate and passes them to an Event Dispatcher.
 4.  **Event Dispatcher notifies subscribers:** The dispatcher (an infrastructure component) sends each event to any registered "subscribers" or "handlers" that are interested in that specific type of event. These handlers can then perform side effects, like updating a read model, sending an email, or logging.
+    -   The dispatcher also supports **conditional subscriptions**, allowing a handler to be invoked only if the event's data meets specific criteria.
+
 
 - **Implementation Details:**
     - **Event Creation:** `Player.create()` in `domain/player.py`.
-    - **Event Dispatch (Future):** The `PlayerService` will be responsible for dispatching events after saving. The dispatcher itself will be an infrastructure component we build later.
+    - **Event Dispatch:** The `PlayerService` dispatches events after a successful save.
+    - **Dispatcher:** The `EventDispatcher` class in `application/event_dispatcher.py`.
+    - **Handlers:** Event handler functions are located in `application/event_handlers.py`.

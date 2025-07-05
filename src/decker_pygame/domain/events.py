@@ -16,26 +16,26 @@ class Event(Protocol):
     def timestamp(self) -> datetime: ...
 
 
+@dataclass(frozen=True, kw_only=True)
+class BaseEvent:
+    """A base class for domain events, providing common fields."""
+
+    event_id: uuid.UUID = field(default_factory=uuid.uuid4)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
 @dataclass(frozen=True)
-class PlayerCreated:
+class PlayerCreated(BaseEvent):
     """Fired when a new player is created."""
 
-    # Event-specific fields come first
     player_id: PlayerId
     name: str
     initial_health: int
 
-    # Common event fields come last, with defaults
-    event_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
-
 
 @dataclass(frozen=True)
-class CharacterCreated:
+class CharacterCreated(BaseEvent):
     """Fired when a new character is created."""
 
     character_id: CharacterId
     name: str
-
-    event_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))

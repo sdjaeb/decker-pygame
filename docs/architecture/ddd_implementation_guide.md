@@ -46,7 +46,23 @@ A Domain Event is an object that represents something that happened in the domai
 - **Decoupling:** Events allow other parts of the system to react to changes without being tightly coupled.
 - **Implementation:** The Aggregate Root creates and collects events. The Application Service dispatches these events *after* the transaction is successfully committed.
 
-### 2.4. Connecting The Layers (Dependency Injection)
+### 2.4. Domain Event Decorators
+
+To improve code clarity and discoverability, we use decorators to explicitly mark the producers and consumers of domain events.
+
+-   **`@emits(EventType)`**: This decorator is placed on methods (typically on an Aggregate Root) that are responsible for creating one or more domain events. It serves as a clear, self-documenting signpost for event creation.
+
+-   **`@handles(EventType, ...)`**: This decorator is placed on functions (event handlers) to mark them as consumers of one or more domain events.
+
+These decorators attach metadata to the functions, which primarily serves a semantic purpose but could be used for advanced features like auto-discovery of handlers in the future.
+
+### 2.5. Conditional Event Handling
+
+The `EventDispatcher` supports conditional subscriptions. When subscribing a handler, you can provide an optional `condition` function. The handler will only be executed if an event is dispatched *and* the condition function returns `True` for that event.
+
+This is useful for creating specialized handlers that only react to events with specific data, without cluttering the handler itself with conditional logic.
+
+### 2.6. Connecting The Layers (Dependency Injection)
 
 The layers are connected at the application's entry point (the "Composition Root"), which for us is `presentation/main.py`.
 
@@ -63,3 +79,27 @@ To start quickly and avoid external dependencies, we will use a simple file-base
 
 - **Strategy:** We will implement repositories that serialize aggregates to and from JSON files.
 - **Location:** This implementation will live in the `infrastructure` layer, completely separate from the domain model. This allows us to easily swap it for SQLite or another database later without changing any business logic.
+
+## 4. Handling Business Rules: Commands vs. Events
+
+It is critical to distinguish between validating a command and conditionally handling an event.
+
+### 4.1. Command Validation (Pre-Condition Checks)
+
+A **Command** is a request to perform an action (e.g., "create a new player"). Business rules that must be satisfied *before* an action can occur are validated at the beginning of an Application Service method.
+
+**Example:** "A player cannot be created until Tutorial Mission X is complete." This check should happen inside the `PlayerService`. If the condition is not met, the service should reject the command (e.g., by raising an exception), and no `PlayerCreated` event will ever be generated.
+
+### 4.2. Sagas (Future Pattern)
+
+For complex, long-running processes that involve multiple events over time (e.g., waiting for `ContractAccepted` and then `DataExtracted` before paying the player), we will use the **Saga** pattern.
+
+A Saga is a stateful component that listens for a sequence of events and can dispatch new commands in response. This is a more advanced pattern that we will implement when a clear use case arises.
+
+## 5. Event Sourcing (Future Goal)
+
+Our event-driven architecture provides the foundation for a powerful pattern called **Event Sourcing**. While not fully implemented yet, it is a guiding principle for our design.
+
+Instead of storing the *current state* of our aggregates, Event Sourcing involves persisting the full, chronological log of domain events that have occurred. The current state is then derived by replaying these events.
+
+For a detailed explanation of this concept and how our current features relate to it, see the Event Sourcing Guide.

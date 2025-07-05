@@ -1,6 +1,7 @@
 import uuid
 from typing import Any
 
+from decker_pygame.application.decorators import emits
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.events import CharacterCreated
 from decker_pygame.domain.ids import AggregateId, CharacterId
@@ -35,6 +36,7 @@ class Character(AggregateRoot):
         self.credits = credits
 
     @staticmethod
+    @emits(CharacterCreated)
     def create(
         character_id: CharacterId,
         name: str,
