@@ -2,9 +2,10 @@ import uuid
 from typing import Any
 
 from decker_pygame.application.decorators import emits
+from decker_pygame.domain.crafting import Schematic
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
-from decker_pygame.domain.events import CharacterCreated
-from decker_pygame.domain.ids import AggregateId, CharacterId
+from decker_pygame.domain.events import CharacterCreated, ItemCrafted
+from decker_pygame.domain.ids import AggregateId, CharacterId, ProgramId
 from decker_pygame.domain.program import Program
 
 
@@ -17,6 +18,7 @@ class Character(AggregateRoot):
         name: str,
         skills: dict[str, int],
         inventory: list[Program],
+        schematics: list[Schematic],
         credits: int,
     ) -> None:
         """
@@ -27,6 +29,7 @@ class Character(AggregateRoot):
             name (str): Character's name.
             skills (Dict[str, int]): Mapping of skill names to values.
             inventory (List[Program]): List of owned programs.
+            schematics (list[Schematic]): List of known program schematics.
             credits (int): Amount of credits the character has.
         """
         super().__init__(id=AggregateId(id))
@@ -34,6 +37,7 @@ class Character(AggregateRoot):
         self.skills = skills
         self.inventory = inventory
         self.credits = credits
+        self.schematics = schematics
 
     @staticmethod
     @emits(CharacterCreated)
@@ -60,6 +64,7 @@ class Character(AggregateRoot):
             name=name,
             skills=initial_skills,
             inventory=[],
+            schematics=[],
             credits=initial_credits,
         )
         character._events.append(
@@ -68,6 +73,42 @@ class Character(AggregateRoot):
             )
         )
         return character
+
+    @emits(ItemCrafted)
+    def craft(self, schematic: Schematic) -> None:
+        """
+        Crafts an item from a schematic, consuming resources and creating an event.
+
+        Note: Pre-condition checks (e.g., if the character has enough credits)
+        are the responsibility of the calling Application Service. This method
+        enforces the outcome of the crafting action.
+
+        Args:
+            schematic: The schematic to use for crafting.
+        """
+        # Deduct resources
+        for resource in schematic.cost:
+            if resource.name == "credits":
+                if self.credits < resource.quantity:
+                    raise ValueError(f"Insufficient credits to craft {schematic.name}.")
+                self.credits -= resource.quantity
+            # In the future, other resource types would be handled here.
+
+        # Create the new program and add it to inventory
+        new_program = Program(
+            id=ProgramId(uuid.uuid4()), name=schematic.produces_item_name
+        )
+        self.inventory.append(new_program)
+
+        # Emit the domain event
+        self._events.append(
+            ItemCrafted(
+                character_id=CharacterId(self.id),
+                schematic_name=schematic.name,
+                item_id=ProgramId(new_program.id),
+                item_name=new_program.name,
+            )
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -81,6 +122,7 @@ class Character(AggregateRoot):
             "name": self.name,
             "skills": self.skills,
             "inventory": [prog.to_dict() for prog in self.inventory],
+            "schematics": [s.to_dict() for s in self.schematics],
             "credits": self.credits,
         }
 
@@ -100,5 +142,6 @@ class Character(AggregateRoot):
             name=data["name"],
             skills=data["skills"],
             inventory=[Program.from_dict(p_data) for p_data in data["inventory"]],
+            schematics=[Schematic.from_dict(s_data) for s_data in data["schematics"]],
             credits=data["credits"],
         )

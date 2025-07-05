@@ -1,18 +1,26 @@
 import pygame
 
+from decker_pygame.application.crafting_service import CraftingError, CraftingService
+from decker_pygame.application.logging_service import LoggingService
 from decker_pygame.application.player_service import PlayerService
-from decker_pygame.domain.ids import PlayerId
+from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
+from decker_pygame.presentation.components.build_view import BuildView
+from decker_pygame.presentation.components.health_bar import HealthBar
+from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.utils import scale_icons
 from decker_pygame.settings import (
     BLACK,
+    DEV_SETTINGS,
     FPS,
     GFX,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     TITLE,
     TRANSPARENT_COLOR,
+    UI_FACE,
 )
 
 
@@ -25,16 +33,33 @@ class Game:
     all_sprites: pygame.sprite.Group[pygame.sprite.Sprite]
     active_bar: ActiveBar
     alarm_bar: AlarmBar
+    health_bar: HealthBar
+    player_service: PlayerService
+    player_id: PlayerId
+    crafting_service: CraftingService
+    character_id: CharacterId
+    logging_service: LoggingService
+    message_view: MessageView
+    build_view: BuildView | None = None
 
-    def __init__(self, player_service: PlayerService, player_id: PlayerId) -> None:
+    def __init__(
+        self,
+        player_service: PlayerService,
+        player_id: PlayerId,
+        crafting_service: CraftingService,
+        character_id: CharacterId,
+        logging_service: LoggingService,
+    ) -> None:
         """
         Initialize the Game.
 
         Args:
             player_service (PlayerService): Service for player operations.
             player_id (PlayerId): The current player's ID.
+            crafting_service (CraftingService): Service for crafting operations.
+            character_id (CharacterId): The current character's ID.
+            logging_service (LoggingService): Service for logging.
         """
-        pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
@@ -42,6 +67,9 @@ class Game:
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
         self.player_service = player_service
         self.player_id = player_id
+        self.crafting_service = crafting_service
+        self.character_id = character_id
+        self.logging_service = logging_service
 
         self._load_assets()
 
@@ -62,16 +90,22 @@ class Game:
 
         # Scale the icons up to the size required by the UI components
         target_size = (GFX.active_bar_image_size, GFX.active_bar_image_size)
-        program_icons = [
-            pygame.transform.scale(icon, target_size) for icon in native_icons
-        ]
+        program_icons = scale_icons(native_icons, target_size)
 
         self.active_bar = ActiveBar(position=(0, 0), image_list=program_icons)
         self.all_sprites.add(self.active_bar)
 
         # Position from DeckerSource_1_12/MatrixView.cpp
-        self.alarm_bar = AlarmBar(206, 342, 200, 50)
+        self.alarm_bar = AlarmBar(position=(206, 342), width=200, height=50)
         self.all_sprites.add(self.alarm_bar)
+
+        self.health_bar = HealthBar(position=(10, 342), width=180, height=50)
+        self.all_sprites.add(self.health_bar)
+
+        self.message_view = MessageView(
+            position=(10, 600), size=(400, 150), background_color=UI_FACE
+        )
+        self.all_sprites.add(self.message_view)
 
     def _handle_events(self) -> None:
         """
@@ -84,6 +118,53 @@ class Game:
             if event.type == pygame.QUIT:
                 self.is_running = False
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:
+                    self._toggle_build_view()
+                if event.key == pygame.K_q:
+                    self.is_running = False
+
+                if DEV_SETTINGS.enabled:
+                    self.logging_service.log(
+                        "Key Press", {"key": pygame.key.name(event.key)}
+                    )
+
+            if self.build_view:
+                self.build_view.handle_event(event)
+
+    def _toggle_build_view(self) -> None:
+        """Opens or closes the build view."""
+        if self.build_view:
+            self.all_sprites.remove(self.build_view)
+            self.build_view = None
+        else:
+            schematics = self.crafting_service.get_character_schematics(
+                self.character_id
+            )
+            if not schematics:
+                print("No schematics known.")
+                return
+
+            self.build_view = BuildView(
+                position=(200, 150),
+                size=(400, 300),
+                schematics=schematics,
+                on_build_click=self._handle_build_click,
+            )
+            self.all_sprites.add(self.build_view)
+
+    def _handle_build_click(self, schematic_name: str) -> None:
+        """Callback for when a build button is clicked in the BuildView."""
+        try:
+            self.crafting_service.craft_item(self.character_id, schematic_name)
+            self.show_message(f"Successfully crafted {schematic_name}!")
+        except CraftingError as e:
+            self.show_message(f"Crafting failed: {e}")
+
+    def show_message(self, text: str) -> None:
+        """Displays a message in the message view."""
+        self.message_view.set_text(text)
+
     def _update(self) -> None:
         """
         Update game state.
@@ -91,12 +172,14 @@ class Game:
         Returns:
             None
         """
-        # In the future, we will get player state from the service:
-        # player = self.player_service.get_player(self.player_id)
-        # self.alarm_bar.update_state(player.alert_level, player.is_crashing)
+        player_status = self.player_service.get_player_status(self.player_id)
+        if player_status:
+            self.health_bar.update_health(
+                player_status.current_health, player_status.max_health
+            )
+            # self.alarm_bar.update_state(player.alert_level, player.is_crashing)
 
         self.all_sprites.update()
-        # self.alarm_bar.update_state(0, False) # Example placeholder
 
     def run(self) -> None:
         """
