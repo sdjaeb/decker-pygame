@@ -6,6 +6,7 @@ import pytest
 from decker_pygame.application.crafting_service import (
     CraftingError,
     CraftingService,
+    InsufficientResourcesError,
     SchematicNotFoundError,
 )
 from decker_pygame.application.event_dispatcher import EventDispatcher
@@ -136,5 +137,5 @@ def test_craft_item_insufficient_credits_in_domain(
     mock_character.craft.side_effect = ValueError("Insufficient credits")
     mock_character_repo.get.return_value = mock_character
 
-    with pytest.raises(ValueError, match="Insufficient credits"):
+    with pytest.raises(InsufficientResourcesError, match="Insufficient credits"):
         crafting_service.craft_item(char_id, "IcePick")
