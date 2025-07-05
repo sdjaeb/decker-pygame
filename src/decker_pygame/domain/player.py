@@ -1,3 +1,6 @@
+import uuid
+from typing import Any
+
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.events import PlayerCreated
 from decker_pygame.domain.ids import AggregateId, PlayerId
@@ -41,3 +44,31 @@ class Player(AggregateRoot):
             )
         )
         return player
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Serialize the aggregate to a dictionary.
+
+        Returns:
+            A dictionary representation of the Player.
+        """
+        return {
+            "id": str(self.id),
+            "name": self.name,
+            "health": self.health,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Player":
+        """
+        Reconstitute a Player from a dictionary.
+
+        Args:
+            data: The dictionary data.
+
+        Returns:
+            A Player instance.
+        """
+        return cls(
+            id=PlayerId(uuid.UUID(data["id"])), name=data["name"], health=data["health"]
+        )

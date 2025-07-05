@@ -25,8 +25,8 @@ class TestAlarmBar:
         assert bar.alarm_level == 0
         assert bar.color == ALARM.colors[0]
 
-        # Check that it's initially transparent (colorkey color)
-        assert bar.image.get_at((5, 5)) == (1, 1, 1)
+        # Check that it's initially transparent
+        assert bar.image.get_at((5, 5)) == pygame.Color(0, 0, 0, 0)
 
     def test_update_state_normal(self, alarm_bar_instance: AlarmBar):
         """Tests updating the alarm level in a normal, non-crashing state."""
@@ -43,7 +43,7 @@ class TestAlarmBar:
         # Check rendering: pixel at 25% width should be bar color
         assert bar.image.get_at((49, 10)) == expected_color
         # Pixel at 75% width should be transparent
-        assert bar.image.get_at((151, 10)) == (1, 1, 1)
+        assert bar.image.get_at((151, 10)) == pygame.Color(0, 0, 0, 0)
 
     def test_update_state_crashing(self, alarm_bar_instance: AlarmBar):
         """Tests the alarm bar in a crashing state."""

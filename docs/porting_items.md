@@ -42,18 +42,18 @@ These files define the fundamental data structures and logic for the game. They 
 ### 2. UI Components / Widgets (**High Importance**)
 Reusable interface elements that are used across multiple screens or dialogs. Port these after the core models, as they are needed to build the UI.
 
-- **ActiveBar.cpp/h**
-- **AlarmBar.cpp/h**
-- **ClockView.cpp/h**
-- **CustomButton.cpp/h**
-- **HealthBar.cpp/h**
-- **ImageArray.cpp/h**
-- **ImageDisplay.cpp/h**
-- **MapView.cpp/h**
-- **MatrixView.cpp/h**
-- **MessageView.cpp/h**
-- **NameBar.cpp/h**
-- **NodeView.cpp/h**
+- **ActiveBar.cpp/h** (`Ported`)
+- **AlarmBar.cpp/h** (`Ported`)
+- **ClockView.cpp/h** (`Ported`)
+- **CustomButton.cpp/h** (`Ported`)
+- **HealthBar.cpp/h** (`Ported`)
+- **ImageArray.cpp/h** (`Ported`)
+- **ImageDisplay.cpp/h** (`Ported`)
+- **MapView.cpp/h** (`Ported`)
+- **MatrixView.cpp/h** (`Ported`)
+- **MessageView.cpp/h** (`Ported`)
+- **NameBar.cpp/h** (`Ported`)
+- **NodeView.cpp/h** (`Ported`)
 
 **Porting Priority:** 2
 

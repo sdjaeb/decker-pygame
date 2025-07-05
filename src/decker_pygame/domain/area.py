@@ -1,3 +1,6 @@
+import uuid
+from typing import Any
+
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.ids import AggregateId, AreaId, ContractId
 
@@ -40,3 +43,37 @@ class Area(AggregateRoot):
             None
         """
         self.contract_ids.append(contract_id)
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Serialize the aggregate to a dictionary.
+
+        Returns:
+            A dictionary representation of the Area.
+        """
+        return {
+            "id": str(self.id),
+            "name": self.name,
+            "description": self.description,
+            "security_level": self.security_level,
+            "contract_ids": [str(cid) for cid in self.contract_ids],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Area":
+        """
+        Reconstitute an Area from a dictionary.
+
+        Args:
+            data: The dictionary data.
+
+        Returns:
+            An Area instance.
+        """
+        return cls(
+            id=AreaId(uuid.UUID(data["id"])),
+            name=data["name"],
+            description=data["description"],
+            security_level=data["security_level"],
+            contract_ids=[ContractId(uuid.UUID(cid)) for cid in data["contract_ids"]],
+        )
