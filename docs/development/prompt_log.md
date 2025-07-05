@@ -85,3 +85,6 @@ This document tracks the prompts and outcomes during the major refactoring to a 
 
 28. **Prompt:** "Will the conditional event wait and then fire when the condition occurs?..."
     -   **Outcome:** Clarified the distinction between immediate, stateless conditional event handling and stateful command validation. Explained that business rule preconditions should be checked in the Application Service *before* an event is created. Introduced the Saga pattern as a future solution for complex, long-running processes.
+
+29. **Prompt:** "would it be easier to allow a list of events to handlers, like emits?" (and subsequent fixes for `ruff` and `mypy`)
+    -   **Outcome:** Refactored the `@handles` decorator to accept multiple event types, improving its ergonomics. Resolved several advanced typing and linting issues to make the decorator implementation robust and compliant with all code quality tools.
