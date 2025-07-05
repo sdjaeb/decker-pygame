@@ -3,6 +3,7 @@ from unittest.mock import ANY, call
 
 from pytest_mock import MockerFixture
 
+from decker_pygame.domain.character import Character
 from decker_pygame.domain.events import ItemCrafted, PlayerCreated
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.presentation.main import main
@@ -30,8 +31,14 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_dispatcher_class = mocker.patch(
         "decker_pygame.presentation.main.EventDispatcher"
     )
-    mock_log_handler = mocker.patch(
-        "decker_pygame.presentation.main.log_player_created"
+    mock_logging_service_class = mocker.patch(
+        "decker_pygame.presentation.main.LoggingService"
+    )
+    mock_console_writer_class = mocker.patch(
+        "decker_pygame.presentation.main.ConsoleLogWriter"
+    )
+    mock_event_handler_factory = mocker.patch(
+        "decker_pygame.presentation.main.create_event_logging_handler"
     )
     mock_special_log_handler = mocker.patch(
         "decker_pygame.presentation.main.log_special_player_created"
@@ -61,6 +68,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_repo_class.assert_called_once()
     mock_char_repo_class.assert_called_once()
     mock_dispatcher_class.assert_called_once()
+    mock_logging_service_class.assert_called_once_with(
+        writers=[mock_console_writer_class.return_value]
+    )
 
     mock_player_service_class.assert_called_once_with(
         player_repo=mock_repo_class.return_value,
@@ -80,8 +90,12 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_character_create.assert_called_once()
     mock_char_repo_class.return_value.save.assert_called_once_with(mock_character)
 
+    mock_event_handler_factory.assert_called_once_with(
+        mock_logging_service_class.return_value
+    )
     subscribe_calls = [
-        call(PlayerCreated, mock_log_handler),
+        call(PlayerCreated, mock_event_handler_factory.return_value),
+        call(ItemCrafted, mock_event_handler_factory.return_value),
         call(
             PlayerCreated,
             mock_special_log_handler,
@@ -99,5 +113,46 @@ def test_main_function(mocker: MockerFixture) -> None:
         player_id=deckard_player_id,
         crafting_service=mock_crafting_service_class.return_value,
         character_id=mock_character.id,
+        logging_service=mock_logging_service_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
+
+
+def test_main_function_dev_mode(mocker: MockerFixture) -> None:
+    """
+    Tests that the main function correctly applies dev settings when enabled.
+    """
+    # Patch all dependencies to prevent side effects
+    mocker.patch("decker_pygame.presentation.main.JsonFilePlayerRepository")
+    mock_char_repo_class = mocker.patch(
+        "decker_pygame.presentation.main.JsonFileCharacterRepository"
+    )
+    mocker.patch("decker_pygame.presentation.main.PlayerService")
+    mocker.patch("decker_pygame.presentation.main.CraftingService")
+    mocker.patch("decker_pygame.presentation.main.Game")
+    mocker.patch("decker_pygame.presentation.main.EventDispatcher")
+    mocker.patch("decker_pygame.presentation.main.LoggingService")
+    mocker.patch("decker_pygame.presentation.main.ConsoleLogWriter")
+    mocker.patch("decker_pygame.presentation.main.create_event_logging_handler")
+    mocker.patch("decker_pygame.presentation.main.log_special_player_created")
+    mocker.patch("decker_pygame.presentation.main.is_special_player")
+    mock_character_create = mocker.patch(
+        "decker_pygame.presentation.main.Character.create"
+    )
+
+    # Enable dev mode for this test
+    mocker.patch("decker_pygame.presentation.main.DEV_SETTINGS.enabled", True)
+
+    # Configure a mock character to be returned by the factory
+    mock_character = mocker.Mock(spec=Character)
+    mock_character.credits = 2000
+    mock_character.schematics = []
+    mock_character_create.return_value = mock_character
+
+    # Act
+    main()
+
+    # Assert that the character was modified by the dev-mode logic before saving
+    assert mock_character.credits == 7000  # 2000 initial + 5000 debug
+    assert len(mock_character.schematics) == 2  # The initial one + the debug one
+    mock_char_repo_class.return_value.save.assert_called_once_with(mock_character)

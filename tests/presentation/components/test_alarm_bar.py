@@ -9,7 +9,7 @@ from decker_pygame.settings import ALARM
 def alarm_bar_instance():
     """Fixture to create a default AlarmBar instance for tests."""
     pygame.init()
-    bar = AlarmBar(10, 20, 200, 20)
+    bar = AlarmBar(position=(10, 20), width=200, height=20)
     yield bar
     pygame.quit()
 
@@ -22,8 +22,8 @@ class TestAlarmBar:
         assert isinstance(bar, pygame.sprite.Sprite)
         assert bar.rect.topleft == (10, 20)
         assert bar.rect.size == (200, 20)
-        assert bar.alarm_level == 0
-        assert bar.color == ALARM.colors[0]
+        assert bar._percentage == 0.0
+        assert bar._color == ALARM.colors[0]
 
         # Check that it's initially transparent
         assert bar.image.get_at((5, 5)) == pygame.Color(0, 0, 0, 0)
@@ -34,11 +34,11 @@ class TestAlarmBar:
 
         bar.update_state(alert_level=50, is_crashing=False)
 
-        assert bar.alarm_level == 50
+        assert bar._percentage == 50.0
 
         expected_index = int(0.5 * (len(ALARM.colors) - 1))
         expected_color = ALARM.colors[expected_index]
-        assert bar.color == expected_color
+        assert bar._color == expected_color
 
         # Check rendering: pixel at 25% width should be bar color
         assert bar.image.get_at((49, 10)) == expected_color
@@ -51,8 +51,8 @@ class TestAlarmBar:
 
         bar.update_state(alert_level=75, is_crashing=True)
 
-        assert bar.alarm_level == 75
-        assert bar.color == ALARM.crash_color
+        assert bar._percentage == 75.0
+        assert bar._color == ALARM.crash_color
         assert bar.image.get_at((74, 10)) == ALARM.crash_color
 
     def test_alarm_level_clamping(self, alarm_bar_instance: AlarmBar):
@@ -60,16 +60,16 @@ class TestAlarmBar:
         bar = alarm_bar_instance
 
         bar.update_state(alert_level=150, is_crashing=False)
-        assert bar.alarm_level == 100
+        assert bar._percentage == 100.0
 
         bar.update_state(alert_level=-50, is_crashing=False)
-        assert bar.alarm_level == 0
+        assert bar._percentage == 0.0
 
     def test_alarm_bar_eq_and_hash_repr(self):
         """Tests basic object methods for the sprite."""
         pygame.init()
-        bar1 = AlarmBar(0, 0, 100, 10)
-        bar2 = AlarmBar(0, 0, 100, 10)
+        bar1 = AlarmBar(position=(0, 0), width=100, height=10)
+        bar2 = AlarmBar(position=(0, 0), width=100, height=10)
 
         assert bar1 == bar1
         assert bar1 != bar2  # Different object instances

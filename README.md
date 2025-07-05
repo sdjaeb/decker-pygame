@@ -75,6 +75,17 @@ cz commit
 
 `commitizen` will prompt you through the process of creating a great commit message. The `pre-commit` hook will ensure that all commits adhere to this standard.
 
+### Development Mode
+
+To enable development mode for rapid prototyping (e.g., giving the character extra starting credits), you can set an environment variable before running the game:
+
+```bash
+export DECKER_DEV_ENABLED=1
+decker
+```
+
+This allows for temporary, config-driven changes without affecting test coverage.
+
 #### What if a pre-commit hook fails?
 
 If a hook fails (e.g., due to a linting error or a failing test), the commit will be aborted. However, your carefully crafted commit message is not lost.

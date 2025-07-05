@@ -32,7 +32,7 @@ class BuildView(pygame.sprite.Sprite):
         self._font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
         )
-        self._font_color = UI_FONT.default_font_color
+        self._font_color = UI_FONT.dark_font_color
         self._background_color = UI_FACE
         self._line_height = self._font.get_linesize()
         self._padding = 10

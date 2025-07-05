@@ -7,6 +7,7 @@ making them easy to adjust.
 
 from pathlib import Path
 
+from pydantic_settings import BaseSettings
 from pygame.color import Color
 
 # --- General ---
@@ -46,6 +47,7 @@ class UiFontSettings:
     default_font_name: str | None = None  # Use pygame default
     default_font_size: int = 18
     default_font_color: Color = Color(200, 200, 200)  # Light grey
+    dark_font_color: Color = Color(20, 20, 20)  # Near-black for light backgrounds
 
 
 UI_FONT = UiFontSettings()
@@ -99,3 +101,16 @@ MAP_VIEW = MapViewSettings()
 
 # --- Gameplay Constants ---
 MAX_ALERT_LEVEL = 100.0
+
+
+# --- Development Settings ---
+class DevSettings(BaseSettings):
+    """Settings for development and debugging, loaded from environment variables."""
+
+    enabled: bool = False
+
+    class Config:
+        env_prefix = "DECKER_DEV_"
+
+
+DEV_SETTINGS = DevSettings()

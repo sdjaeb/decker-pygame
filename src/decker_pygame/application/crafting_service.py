@@ -79,7 +79,11 @@ class CraftingService:
             ) from None
 
         # Execute the domain logic
-        character.craft(schematic_to_use)
+        try:
+            character.craft(schematic_to_use)
+        except ValueError as e:
+            # Translate domain error into application-specific error
+            raise InsufficientResourcesError(str(e)) from e
 
         # Persist the new state
         self.character_repo.save(character)

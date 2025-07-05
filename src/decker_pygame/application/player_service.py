@@ -1,6 +1,7 @@
 # player_service.py
 
 import uuid
+from dataclasses import dataclass
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import PlayerId
@@ -12,6 +13,14 @@ class PlayerCreationPreconditionError(Exception):
     """Custom exception raised when preconditions for creating a player are not met."""
 
     pass
+
+
+@dataclass(frozen=True)
+class PlayerStatusDTO:
+    """Data Transfer Object for player status to be displayed in the UI."""
+
+    current_health: int
+    max_health: int
 
 
 class PlayerService:
@@ -57,3 +66,20 @@ class PlayerService:
         player.clear_events()
 
         return PlayerId(player.id)
+
+    def get_player_status(self, player_id: PlayerId) -> PlayerStatusDTO | None:
+        """
+        Retrieves the current status of a player for UI display.
+
+        Args:
+            player_id: The ID of the player to query.
+
+        Returns:
+            A DTO with player status, or None if the player is not found.
+        """
+        player = self.player_repo.get(player_id)
+        if not player:
+            return None
+
+        # Assuming max health is 100 for now, as defined in Player.create
+        return PlayerStatusDTO(current_health=player.health, max_health=100)

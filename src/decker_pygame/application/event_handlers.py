@@ -1,13 +1,31 @@
+from collections.abc import Callable
+
 from decker_pygame.application.decorators import handles
-from decker_pygame.domain.events import PlayerCreated
+from decker_pygame.application.logging_service import LoggingService
+from decker_pygame.domain.events import Event, PlayerCreated
 
 
-@handles(PlayerCreated)
-def log_player_created(event: PlayerCreated) -> None:
+def create_event_logging_handler(
+    logging_service: LoggingService,
+) -> Callable[[Event], None]:
     """
-    A simple event handler that logs when a player is created.
+    A factory that creates a generic event handler for logging.
+
+    This handler extracts data from any domain event and passes it to the
+    logging service for structured logging.
     """
-    print(f"EVENT LOG: Player '{event.name}' created with ID {event.player_id}.")
+
+    @handles(Event)  # type: ignore[type-abstract]
+    def log_event(event: Event) -> None:
+        event_type = type(event).__name__
+        log_data = {
+            key: str(value)
+            for key, value in event.__dict__.items()
+            if not key.startswith("_")
+        }
+        logging_service.log(f"Domain Event: {event_type}", data=log_data)
+
+    return log_event
 
 
 def log_special_player_created(event: PlayerCreated) -> None:

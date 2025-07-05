@@ -119,3 +119,11 @@ Our event-driven architecture provides the foundation for a powerful pattern cal
 Instead of storing the *current state* of our aggregates, Event Sourcing involves persisting the full, chronological log of domain events that have occurred. The current state is then derived by replaying these events.
 
 For a detailed explanation of this concept and how our current features relate to it, see the Event Sourcing Guide.
+
+## 7. Development & Debugging Concerns
+
+To facilitate rapid prototyping and debugging without polluting the core domain or application layers, we use a configuration-driven "dev mode".
+
+-   **Strategy:** Development-specific logic (e.g., verbose input logging, granting extra starting resources) is placed within the `presentation` or `main` composition root.
+-   **Control:** This logic is wrapped in a conditional check against `DEV_SETTINGS.enabled`, which is controlled by an environment variable.
+-   **Benefit:** This approach keeps our core layers clean and testable, while allowing for flexible, temporary changes during development.
