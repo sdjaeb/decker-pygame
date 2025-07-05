@@ -1,6 +1,7 @@
 import uuid
 from typing import Any
 
+from decker_pygame.application.decorators import emits
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.events import PlayerCreated
 from decker_pygame.domain.ids import AggregateId, PlayerId
@@ -23,6 +24,7 @@ class Player(AggregateRoot):
         self.health = health
 
     @staticmethod
+    @emits(PlayerCreated)
     def create(player_id: PlayerId, name: str, initial_health: int) -> "Player":
         """
         Factory to create a new player, raising a PlayerCreated domain event.

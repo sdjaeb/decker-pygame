@@ -1,6 +1,7 @@
 import uuid
 from unittest.mock import Mock, patch
 
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.player_service import PlayerService
 from decker_pygame.domain.player import Player, PlayerId
 from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
@@ -12,7 +13,10 @@ def test_create_new_player():
     """
     # Arrange
     mock_repo = Mock(spec=PlayerRepositoryInterface)
-    player_service = PlayerService(player_repo=mock_repo)
+    mock_dispatcher = Mock(spec=EventDispatcher)
+    player_service = PlayerService(
+        player_repo=mock_repo, event_dispatcher=mock_dispatcher
+    )
     player_name = "Deckard"
 
     # We patch uuid.uuid4 to have a predictable ID
@@ -31,6 +35,7 @@ def test_create_new_player():
             # It must have an `id` attribute to avoid an AttributeError in the service.
             mock_created_player = Mock(spec=Player)
             mock_created_player.id = expected_player_id
+            mock_created_player.events = []  # Mock the events list
             mock_player_create.return_value = mock_created_player
 
             # Act
@@ -47,3 +52,7 @@ def test_create_new_player():
 
             # 3. Check that the repository saved the mock player we configured
             mock_repo.save.assert_called_once_with(mock_created_player)
+
+            # 4. Check that the dispatcher was called with the player's events
+            mock_dispatcher.dispatch.assert_called_once_with(mock_created_player.events)
+            mock_created_player.clear_events.assert_called_once()

@@ -70,3 +70,18 @@ This document tracks the prompts and outcomes during the major refactoring to a 
 
 23. **Prompt:** "Can we add a document detailing information about Domain-Driven Design, with an overview of the concepts we're using...?"
     -   **Outcome:** Created the `docs/architecture/ddd_concepts.md` file, mapping abstract DDD concepts to concrete files and classes in the project.
+
+24. **Prompt:** "what can I do with the domain events? Can we change the PlayerCreated and CharacterCreated events to use the Event base class (protocol)?"
+    -   **Outcome:** Refactored domain events to inherit from a common `BaseEvent` dataclass, reducing code duplication and clarifying the design.
+
+25. **Prompt:** "I think we should spend a little time enhancing the event system before we move on. Questions: 1. How are the events emitted?..."
+    -   **Outcome:** Implemented a full, simple event system, including an `EventDispatcher`, a logging `EventHandler`, and wired them into the `PlayerService` and `main.py` Composition Root.
+
+26. **Prompt:** "I would like to add an annotation to functions that emit events, and another annotation to functions that handle events."
+    -   **Outcome:** Created the `@emits` and `@handles` decorators in `application/decorators.py` to improve the semantic clarity of the event-driven architecture.
+
+27. **Prompt:** "We should probably add a feature of the event system that allows for handlers to only fire if a condition has occured."
+    -   **Outcome:** Enhanced the `EventDispatcher` to accept an optional `condition` function during subscription, allowing for more flexible and targeted event handling.
+
+28. **Prompt:** "Will the conditional event wait and then fire when the condition occurs?..."
+    -   **Outcome:** Clarified the distinction between immediate, stateless conditional event handling and stateful command validation. Explained that business rule preconditions should be checked in the Application Service *before* an event is created. Introduced the Saga pattern as a future solution for complex, long-running processes.
