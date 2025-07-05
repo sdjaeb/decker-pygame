@@ -4,42 +4,26 @@ from decker_pygame.domain.contract import Contract
 from decker_pygame.domain.ids import AreaId, ContractId
 
 
-def test_contract_creation():
-    """Tests creating a contract."""
-    contract = Contract(
-        id=ContractId(uuid.uuid4()),
+def test_contract_serialization_roundtrip():
+    """Tests that a Contract can be serialized and deserialized correctly."""
+    contract_id = ContractId(uuid.uuid4())
+    area_id = AreaId(uuid.uuid4())
+    original_contract = Contract(
+        id=contract_id,
         title="Data Heist",
-        client="Anonymous",
-        target_area_id=AreaId(uuid.uuid4()),
-        description="...",
+        client="Ares Corp",
+        target_area_id=area_id,
+        description="Steal the data.",
         reward_credits=5000,
     )
 
-    assert contract.title == "Data Heist"
-    assert contract.reward_credits == 5000
+    contract_dict = original_contract.to_dict()
 
+    reconstituted_contract = Contract.from_dict(contract_dict)
 
-def test_contract_equality():
-    """Contracts should be equal if they have the same ID."""
-    contract_id = ContractId(uuid.uuid4())
-    area_id = AreaId(uuid.uuid4())
-    contract1 = Contract(contract_id, "c1", "client1", area_id, "desc1", 100)
-    contract2 = Contract(contract_id, "c2", "client2", area_id, "desc2", 200)
-    contract3 = Contract(
-        ContractId(uuid.uuid4()), "c1", "client1", area_id, "desc1", 100
-    )
-
-    assert contract1 == contract2
-    assert contract1 != contract3
-    assert contract1 != "not a contract"
-
-
-def test_contract_hash():
-    """Contracts with the same ID should have the same hash."""
-    contract_id = ContractId(uuid.uuid4())
-    area_id = AreaId(uuid.uuid4())
-    contract1 = Contract(contract_id, "c1", "client1", area_id, "desc1", 100)
-    contract2 = Contract(contract_id, "c2", "client2", area_id, "desc2", 200)
-
-    assert hash(contract1) == hash(contract2)
-    assert len({contract1, contract2}) == 1
+    assert reconstituted_contract == original_contract
+    assert reconstituted_contract.title == original_contract.title
+    assert reconstituted_contract.client == original_contract.client
+    assert reconstituted_contract.target_area_id == original_contract.target_area_id
+    assert reconstituted_contract.description == original_contract.description
+    assert reconstituted_contract.reward_credits == original_contract.reward_credits

@@ -1,42 +1,51 @@
 import uuid
 
 from decker_pygame.domain.area import Area
-from decker_pygame.domain.contract import Contract
 from decker_pygame.domain.ids import AreaId, ContractId
 
 
-def test_area_creation():
-    """Tests creating an area with default empty contracts."""
+def test_area_serialization_roundtrip():
+    """Tests that an Area can be serialized and deserialized correctly."""
+    area_id = AreaId(uuid.uuid4())
+    contract_id = ContractId(uuid.uuid4())
+    original_area = Area(
+        id=area_id,
+        name="Downtown",
+        description="The bustling city center.",
+        security_level=3,
+        contract_ids=[contract_id],
+    )
+
+    area_dict = original_area.to_dict()
+
+    assert area_dict == {
+        "id": str(area_id),
+        "name": "Downtown",
+        "description": "The bustling city center.",
+        "security_level": 3,
+        "contract_ids": [str(contract_id)],
+    }
+
+    reconstituted_area = Area.from_dict(area_dict)
+
+    assert reconstituted_area == original_area
+    assert reconstituted_area.name == original_area.name
+    assert reconstituted_area.contract_ids == original_area.contract_ids
+
+
+def test_area_add_contract():
+    """Tests that adding a contract correctly modifies the area."""
     area = Area(
         id=AreaId(uuid.uuid4()),
-        name="Downtown",
-        description="The neon-drenched heart of the city.",
-        security_level=3,
-        contract_ids=[],
-    )
-    assert area.name == "Downtown"
-    assert area.contract_ids == []
-
-
-def test_area_with_contracts():
-    """Tests creating an area with a list of contracts."""
-    area_id = AreaId(uuid.uuid4())
-    contract = Contract(
-        id=ContractId(uuid.uuid4()),
-        title="Data Heist",
-        client="Anonymous",
-        target_area_id=area_id,
-        description="...",
-        reward_credits=5000,
-    )
-    area = Area(
-        id=area_id,
-        name="Corporate Plaza",
-        description="...",
+        name="The Sprawl",
+        description="Urban decay and high tech.",
         security_level=5,
         contract_ids=[],
     )
-    area.add_contract(ContractId(contract.id))
+    assert not area.contract_ids
+
+    new_contract_id = ContractId(uuid.uuid4())
+    area.add_contract(new_contract_id)
 
     assert len(area.contract_ids) == 1
-    assert area.contract_ids[0] == contract.id
+    assert area.contract_ids[0] == new_contract_id
