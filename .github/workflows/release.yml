@@ -52,7 +52,7 @@ jobs:
         run: |
           source .venv/bin/activate
           # The "|| true" part ensures the workflow doesn't fail if no bump is needed (e.g., only docs changes)
-          cz bump --changelog || true
+          cz bump --changelog --yes || true
 
       - name: Push changes
         run: git push --follow-tags
