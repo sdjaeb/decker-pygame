@@ -41,13 +41,8 @@ class JsonFilePlayerRepository(PlayerRepositoryInterface):
         Args:
             player (Player): The player aggregate to save.
         """
-        player_dict = {
-            "id": str(player.id),
-            "name": player.name,
-            "health": player.health,
-        }
         with open(self._get_path(PlayerId(player.id)), "w") as f:
-            json.dump(player_dict, f, indent=4)
+            json.dump(player.to_dict(), f, indent=4)
 
     def get(self, player_id: PlayerId) -> Player | None:
         """
@@ -66,8 +61,4 @@ class JsonFilePlayerRepository(PlayerRepositoryInterface):
         with open(filepath) as f:
             data = json.load(f)
 
-        # Reconstitute the aggregate directly from its data.
-        # This is a key DDD concept: repositories restore objects to their
-        # last known state without running business logic (which is in factories
-        # or methods).
-        return Player(id=player_id, name=data["name"], health=data["health"])
+        return Player.from_dict(data)

@@ -27,7 +27,7 @@ class AlarmBar(pygame.sprite.Sprite):
 
         self.width = width
         self.height = height
-        self.image = pygame.Surface([self.width, self.height])
+        self.image = pygame.Surface([self.width, self.height], pygame.SRCALPHA)
         self.rect = self.image.get_rect(topleft=(x, y))
 
         self.alarm_level = 0
@@ -57,9 +57,7 @@ class AlarmBar(pygame.sprite.Sprite):
 
     def update(self) -> None:
         """Redraws the alarm bar surface based on the current state."""
-        self.image.fill((1, 1, 1))  # Use a unique color for transparency
-        self.image.set_colorkey((1, 1, 1))
-
+        self.image.fill((0, 0, 0, 0))  # Fill with a transparent color
         current_width = int(self.width * (self.alarm_level / 100))
         if current_width > 0:
             bar_rect = pygame.Rect(0, 0, current_width, self.height)

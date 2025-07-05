@@ -1,3 +1,6 @@
+import uuid
+from typing import Any
+
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
 from decker_pygame.domain.events import CharacterCreated
 from decker_pygame.domain.ids import AggregateId, CharacterId
@@ -63,3 +66,37 @@ class Character(AggregateRoot):
             )
         )
         return character
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Serialize the aggregate to a dictionary.
+
+        Returns:
+            A dictionary representation of the Character.
+        """
+        return {
+            "id": str(self.id),
+            "name": self.name,
+            "skills": self.skills,
+            "inventory": [prog.to_dict() for prog in self.inventory],
+            "credits": self.credits,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Character":
+        """
+        Reconstitute a Character from a dictionary.
+
+        Args:
+            data: The dictionary data.
+
+        Returns:
+            A Character instance.
+        """
+        return cls(
+            id=CharacterId(uuid.UUID(data["id"])),
+            name=data["name"],
+            skills=data["skills"],
+            inventory=[Program.from_dict(p_data) for p_data in data["inventory"]],
+            credits=data["credits"],
+        )
