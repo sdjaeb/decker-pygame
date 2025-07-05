@@ -96,7 +96,23 @@ For complex, long-running processes that involve multiple events over time (e.g.
 
 A Saga is a stateful component that listens for a sequence of events and can dispatch new commands in response. This is a more advanced pattern that we will implement when a clear use case arises.
 
-## 5. Event Sourcing (Future Goal)
+## 5. Discovering the Domain: Event Storming
+
+To effectively explore and model the game's complex rules, we will use **Event Storming**. It's important to note that this is not a software component, but a collaborative workshop process designed to create a shared understanding of the domain.
+
+### How It Helps This Project
+
+-   **Answers Design Questions:** It provides a structured way to answer the open questions in our [roadmap](./roadmap.md), such as defining the core gameplay loop and player progression.
+-   **Validates the Domain Model:** By mapping out game scenarios, we can validate that our Aggregates (`Player`, `Contract`, etc.) are correctly defined and that their boundaries make sense.
+-   **Creates a Blueprint for Code:** The output of an Event Storming session directly translates into our architecture:
+    -   **Domain Events** (orange notes) become our event classes.
+    -   **Commands** (blue notes) become methods on our Application Services.
+    -   **Aggregates** (yellow notes) become our Aggregate Root classes.
+    -   **Policies** (purple notes) become our event handlers or Sagas.
+
+By using this process, we ensure our code is a direct reflection of the game's domain logic.
+
+## 6. Event Sourcing (Future Goal)
 
 Our event-driven architecture provides the foundation for a powerful pattern called **Event Sourcing**. While not fully implemented yet, it is a guiding principle for our design.
 

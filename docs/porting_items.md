@@ -62,7 +62,7 @@ Reusable interface elements that are used across multiple screens or dialogs. Po
 ### 3. Dialogs / Screens (**Medium Importance**)
 Modal dialogs and main screens for editing/viewing specific data. These depend on both the data models and UI components.
 
-- **BuildDialog.cpp/h**
+- **BuildDialog.cpp/h** (`Ported as BuildView`)
 - **CharDataDialog.cpp/h**
 - **ContractDataDialog.cpp/h**
 - **ContractListDialog.cpp/h**

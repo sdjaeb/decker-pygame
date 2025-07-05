@@ -1,10 +1,13 @@
 import pygame
 
+from decker_pygame.application.crafting_service import CraftingError, CraftingService
 from decker_pygame.application.player_service import PlayerService
-from decker_pygame.domain.ids import PlayerId
+from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
+from decker_pygame.presentation.components.build_view import BuildView
+from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.settings import (
     BLACK,
     FPS,
@@ -13,6 +16,7 @@ from decker_pygame.settings import (
     SCREEN_WIDTH,
     TITLE,
     TRANSPARENT_COLOR,
+    UI_FACE,
 )
 
 
@@ -25,16 +29,29 @@ class Game:
     all_sprites: pygame.sprite.Group[pygame.sprite.Sprite]
     active_bar: ActiveBar
     alarm_bar: AlarmBar
+    player_service: PlayerService
+    player_id: PlayerId
+    crafting_service: CraftingService
+    character_id: CharacterId
+    message_view: MessageView
+    build_view: BuildView | None = None
 
-    def __init__(self, player_service: PlayerService, player_id: PlayerId) -> None:
+    def __init__(
+        self,
+        player_service: PlayerService,
+        player_id: PlayerId,
+        crafting_service: CraftingService,
+        character_id: CharacterId,
+    ) -> None:
         """
         Initialize the Game.
 
         Args:
             player_service (PlayerService): Service for player operations.
             player_id (PlayerId): The current player's ID.
+            crafting_service (CraftingService): Service for crafting operations.
+            character_id (CharacterId): The current character's ID.
         """
-        pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
@@ -42,6 +59,8 @@ class Game:
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
         self.player_service = player_service
         self.player_id = player_id
+        self.crafting_service = crafting_service
+        self.character_id = character_id
 
         self._load_assets()
 
@@ -73,6 +92,11 @@ class Game:
         self.alarm_bar = AlarmBar(206, 342, 200, 50)
         self.all_sprites.add(self.alarm_bar)
 
+        self.message_view = MessageView(
+            position=(10, 600), size=(400, 150), background_color=UI_FACE
+        )
+        self.all_sprites.add(self.message_view)
+
     def _handle_events(self) -> None:
         """
         Handle user input and system events.
@@ -83,6 +107,47 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:
+                    self._toggle_build_view()
+
+            if self.build_view:
+                self.build_view.handle_event(event)
+
+    def _toggle_build_view(self) -> None:
+        """Opens or closes the build view."""
+        if self.build_view:
+            self.all_sprites.remove(self.build_view)
+            self.build_view = None
+        else:
+            schematics = self.crafting_service.get_character_schematics(
+                self.character_id
+            )
+            if not schematics:
+                print("No schematics known.")
+                return
+
+            self.build_view = BuildView(
+                position=(200, 150),
+                size=(400, 300),
+                schematics=schematics,
+                on_build_click=self._handle_build_click,
+            )
+            self.all_sprites.add(self.build_view)
+
+    def _handle_build_click(self, schematic_name: str) -> None:
+        """Callback for when a build button is clicked in the BuildView."""
+        print(f"Attempting to build: {schematic_name}")
+        try:
+            self.crafting_service.craft_item(self.character_id, schematic_name)
+            print(f"Successfully crafted {schematic_name}!")
+        except CraftingError as e:
+            print(f"Crafting failed: {e}")
+
+    def show_message(self, text: str) -> None:
+        """Displays a message in the message view."""
+        self.message_view.set_text(text)
 
     def _update(self) -> None:
         """
