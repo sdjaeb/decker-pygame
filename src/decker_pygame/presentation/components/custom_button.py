@@ -2,12 +2,11 @@ from collections.abc import Callable
 
 import pygame
 
+from .base_widgets import Clickable
 
-class CustomButton(pygame.sprite.Sprite):
+
+class CustomButton(Clickable):
     """A reusable button sprite that handles visual states and click events."""
-
-    image: pygame.Surface
-    rect: pygame.Rect
 
     def __init__(
         self,
@@ -25,10 +24,9 @@ class CustomButton(pygame.sprite.Sprite):
             image_down: The surface to display when the button is pressed.
             on_click: A zero-argument function to call when the button is clicked.
         """
-        super().__init__()
+        super().__init__(on_click=on_click)
         self._image_up = image_up
         self._image_down = image_down
-        self._on_click = on_click
 
         self.image = self._image_up
         self.rect = self.image.get_rect(topleft=position)

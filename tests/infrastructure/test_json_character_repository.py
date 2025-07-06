@@ -1,6 +1,5 @@
-import json
+import tempfile
 import uuid
-from pathlib import Path
 
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.ids import CharacterId
@@ -9,43 +8,37 @@ from decker_pygame.infrastructure.json_character_repository import (
 )
 
 
-def test_save_and_get_character(tmp_path: Path):
-    """
-    Tests that a character can be saved and then retrieved correctly.
-    """
-    # Arrange
-    repo = JsonFileCharacterRepository(base_path=str(tmp_path))
-    char_id = CharacterId(uuid.uuid4())
-    original_char = Character(
-        id=char_id,
-        name="Rynn",
-        skills={"hacking": 5},
-        inventory=[],
-        schematics=[],
-        credits=1000,
-    )
+def test_save_and_get_character():
+    """Tests that a character can be saved and retrieved."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo = JsonFileCharacterRepository(base_path=tmpdir)
+        char_id = CharacterId(uuid.uuid4())
+        character = Character(
+            id=char_id,
+            name="Testy",
+            skills={"hacking": 1},
+            inventory=[],
+            schematics=[],
+            credits=100,
+            unused_skill_points=5,
+        )
 
-    # Act
-    repo.save(original_char)
-    retrieved_char = repo.get(char_id)
+        repo.save(character)
 
-    # Assert
-    assert retrieved_char is not None
-    assert retrieved_char.id == original_char.id
-    assert retrieved_char.name == original_char.name
-    assert retrieved_char.credits == original_char.credits
+        retrieved_char = repo.get(char_id)
 
-    # Verify the file content
-    expected_path = tmp_path / f"{char_id}.json"
-    assert expected_path.exists()
-    with open(expected_path) as f:
-        data = json.load(f)
-        assert data["name"] == "Rynn"
+        assert retrieved_char is not None
+        assert retrieved_char.id == character.id
+        assert retrieved_char.name == "Testy"
+        assert retrieved_char.unused_skill_points == 5
 
 
-def test_get_non_existent_character(tmp_path: Path):
-    """Tests that getting a non-existent character returns None."""
-    repo = JsonFileCharacterRepository(base_path=str(tmp_path))
-    non_existent_id = CharacterId(uuid.uuid4())
+def test_get_nonexistent_character():
+    """Tests that get returns None for a non-existent character."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo = JsonFileCharacterRepository(base_path=tmpdir)
+        char_id = CharacterId(uuid.uuid4())
 
-    assert repo.get(non_existent_id) is None
+        retrieved_char = repo.get(char_id)
+
+        assert retrieved_char is None

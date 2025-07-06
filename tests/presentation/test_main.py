@@ -21,6 +21,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_char_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFileCharacterRepository"
     )
+    mock_char_service_class = mocker.patch(
+        "decker_pygame.presentation.main.CharacterService"
+    )
     mock_player_service_class = mocker.patch(
         "decker_pygame.presentation.main.PlayerService"
     )
@@ -76,6 +79,10 @@ def test_main_function(mocker: MockerFixture) -> None:
         player_repo=mock_repo_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
     )
+    mock_char_service_class.assert_called_once_with(
+        character_repo=mock_char_repo_class.return_value,
+        event_dispatcher=mock_dispatcher_class.return_value,
+    )
     mock_crafting_service_class.assert_called_once_with(
         character_repo=mock_char_repo_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
@@ -111,6 +118,7 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_game_class.assert_called_once_with(
         player_service=mock_player_service_instance,
         player_id=deckard_player_id,
+        character_service=mock_char_service_class.return_value,
         crafting_service=mock_crafting_service_class.return_value,
         character_id=mock_character.id,
         logging_service=mock_logging_service_class.return_value,
