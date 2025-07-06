@@ -42,6 +42,19 @@ class GfxSettings:
 GFX = GfxSettings()
 
 
+# --- Data Paths ---
+class Paths:
+    """A namespace for data storage paths."""
+
+    base_path: str = "data"
+    characters_data: str = "data/characters"
+    players_data: str = "data/players"
+    contracts_data: str = "data/contracts"
+
+
+PATHS = Paths()
+
+
 # --- Fonts ---
 class UiFontSettings:
     """A namespace for UI font settings."""

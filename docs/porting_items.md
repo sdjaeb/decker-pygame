@@ -64,8 +64,8 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 
 - **BuildDialog.cpp/h** (`Ported as BuildView`)
 - **CharDataDialog.cpp/h** (`Ported as CharDataView`)
-- **ContractDataDialog.cpp/h**
-- **ContractListDialog.cpp/h**
+- **ContractDataDialog.cpp/h** (`Ported as ContractDataView`)
+- **ContractListDialog.cpp/h** (`Ported as ContractListView`)
 - **DeckDataDialog.cpp/h**
 - **EntryDlg.cpp/h**
 - **FileAccessDlg.cpp/h**

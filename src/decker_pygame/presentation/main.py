@@ -5,6 +5,7 @@ import uuid
 import pygame
 
 from decker_pygame.application.character_service import CharacterService
+from decker_pygame.application.contract_service import ContractService
 from decker_pygame.application.crafting_service import CraftingService
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.event_handlers import (
@@ -21,9 +22,12 @@ from decker_pygame.domain.ids import CharacterId
 from decker_pygame.infrastructure.json_character_repository import (
     JsonFileCharacterRepository,
 )
+from decker_pygame.infrastructure.json_contract_repository import (
+    JsonFileContractRepository,
+)
 from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
 from decker_pygame.presentation.game import Game
-from decker_pygame.settings import DEV_SETTINGS
+from decker_pygame.settings import DEV_SETTINGS, PATHS
 
 
 def main() -> None:
@@ -37,8 +41,9 @@ def main() -> None:
 
     # 1. Set up infrastructure
     storage_path = os.path.join(tempfile.gettempdir(), "decker_pygame")
-    player_repo = JsonFilePlayerRepository(base_path=storage_path)
-    character_repo = JsonFileCharacterRepository(base_path=storage_path)
+    character_repo = JsonFileCharacterRepository(base_path=PATHS.characters_data)
+    player_repo = JsonFilePlayerRepository(base_path=PATHS.players_data)
+    contract_repo = JsonFileContractRepository(base_path=PATHS.contracts_data)
     event_dispatcher = EventDispatcher()
     logging_service = LoggingService(writers=[ConsoleLogWriter()])
 
@@ -51,6 +56,9 @@ def main() -> None:
     )
     crafting_service = CraftingService(
         character_repo=character_repo, event_dispatcher=event_dispatcher
+    )
+    contract_service = ContractService(
+        contract_repo=contract_repo, event_dispatcher=event_dispatcher
     )
 
     # 3. Set up generic event handlers
@@ -105,6 +113,7 @@ def main() -> None:
         player_service=player_service,
         player_id=player_id,
         character_service=character_service,
+        contract_service=contract_service,
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
         logging_service=logging_service,

@@ -1,6 +1,7 @@
 import pygame
 
 from decker_pygame.application.character_service import CharacterService
+from decker_pygame.application.contract_service import ContractService
 from decker_pygame.application.crafting_service import CraftingError, CraftingService
 from decker_pygame.application.logging_service import LoggingService
 from decker_pygame.application.player_service import PlayerService
@@ -10,6 +11,8 @@ from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.char_data_view import CharDataView
+from decker_pygame.presentation.components.contract_data_view import ContractDataView
+from decker_pygame.presentation.components.contract_list_view import ContractListView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.utils import scale_icons
@@ -38,6 +41,7 @@ class Game:
     health_bar: HealthBar
     player_service: PlayerService
     character_service: CharacterService
+    contract_service: ContractService
     player_id: PlayerId
     crafting_service: CraftingService
     character_id: CharacterId
@@ -45,12 +49,15 @@ class Game:
     message_view: MessageView
     build_view: BuildView | None = None
     char_data_view: CharDataView | None = None
+    contract_list_view: ContractListView | None = None
+    contract_data_view: ContractDataView | None = None
 
     def __init__(
         self,
         player_service: PlayerService,
         player_id: PlayerId,
         character_service: CharacterService,
+        contract_service: ContractService,
         crafting_service: CraftingService,
         character_id: CharacterId,
         logging_service: LoggingService,
@@ -62,6 +69,7 @@ class Game:
             player_service (PlayerService): Service for player operations.
             player_id (PlayerId): The current player's ID.
             character_service (CharacterService): Service for character operations.
+            contract_service (ContractService): Service for contract operations.
             crafting_service (CraftingService): Service for crafting operations.
             character_id (CharacterId): The current character's ID.
             logging_service (LoggingService): Service for logging.
@@ -73,6 +81,7 @@ class Game:
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
         self.player_service = player_service
         self.character_service = character_service
+        self.contract_service = contract_service
         self.player_id = player_id
         self.crafting_service = crafting_service
         self.character_id = character_id
@@ -126,12 +135,7 @@ class Game:
                 self.is_running = False
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_b:
-                    self._toggle_build_view()
-                if event.key == pygame.K_c:
-                    self._toggle_char_data_view()
-                if event.key == pygame.K_q:
-                    self.is_running = False
+                self._handle_keydown(event)
 
                 if DEV_SETTINGS.enabled:
                     self.logging_service.log(
@@ -143,6 +147,19 @@ class Game:
 
             if self.char_data_view:
                 self.char_data_view.handle_event(event)
+
+    def _handle_keydown(self, event: pygame.event.Event) -> None:
+        """Handles key down events."""
+        if event.key == pygame.K_b:
+            self._toggle_build_view()
+        if event.key == pygame.K_c:
+            self._toggle_char_data_view()
+        if event.key == pygame.K_l:
+            self._toggle_contract_list_view()
+        if event.key == pygame.K_d:
+            self._toggle_contract_data_view()
+        if event.key == pygame.K_q:
+            self.is_running = False
 
     def _toggle_build_view(self) -> None:
         """Opens or closes the build view."""
@@ -215,6 +232,28 @@ class Game:
                 on_decrease_skill=self._on_decrease_skill,
             )
             self.all_sprites.add(self.char_data_view)
+
+    def _toggle_contract_list_view(self) -> None:
+        """Opens or closes the contract list view."""
+        if self.contract_list_view:
+            self.all_sprites.remove(self.contract_list_view)
+            self.contract_list_view = None
+        else:
+            self.contract_list_view = ContractListView(
+                position=(200, 150), size=(400, 300)
+            )
+            self.all_sprites.add(self.contract_list_view)
+
+    def _toggle_contract_data_view(self) -> None:
+        """Opens or closes the contract data view."""
+        if self.contract_data_view:
+            self.all_sprites.remove(self.contract_data_view)
+            self.contract_data_view = None
+        else:
+            self.contract_data_view = ContractDataView(
+                position=(200, 150), size=(400, 300), contract_name="Placeholder"
+            )
+            self.all_sprites.add(self.contract_data_view)
 
     def show_message(self, text: str) -> None:
         """Displays a message in the message view."""

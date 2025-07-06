@@ -1,13 +1,13 @@
-import abc
+from abc import ABC, abstractmethod
 
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.ids import CharacterId
 
 
-class CharacterRepositoryInterface(abc.ABC):
+class CharacterRepositoryInterface(ABC):
     """Abstract base class for character repository implementations."""
 
-    @abc.abstractmethod
+    @abstractmethod
     def get(self, character_id: CharacterId) -> Character | None:
         """Retrieve a character by ID.
 
@@ -17,9 +17,9 @@ class CharacterRepositoryInterface(abc.ABC):
         Returns:
             The character if found, else None.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
-    @abc.abstractmethod
+    @abstractmethod
     def save(self, character: Character) -> None:
         """Save a character aggregate."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover

@@ -7,6 +7,7 @@ from decker_pygame.domain.character import Character
 from decker_pygame.domain.events import ItemCrafted, PlayerCreated
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.presentation.main import main
+from decker_pygame.settings import PATHS
 
 
 def test_main_function(mocker: MockerFixture) -> None:
@@ -21,8 +22,14 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_char_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFileCharacterRepository"
     )
+    mock_contract_repo_class = mocker.patch(
+        "decker_pygame.presentation.main.JsonFileContractRepository"
+    )
     mock_char_service_class = mocker.patch(
         "decker_pygame.presentation.main.CharacterService"
+    )
+    mock_contract_service_class = mocker.patch(
+        "decker_pygame.presentation.main.ContractService"
     )
     mock_player_service_class = mocker.patch(
         "decker_pygame.presentation.main.PlayerService"
@@ -68,12 +75,13 @@ def test_main_function(mocker: MockerFixture) -> None:
     main()
 
     # Assert that the infrastructure and application layers were wired correctly
-    mock_repo_class.assert_called_once()
-    mock_char_repo_class.assert_called_once()
+    mock_repo_class.assert_called_once_with(base_path=PATHS.players_data)
+    mock_char_repo_class.assert_called_once_with(base_path=PATHS.characters_data)
     mock_dispatcher_class.assert_called_once()
     mock_logging_service_class.assert_called_once_with(
         writers=[mock_console_writer_class.return_value]
     )
+    mock_contract_repo_class.assert_called_once_with(base_path=PATHS.contracts_data)
 
     mock_player_service_class.assert_called_once_with(
         player_repo=mock_repo_class.return_value,
@@ -119,6 +127,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         player_service=mock_player_service_instance,
         player_id=deckard_player_id,
         character_service=mock_char_service_class.return_value,
+        contract_service=mock_contract_service_class.return_value,
         crafting_service=mock_crafting_service_class.return_value,
         character_id=mock_character.id,
         logging_service=mock_logging_service_class.return_value,
