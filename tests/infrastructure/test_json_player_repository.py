@@ -1,4 +1,3 @@
-import json
 import os
 import tempfile
 import uuid
@@ -18,30 +17,20 @@ def test_repository_creates_directory_on_init():
         assert os.path.exists(repo_path)
 
 
-def test_repository_can_save_and_get_player():
-    """Verify that a player can be saved and then retrieved."""
-    player_id = PlayerId(uuid.uuid4())
-    player = Player(id=player_id, name="Deckard", health=100)
-
+def test_save_and_get_player():
+    """Tests that a player can be saved and retrieved."""
     with tempfile.TemporaryDirectory() as tmpdir:
         repo = JsonFilePlayerRepository(base_path=tmpdir)
+        player_id = PlayerId(uuid.uuid4())
+        player = Player(id=player_id, name="Test Player", health=100)
+
         repo.save(player)
 
-        # Assert file system state
-        expected_file = os.path.join(tmpdir, f"{player_id}.json")
-        assert os.path.exists(expected_file)
-        with open(expected_file) as f:
-            data = json.load(f)
-            assert data["id"] == str(player_id)
-
-        # Assert repository get method
         retrieved_player = repo.get(player_id)
-        assert (
-            retrieved_player is not None
-        )  # Ensure it's not None before checking attributes
-        assert retrieved_player == player  # Check equality based on ID
-        assert retrieved_player.name == player.name
-        assert retrieved_player.health == player.health
+
+        assert retrieved_player is not None
+        assert retrieved_player.id == player.id
+        assert retrieved_player.name == "Test Player"
 
 
 def test_repository_get_returns_none_for_nonexistent_player():

@@ -1,11 +1,11 @@
 import uuid
 from typing import Any
 
-from decker_pygame.domain.ddd.entity import Entity
-from decker_pygame.domain.ids import AreaId, ContractId
+from decker_pygame.domain.ddd.aggregate import AggregateRoot
+from decker_pygame.domain.ids import AggregateId, AreaId, ContractId
 
 
-class Contract(Entity):
+class Contract(AggregateRoot):
     """Represents a job or mission a character can undertake."""
 
     def __init__(
@@ -28,7 +28,7 @@ class Contract(Entity):
             description (str): Description of the contract.
             reward_credits (int): Reward for completing the contract.
         """
-        super().__init__(id=id)
+        super().__init__(id=AggregateId(id))
         self.title = title
         self.client = client
         self.target_area_id = target_area_id

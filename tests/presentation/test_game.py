@@ -9,6 +9,7 @@ from decker_pygame.application.character_service import (
     CharacterDataDTO,
     CharacterService,
 )
+from decker_pygame.application.contract_service import ContractService
 from decker_pygame.application.crafting_service import CraftingError, CraftingService
 from decker_pygame.application.logging_service import LoggingService
 from decker_pygame.application.player_service import PlayerService, PlayerStatusDTO
@@ -30,12 +31,13 @@ def pygame_context() -> Generator[None]:
 
 
 @pytest.fixture
-def game_with_mocks() -> Generator[tuple[Game, Mock, Mock, Mock, Mock]]:
+def game_with_mocks() -> Generator[tuple[Game, Mock, Mock, Mock, Mock, Mock]]:
     """
     Provides a fully mocked Game instance and its mocked dependencies.
     """
     mock_player_service = Mock(autospec=PlayerService)
     mock_character_service = Mock(autospec=CharacterService)
+    mock_contract_service = Mock(autospec=ContractService)
     mock_crafting_service = Mock(autospec=CraftingService)
     mock_logging_service = Mock(autospec=LoggingService)
     dummy_player_id = PlayerId(uuid.uuid4())
@@ -57,6 +59,7 @@ def game_with_mocks() -> Generator[tuple[Game, Mock, Mock, Mock, Mock]]:
             player_service=mock_player_service,
             player_id=dummy_player_id,
             character_service=mock_character_service,
+            contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
@@ -66,17 +69,21 @@ def game_with_mocks() -> Generator[tuple[Game, Mock, Mock, Mock, Mock]]:
             game,
             mock_player_service,
             mock_character_service,
+            mock_contract_service,
             mock_crafting_service,
             mock_logging_service,
         )
 
 
-def test_game_initialization(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_initialization(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests that the Game class correctly stores its injected dependencies."""
     (
         game,
         mock_player_service,
         mock_character_service,
+        mock_contract_service,
         mock_crafting_service,
         mock_logging_service,
     ) = game_with_mocks
@@ -84,6 +91,7 @@ def test_game_initialization(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock
     # The __init__ method should store the service and id
     assert game.player_service is mock_player_service
     assert game.character_service is mock_character_service
+    assert game.contract_service is mock_contract_service
     assert game.crafting_service is mock_crafting_service
     assert game.logging_service is mock_logging_service
     assert isinstance(game.player_id, uuid.UUID)
@@ -115,6 +123,7 @@ def test_game_load_assets_with_icons():
             player_service=Mock(autospec=PlayerService),
             player_id=Mock(spec=PlayerId),
             character_service=Mock(autospec=CharacterService),
+            contract_service=Mock(autospec=ContractService),
             crafting_service=Mock(autospec=CraftingService),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(autospec=LoggingService),
@@ -149,6 +158,7 @@ def test_game_load_assets_no_icons():
             player_service=Mock(autospec=PlayerService),
             player_id=Mock(spec=PlayerId),
             character_service=Mock(autospec=CharacterService),
+            contract_service=Mock(autospec=ContractService),
             crafting_service=Mock(autospec=CraftingService),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(autospec=LoggingService),
@@ -160,9 +170,11 @@ def test_game_load_assets_no_icons():
         mock_active_bar.assert_called_once_with(position=(0, 0), image_list=[])
 
 
-def test_game_run_loop_quits(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_run_loop_quits(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests that the main game loop runs, calls its methods, and can be exited."""
-    game, mock_player_service, _, _, _ = game_with_mocks
+    game, mock_player_service, _, _, _, _ = game_with_mocks
 
     # Configure mock to prevent TypeError in _update
     mock_player_service.get_player_status.return_value = PlayerStatusDTO(
@@ -206,9 +218,11 @@ def test_game_run_loop_quits(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock
             mock_quit.assert_called_once()
 
 
-def test_game_quits_on_q_press(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_quits_on_q_press(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests that pressing 'q' sets the is_running flag to False."""
-    game, _, _, _, _ = game_with_mocks
+    game, _, _, _, _, _ = game_with_mocks
     assert game.is_running is True
 
     q_press_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_q})
@@ -220,10 +234,10 @@ def test_game_quits_on_q_press(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mo
 
 
 def test_game_logs_keypress_in_dev_mode(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests that keypresses are logged when dev mode is enabled."""
-    game, _, _, _, mock_logging_service = game_with_mocks
+    game, _, _, _, _, mock_logging_service = game_with_mocks
 
     with patch("decker_pygame.presentation.game.DEV_SETTINGS.enabled", True):
         key_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_a})
@@ -233,9 +247,9 @@ def test_game_logs_keypress_in_dev_mode(
     mock_logging_service.log.assert_called_once_with("Key Press", {"key": "a"})
 
 
-def test_game_update(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_update(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock]):
     """Tests that the _update method calls update on its sprite group."""
-    game, mock_player_service, _, _, _ = game_with_mocks
+    game, mock_player_service, _, _, _, _ = game_with_mocks
     game.all_sprites = Mock()
 
     # Configure mock to prevent TypeError
@@ -249,10 +263,10 @@ def test_game_update(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
 
 
 def test_game_update_calls_update_health(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests that the _update method updates the health bar."""
-    game, mock_player_service, _, _, _ = game_with_mocks
+    game, mock_player_service, _, _, _, _ = game_with_mocks
     game.health_bar = Mock(spec=HealthBar)  # Replace real with mock
 
     # Mock the DTO returned by the service
@@ -268,10 +282,10 @@ def test_game_update_calls_update_health(
 
 
 def test_game_update_no_player_status(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests that _update handles the case where the player is not found."""
-    game, mock_player_service, _, _, _ = game_with_mocks
+    game, mock_player_service, _, _, _, _ = game_with_mocks
     game.health_bar = Mock(spec=HealthBar)  # Replace real with mock
     mock_player_service.get_player_status.return_value = None
 
@@ -282,9 +296,9 @@ def test_game_update_no_player_status(
     game.health_bar.update_health.assert_not_called()
 
 
-def test_game_show_message(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_show_message(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock]):
     """Tests that the show_message method calls set_text on the message_view."""
-    game, _, _, _, _ = game_with_mocks
+    game, _, _, _, _, _ = game_with_mocks
     # Replace the real view with a mock for this test
     game.message_view = Mock(spec=MessageView)
 
@@ -293,9 +307,11 @@ def test_game_show_message(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock])
     game.message_view.set_text.assert_called_once_with("Test message")
 
 
-def test_game_toggles_build_view(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_toggles_build_view(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests that pressing 'b' opens and closes the build view."""
-    game, _, _, mock_crafting_service, _ = game_with_mocks
+    game, _, _, _, mock_crafting_service, _ = game_with_mocks
     # Ensure the service returns schematics so the view can be created
     mock_crafting_service.get_character_schematics.return_value = [Mock()]
 
@@ -324,10 +340,10 @@ def test_game_toggles_build_view(game_with_mocks: tuple[Game, Mock, Mock, Mock, 
 
 
 def test_game_toggle_build_view_no_schematics(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock], capsys
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock], capsys
 ):
     """Tests that the build view is not opened if the character has no schematics."""
-    game, _, _, mock_crafting_service, _ = game_with_mocks
+    game, _, _, _, mock_crafting_service, _ = game_with_mocks
     # Ensure the service returns an empty list
     mock_crafting_service.get_character_schematics.return_value = []
 
@@ -344,10 +360,10 @@ def test_game_toggle_build_view_no_schematics(
 
 
 def test_game_build_view_event_handling(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests that the game correctly delegates events to an active build view."""
-    game, _, _, _, _ = game_with_mocks
+    game, _, _, _, _, _ = game_with_mocks
     game.build_view = Mock(spec=BuildView)  # Manually set an active view
 
     mouse_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1})
@@ -357,9 +373,11 @@ def test_game_build_view_event_handling(
     game.build_view.handle_event.assert_called_once_with(mouse_event)
 
 
-def test_game_handle_build_click(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_handle_build_click(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests the callback function that handles build clicks."""
-    game, _, _, mock_crafting_service, _ = game_with_mocks
+    game, _, _, _, mock_crafting_service, _ = game_with_mocks
     schematic_name = "TestSchematic"
 
     # Spy on the show_message method to verify it's called
@@ -385,11 +403,11 @@ def test_game_handle_build_click(game_with_mocks: tuple[Game, Mock, Mock, Mock, 
 
 
 def test_game_char_data_view_event_handling(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests that the game correctly delegates events to an active
     char data view."""
-    game, _, _, _, _ = game_with_mocks
+    game, _, _, _, _, _ = game_with_mocks
     game.char_data_view = Mock(spec=CharDataView)  # Manually set an active view
 
     mouse_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1})
@@ -400,10 +418,10 @@ def test_game_char_data_view_event_handling(
 
 
 def test_game_toggles_char_data_view(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests that pressing 'c' opens and closes the character data view."""
-    game, mock_player_service, mock_character_service, _, _ = game_with_mocks
+    game, mock_player_service, mock_character_service, _, _, _ = game_with_mocks
 
     # Mock the DTOs returned by the services
     char_dto = CharacterDataDTO(
@@ -457,10 +475,10 @@ def test_game_toggles_char_data_view(
 
 
 def test_toggle_char_data_view_no_data(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock], capsys
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock], capsys
 ):
     """Tests that the char data view is not opened if data is missing."""
-    game, mock_player_service, mock_character_service, _, _ = game_with_mocks
+    game, mock_player_service, mock_character_service, _, _, _ = game_with_mocks
 
     # Case 1: Character data is missing
     mock_character_service.get_character_data.return_value = None
@@ -477,9 +495,11 @@ def test_toggle_char_data_view_no_data(
     assert "Could not retrieve character/player data" in capsys.readouterr().out
 
 
-def test_game_on_increase_skill(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_on_increase_skill(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests the callback for increasing a skill."""
-    game, _, mock_character_service, _, _ = game_with_mocks
+    game, _, mock_character_service, _, _, _ = game_with_mocks
 
     with patch.object(game, "_toggle_char_data_view") as mock_toggle:
         game._on_increase_skill("hacking")
@@ -491,10 +511,10 @@ def test_game_on_increase_skill(game_with_mocks: tuple[Game, Mock, Mock, Mock, M
 
 
 def test_game_on_increase_skill_failure(
-    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock],
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
 ):
     """Tests the callback for increasing a skill when the service fails."""
-    game, _, mock_character_service, _, _ = game_with_mocks
+    game, _, mock_character_service, _, _, _ = game_with_mocks
     mock_character_service.increase_skill.side_effect = Exception("Service Error")
 
     with patch.object(game, "show_message") as mock_show_message:
@@ -503,9 +523,11 @@ def test_game_on_increase_skill_failure(
         mock_show_message.assert_called_once_with("Error: Service Error")
 
 
-def test_game_on_decrease_skill(game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock]):
+def test_game_on_decrease_skill(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
     """Tests the callback for decreasing a skill."""
-    game, _, mock_character_service, _, _ = game_with_mocks
+    game, _, mock_character_service, _, _, _ = game_with_mocks
 
     with patch.object(game, "_toggle_char_data_view") as mock_toggle:
         game._on_decrease_skill("hacking")
@@ -514,3 +536,53 @@ def test_game_on_decrease_skill(game_with_mocks: tuple[Game, Mock, Mock, Mock, M
             game.character_id, "hacking"
         )
         assert mock_toggle.call_count == 2  # Close and re-open
+
+
+def test_game_toggles_contract_list_view(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
+    """Tests that pressing 'l' opens and closes the contract list view."""
+    game, _, _, _, _, _ = game_with_mocks
+
+    assert game.contract_list_view is None
+
+    # Press 'l' to open the view
+    open_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_l})
+    with (
+        patch("pygame.event.get", return_value=[open_event]),
+        patch("decker_pygame.presentation.game.ContractListView") as mock_view_class,
+    ):
+        game._handle_events()
+        mock_view_class.assert_called_once()
+        assert game.contract_list_view is not None
+
+    # Press 'l' again to close the view
+    close_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_l})
+    with patch("pygame.event.get", return_value=[close_event]):
+        game._handle_events()
+        assert game.contract_list_view is None
+
+
+def test_game_toggles_contract_data_view(
+    game_with_mocks: tuple[Game, Mock, Mock, Mock, Mock, Mock],
+):
+    """Tests that pressing 'd' opens and closes the contract data view."""
+    game, _, _, _, _, _ = game_with_mocks
+
+    assert game.contract_data_view is None
+
+    # Press 'd' to open the view
+    open_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_d})
+    with (
+        patch("pygame.event.get", return_value=[open_event]),
+        patch("decker_pygame.presentation.game.ContractDataView") as mock_view_class,
+    ):
+        game._handle_events()
+        mock_view_class.assert_called_once()
+        assert game.contract_data_view is not None
+
+    # Press 'd' again to close the view
+    close_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_d})
+    with patch("pygame.event.get", return_value=[close_event]):
+        game._handle_events()
+        assert game.contract_data_view is None
