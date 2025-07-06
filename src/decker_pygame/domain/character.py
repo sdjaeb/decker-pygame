@@ -4,7 +4,12 @@ from typing import Any
 from decker_pygame.application.decorators import emits
 from decker_pygame.domain.crafting import Schematic
 from decker_pygame.domain.ddd.aggregate import AggregateRoot
-from decker_pygame.domain.events import CharacterCreated, ItemCrafted
+from decker_pygame.domain.events import (
+    CharacterCreated,
+    ItemCrafted,
+    SkillDecreased,
+    SkillIncreased,
+)
 from decker_pygame.domain.ids import AggregateId, CharacterId, ProgramId
 from decker_pygame.domain.program import Program
 
@@ -20,6 +25,7 @@ class Character(AggregateRoot):
         inventory: list[Program],
         schematics: list[Schematic],
         credits: int,
+        unused_skill_points: int,
     ) -> None:
         """
         Initialize a Character.
@@ -31,6 +37,7 @@ class Character(AggregateRoot):
             inventory (List[Program]): List of owned programs.
             schematics (list[Schematic]): List of known program schematics.
             credits (int): Amount of credits the character has.
+            unused_skill_points (int): Points available to spend on skills.
         """
         super().__init__(id=AggregateId(id))
         self.name = name
@@ -38,6 +45,7 @@ class Character(AggregateRoot):
         self.inventory = inventory
         self.credits = credits
         self.schematics = schematics
+        self.unused_skill_points = unused_skill_points
 
     @staticmethod
     @emits(CharacterCreated)
@@ -46,6 +54,7 @@ class Character(AggregateRoot):
         name: str,
         initial_skills: dict[str, int],
         initial_credits: int,
+        initial_skill_points: int,
     ) -> "Character":
         """
         Factory to create a new character, raising a CharacterCreated domain event.
@@ -55,6 +64,7 @@ class Character(AggregateRoot):
             name (str): Character's name.
             initial_skills (Dict[str, int]): Initial skills.
             initial_credits (int): Starting credits.
+            initial_skill_points (int): Starting skill points.
 
         Returns:
             Character: The newly created character.
@@ -66,6 +76,7 @@ class Character(AggregateRoot):
             inventory=[],
             schematics=[],
             credits=initial_credits,
+            unused_skill_points=initial_skill_points,
         )
         character._events.append(
             CharacterCreated(
@@ -110,6 +121,53 @@ class Character(AggregateRoot):
             )
         )
 
+    @emits(SkillIncreased)
+    def increase_skill(self, skill_name: str) -> None:
+        """Increases a skill level if there are enough points."""
+        if skill_name not in self.skills:
+            raise ValueError(f"Skill '{skill_name}' does not exist.")
+
+        current_level = self.skills[skill_name]
+        cost = current_level + 1
+
+        if self.unused_skill_points < cost:
+            raise ValueError("Not enough skill points.")
+
+        self.unused_skill_points -= cost
+        self.skills[skill_name] += 1
+        new_level = self.skills[skill_name]
+
+        self._events.append(
+            SkillIncreased(
+                character_id=CharacterId(self.id),
+                skill_name=skill_name,
+                new_level=new_level,
+            )
+        )
+
+    @emits(SkillDecreased)
+    def decrease_skill(self, skill_name: str) -> None:
+        """Decreases a skill level and refunds points."""
+        if skill_name not in self.skills:
+            raise ValueError(f"Skill '{skill_name}' does not exist.")
+
+        current_level = self.skills[skill_name]
+        if current_level <= 0:
+            raise ValueError("Cannot decrease skill below 0.")
+
+        refund = current_level
+        self.unused_skill_points += refund
+        self.skills[skill_name] -= 1
+        new_level = self.skills[skill_name]
+
+        self._events.append(
+            SkillDecreased(
+                character_id=CharacterId(self.id),
+                skill_name=skill_name,
+                new_level=new_level,
+            )
+        )
+
     def to_dict(self) -> dict[str, Any]:
         """
         Serialize the aggregate to a dictionary.
@@ -124,6 +182,7 @@ class Character(AggregateRoot):
             "inventory": [prog.to_dict() for prog in self.inventory],
             "schematics": [s.to_dict() for s in self.schematics],
             "credits": self.credits,
+            "unused_skill_points": self.unused_skill_points,
         }
 
     @classmethod
@@ -144,4 +203,5 @@ class Character(AggregateRoot):
             inventory=[Program.from_dict(p_data) for p_data in data["inventory"]],
             schematics=[Schematic.from_dict(s_data) for s_data in data["schematics"]],
             credits=data["credits"],
+            unused_skill_points=data["unused_skill_points"],
         )

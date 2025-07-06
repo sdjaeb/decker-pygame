@@ -1,5 +1,6 @@
 import pygame
 
+from decker_pygame.application.character_service import CharacterService
 from decker_pygame.application.crafting_service import CraftingError, CraftingService
 from decker_pygame.application.logging_service import LoggingService
 from decker_pygame.application.player_service import PlayerService
@@ -8,6 +9,7 @@ from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.presentation.components.build_view import BuildView
+from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.utils import scale_icons
@@ -35,17 +37,20 @@ class Game:
     alarm_bar: AlarmBar
     health_bar: HealthBar
     player_service: PlayerService
+    character_service: CharacterService
     player_id: PlayerId
     crafting_service: CraftingService
     character_id: CharacterId
     logging_service: LoggingService
     message_view: MessageView
     build_view: BuildView | None = None
+    char_data_view: CharDataView | None = None
 
     def __init__(
         self,
         player_service: PlayerService,
         player_id: PlayerId,
+        character_service: CharacterService,
         crafting_service: CraftingService,
         character_id: CharacterId,
         logging_service: LoggingService,
@@ -56,6 +61,7 @@ class Game:
         Args:
             player_service (PlayerService): Service for player operations.
             player_id (PlayerId): The current player's ID.
+            character_service (CharacterService): Service for character operations.
             crafting_service (CraftingService): Service for crafting operations.
             character_id (CharacterId): The current character's ID.
             logging_service (LoggingService): Service for logging.
@@ -66,6 +72,7 @@ class Game:
         self.is_running = True
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
         self.player_service = player_service
+        self.character_service = character_service
         self.player_id = player_id
         self.crafting_service = crafting_service
         self.character_id = character_id
@@ -121,6 +128,8 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_b:
                     self._toggle_build_view()
+                if event.key == pygame.K_c:
+                    self._toggle_char_data_view()
                 if event.key == pygame.K_q:
                     self.is_running = False
 
@@ -131,6 +140,9 @@ class Game:
 
             if self.build_view:
                 self.build_view.handle_event(event)
+
+            if self.char_data_view:
+                self.char_data_view.handle_event(event)
 
     def _toggle_build_view(self) -> None:
         """Opens or closes the build view."""
@@ -160,6 +172,49 @@ class Game:
             self.show_message(f"Successfully crafted {schematic_name}!")
         except CraftingError as e:
             self.show_message(f"Crafting failed: {e}")
+
+    def _on_increase_skill(self, skill_name: str) -> None:
+        """Callback to handle increasing a skill."""
+        try:
+            self.character_service.increase_skill(self.character_id, skill_name)
+            self._toggle_char_data_view()  # Close
+            self._toggle_char_data_view()  # and re-open to refresh
+        except Exception as e:
+            self.show_message(f"Error: {e}")
+
+    def _on_decrease_skill(self, skill_name: str) -> None:
+        """Callback to handle decreasing a skill."""
+        self.character_service.decrease_skill(self.character_id, skill_name)
+        self._toggle_char_data_view()  # Close
+        self._toggle_char_data_view()  # and re-open to refresh
+
+    def _toggle_char_data_view(self) -> None:
+        """Opens or closes the character data view."""
+        if self.char_data_view:
+            self.all_sprites.remove(self.char_data_view)
+            self.char_data_view = None
+        else:
+            char_data = self.character_service.get_character_data(self.character_id)
+            player_status = self.player_service.get_player_status(self.player_id)
+
+            if not char_data or not player_status:
+                print("Could not retrieve character/player data.")
+                return
+
+            self.char_data_view = CharDataView(
+                position=(150, 100),
+                size=(400, 450),
+                character_name=char_data.name,
+                reputation=char_data.reputation,
+                money=char_data.credits,
+                health=player_status.current_health,
+                skills=char_data.skills,
+                unused_skill_points=char_data.unused_skill_points,
+                on_close=self._toggle_char_data_view,
+                on_increase_skill=self._on_increase_skill,
+                on_decrease_skill=self._on_decrease_skill,
+            )
+            self.all_sprites.add(self.char_data_view)
 
     def show_message(self, text: str) -> None:
         """Displays a message in the message view."""

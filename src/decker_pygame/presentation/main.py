@@ -4,6 +4,7 @@ import uuid
 
 import pygame
 
+from decker_pygame.application.character_service import CharacterService
 from decker_pygame.application.crafting_service import CraftingService
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.event_handlers import (
@@ -45,6 +46,9 @@ def main() -> None:
     player_service = PlayerService(
         player_repo=player_repo, event_dispatcher=event_dispatcher
     )
+    character_service = CharacterService(
+        character_repo=character_repo, event_dispatcher=event_dispatcher
+    )
     crafting_service = CraftingService(
         character_repo=character_repo, event_dispatcher=event_dispatcher
     )
@@ -72,6 +76,7 @@ def main() -> None:
         name="Rynn",
         initial_skills={"crafting": 5},
         initial_credits=2000,
+        initial_skill_points=5,
     )
     schematic = Schematic(
         name="IcePick v1",
@@ -99,6 +104,7 @@ def main() -> None:
     game = Game(
         player_service=player_service,
         player_id=player_id,
+        character_service=character_service,
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
         logging_service=logging_service,

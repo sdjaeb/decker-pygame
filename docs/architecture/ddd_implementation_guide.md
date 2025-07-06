@@ -127,3 +127,19 @@ To facilitate rapid prototyping and debugging without polluting the core domain 
 -   **Strategy:** Development-specific logic (e.g., verbose input logging, granting extra starting resources) is placed within the `presentation` or `main` composition root.
 -   **Control:** This logic is wrapped in a conditional check against `DEV_SETTINGS.enabled`, which is controlled by an environment variable.
 -   **Benefit:** This approach keeps our core layers clean and testable, while allowing for flexible, temporary changes during development.
+
+## 8. Anatomy of a User Interaction
+
+To understand how the layers work together during runtime, consider the example of a user clicking a "+" button to increase a character's skill.
+
+The flow is as follows:
+
+1.  **UI Event (Presentation Layer):** The user clicks the `+` button in the `CharDataView`. The `Button` widget's `on_click` callback is triggered.
+
+2.  **Command (Presentation -> Application):** The `CharDataView` (which owns the button) has a method like `_on_increase_skill_click`. This method calls a method on the `CharacterService`, for example, `character_service.increase_skill(character_id, "hacking")`. This call is a **Command**—it's an instruction from the UI to the application to *do something*.
+
+3.  **Domain Logic (Application -> Domain):** The `CharacterService` loads the `Character` aggregate from the repository. It then calls a method on the domain object, like `character.increase_skill("hacking")`. This is where the core business rules are enforced (e.g., "do I have enough skill points?").
+
+4.  **Domain Event (Domain Layer):** If the skill increase is successful, the `character.increase_skill` method creates and records a new **Domain Event**, like `SkillIncreased(skill="hacking", new_level=3)`.
+
+5.  **Event Dispatch (Application Layer):** After calling `character_repo.save(character)`, the `CharacterService` dispatches the new `SkillIncreased` event to the rest of the system via the `EventDispatcher`. Other parts of the application can then react to this change.

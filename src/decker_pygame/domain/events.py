@@ -49,3 +49,21 @@ class ItemCrafted(BaseEvent):
     schematic_name: str
     item_id: ProgramId  # Could be a generic ItemId in the future
     item_name: str
+
+
+@dataclass(frozen=True)
+class SkillIncreased(BaseEvent):
+    """Fired when a character's skill is increased."""
+
+    character_id: CharacterId
+    skill_name: str
+    new_level: int
+
+
+@dataclass(frozen=True)
+class SkillDecreased(BaseEvent):
+    """Fired when a character's skill is decreased."""
+
+    character_id: CharacterId
+    skill_name: str
+    new_level: int
