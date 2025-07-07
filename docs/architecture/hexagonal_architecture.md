@@ -63,11 +63,28 @@ These are the concrete implementations of the Core's driven ports.
 -   **Infrastructure (`src/decker_pygame/infrastructure`):** Our `JsonFileCharacterRepository` is a driven adapter. It implements the `CharacterRepositoryInterface` port, translating the Core's request to save a character into the specific action of writing a JSON file to disk.
 
 ## 4. Future Improvements
+## 4. Explicit Ports and Adapters
 
-While our current structure aligns well with Hexagonal Architecture, we can make it even more explicit and robust:
+To make our architecture even more robust and self-documenting, we have made the roles of Ports and Adapters more explicit.
 
--   **Explicit Port Modules:** We could create a dedicated `src/decker_pygame/ports` directory to make the separation even clearer, though the current placement within the `domain` (for repository interfaces) and `application` (for service methods) layers is also a valid and common approach.
+### 4.1. Explicit Port Modules
 
--   **Decouple Presentation Logic:** The `Game` class currently contains a mix of game loop management and UI event handling. In the future, we could introduce a more formal "Presentation Adapter" that is solely responsible for translating Pygame events into calls to our application services, further decoupling the UI from the core game state.
+All port interfaces, both driving and driven, are now located in a dedicated `src/decker_pygame/ports` directory.
 
--   **External API Adapters:** When we need to communicate with external services (e.g., a high-score server), we would create a new port in the Core (e.g., `HighScoreServiceInterface`) and a corresponding adapter in the `infrastructure` layer that handles the HTTP requests.
+-   **Driving Port Interfaces (`ports/service_interfaces.py`):** These are abstract base classes (e.g., `CharacterServiceInterface`) that define the use cases the application offers. The Application Services in `src/decker_pygame/application` provide the concrete implementations of these interfaces.
+
+-   **Driven Port Interfaces (`ports/repository_interfaces.py`):** These are the abstract base classes for our repositories (e.g., `CharacterRepositoryInterface`). They define the persistence contract required by the Core.
+
+This explicit separation makes it immediately clear what the application's boundaries are.
+
+### 4.2. Decoupled Presentation Logic
+
+The `Game` class delegates the task of interpreting user input to a dedicated **Presentation Adapter** (e.g., `PygameEventHandler`). This adapter's sole responsibility is to translate raw Pygame events (like key presses) into calls to the appropriate methods on our Application Services (our driving ports). This further decouples the UI from the core application logic.
+
+### 4.3. External API Adapters
+
+When we need to communicate with external services (e.g., a high-score server), we follow a standard pattern:
+
+1.  Define a new driven port in `src/decker_pygame/ports` (e.g., `HighScoreServiceInterface`).
+2.  Create a corresponding adapter in the `infrastructure` layer (e.g., `ApiHighScoreService`) that implements this interface and handles the actual HTTP communication.
+3.  Inject this adapter into the relevant Application Service.

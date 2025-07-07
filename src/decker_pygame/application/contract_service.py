@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
-from decker_pygame.domain.contract_repository_interface import (
-    ContractRepositoryInterface,
-)
 from decker_pygame.domain.ids import ContractId
+from decker_pygame.ports.repository_interfaces import ContractRepositoryInterface
+
+if TYPE_CHECKING:
+    from decker_pygame.domain.contract import Contract
 
 
 @dataclass(frozen=True)
@@ -16,6 +18,17 @@ class ContractSummaryDTO:
     title: str
     client: str
     reward: int
+
+    @classmethod
+    def from_domain(cls, contract: "Contract") -> "ContractSummaryDTO":
+        """Create a DTO from a Contract domain object."""
+        return cls(
+            # The domain object's ID is a generic AggregateId; cast it.
+            id=ContractId(contract.id),
+            title=contract.title,
+            client=contract.client,
+            reward=contract.reward_credits,
+        )
 
 
 class ContractService:
@@ -32,13 +45,4 @@ class ContractService:
     def get_available_contracts(self) -> list[ContractSummaryDTO]:
         """Retrieves a list of summaries for all available contracts."""
         contracts = self.contract_repo.get_all()
-        return [
-            ContractSummaryDTO(
-                # Cast the AggregateId from the base class to the specific ContractId
-                id=ContractId(c.id),
-                title=c.title,
-                client=c.client,
-                reward=c.reward_credits,
-            )
-            for c in contracts
-        ]
+        return [ContractSummaryDTO.from_domain(c) for c in contracts]

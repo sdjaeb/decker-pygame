@@ -9,10 +9,8 @@ from decker_pygame.application.character_service import (
     CharacterServiceError,
 )
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.character_repository_interface import (
-    CharacterRepositoryInterface,
-)
 from decker_pygame.domain.ids import CharacterId
+from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 
 
 def test_get_character_name_success():

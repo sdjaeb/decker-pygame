@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import PlayerId
 from decker_pygame.domain.player import Player
-from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
+from decker_pygame.ports.repository_interfaces import PlayerRepositoryInterface
 
 
 class PlayerCreationPreconditionError(Exception):

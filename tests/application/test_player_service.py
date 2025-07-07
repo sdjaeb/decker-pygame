@@ -7,7 +7,7 @@ from decker_pygame.application.player_service import (
     PlayerStatusDTO,
 )
 from decker_pygame.domain.player import Player, PlayerId
-from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
+from decker_pygame.ports.repository_interfaces import PlayerRepositoryInterface
 
 
 def test_create_new_player():

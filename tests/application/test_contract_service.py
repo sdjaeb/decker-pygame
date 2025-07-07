@@ -6,10 +6,8 @@ from decker_pygame.application.contract_service import (
     ContractSummaryDTO,
 )
 from decker_pygame.domain.contract import Contract
-from decker_pygame.domain.contract_repository_interface import (
-    ContractRepositoryInterface,
-)
 from decker_pygame.domain.ids import AreaId, ContractId
+from decker_pygame.ports.repository_interfaces import ContractRepositoryInterface
 
 
 def test_get_available_contracts():
