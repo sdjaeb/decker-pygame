@@ -18,10 +18,10 @@ from decker_pygame.presentation.components.contract_data_view import ContractDat
 from decker_pygame.presentation.components.contract_list_view import ContractListView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
 from decker_pygame.settings import (
     BLACK,
-    DEV_SETTINGS,
     FPS,
     GFX,
     SCREEN_HEIGHT,
@@ -50,6 +50,7 @@ class Game:
     character_id: CharacterId
     logging_service: LoggingServiceInterface
     message_view: MessageView
+    input_handler: PygameInputHandler
     build_view: BuildView | None = None
     char_data_view: CharDataView | None = None
     contract_list_view: ContractListView | None = None
@@ -89,6 +90,7 @@ class Game:
         self.crafting_service = crafting_service
         self.character_id = character_id
         self.logging_service = logging_service
+        self.input_handler = PygameInputHandler(self, logging_service)
 
         self._load_assets()
 
@@ -126,45 +128,11 @@ class Game:
         )
         self.all_sprites.add(self.message_view)
 
-    def _handle_events(self) -> None:
-        """
-        Handle user input and system events.
+    def quit(self) -> None:
+        """Signals the game to exit the main loop."""
+        self.is_running = False
 
-        Returns:
-            None
-        """
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.is_running = False
-
-            if event.type == pygame.KEYDOWN:
-                self._handle_keydown(event)
-
-                if DEV_SETTINGS.enabled:
-                    self.logging_service.log(
-                        "Key Press", {"key": pygame.key.name(event.key)}
-                    )
-
-            if self.build_view:
-                self.build_view.handle_event(event)
-
-            if self.char_data_view:
-                self.char_data_view.handle_event(event)
-
-    def _handle_keydown(self, event: pygame.event.Event) -> None:
-        """Handles key down events."""
-        if event.key == pygame.K_b:
-            self._toggle_build_view()
-        if event.key == pygame.K_c:
-            self._toggle_char_data_view()
-        if event.key == pygame.K_l:
-            self._toggle_contract_list_view()
-        if event.key == pygame.K_d:
-            self._toggle_contract_data_view()
-        if event.key == pygame.K_q:
-            self.is_running = False
-
-    def _toggle_build_view(self) -> None:
+    def toggle_build_view(self) -> None:
         """Opens or closes the build view."""
         if self.build_view:
             self.all_sprites.remove(self.build_view)
@@ -197,18 +165,18 @@ class Game:
         """Callback to handle increasing a skill."""
         try:
             self.character_service.increase_skill(self.character_id, skill_name)
-            self._toggle_char_data_view()  # Close
-            self._toggle_char_data_view()  # and re-open to refresh
+            self.toggle_char_data_view()  # Close
+            self.toggle_char_data_view()  # and re-open to refresh
         except Exception as e:
             self.show_message(f"Error: {e}")
 
     def _on_decrease_skill(self, skill_name: str) -> None:
         """Callback to handle decreasing a skill."""
         self.character_service.decrease_skill(self.character_id, skill_name)
-        self._toggle_char_data_view()  # Close
-        self._toggle_char_data_view()  # and re-open to refresh
+        self.toggle_char_data_view()  # Close
+        self.toggle_char_data_view()  # and re-open to refresh
 
-    def _toggle_char_data_view(self) -> None:
+    def toggle_char_data_view(self) -> None:
         """Opens or closes the character data view."""
         if self.char_data_view:
             self.all_sprites.remove(self.char_data_view)
@@ -230,13 +198,13 @@ class Game:
                 health=player_status.current_health,
                 skills=char_data.skills,
                 unused_skill_points=char_data.unused_skill_points,
-                on_close=self._toggle_char_data_view,
+                on_close=self.toggle_char_data_view,
                 on_increase_skill=self._on_increase_skill,
                 on_decrease_skill=self._on_decrease_skill,
             )
             self.all_sprites.add(self.char_data_view)
 
-    def _toggle_contract_list_view(self) -> None:
+    def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
         if self.contract_list_view:
             self.all_sprites.remove(self.contract_list_view)
@@ -247,7 +215,7 @@ class Game:
             )
             self.all_sprites.add(self.contract_list_view)
 
-    def _toggle_contract_data_view(self) -> None:
+    def toggle_contract_data_view(self) -> None:
         """Opens or closes the contract data view."""
         if self.contract_data_view:
             self.all_sprites.remove(self.contract_data_view)
@@ -286,7 +254,7 @@ class Game:
             None
         """
         while self.is_running:
-            self._handle_events()
+            self.input_handler.handle_events()
             self._update()
 
             self.screen.fill(BLACK)

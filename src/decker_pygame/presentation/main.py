@@ -7,12 +7,12 @@ import pygame
 from decker_pygame.application.character_service import CharacterService
 from decker_pygame.application.contract_service import ContractService
 from decker_pygame.application.crafting_service import CraftingService
-from decker_pygame.application.event_dispatcher import EventDispatcher
-from decker_pygame.application.event_handlers import (
+from decker_pygame.application.domain_event_handlers import (
     create_event_logging_handler,
     is_special_player,
     log_special_player_created,
 )
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.logging_service import ConsoleLogWriter, LoggingService
 from decker_pygame.application.player_service import PlayerService
 from decker_pygame.domain.character import Character

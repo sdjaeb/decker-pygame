@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.domain.character import Character
     from decker_pygame.domain.contract import Contract
     from decker_pygame.domain.ids import CharacterId, ContractId, PlayerId
@@ -14,12 +14,12 @@ class CharacterRepositoryInterface(ABC):  # pragma: no cover
     @abstractmethod
     def save(self, character: "Character") -> None:
         """Saves a character."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def get(self, character_id: "CharacterId") -> Optional["Character"]:
         """Retrieves a character by its ID."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class ContractRepositoryInterface(ABC):  # pragma: no cover
@@ -28,17 +28,17 @@ class ContractRepositoryInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_all(self) -> list["Contract"]:
         """Retrieves all contracts."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def save(self, contract: "Contract") -> None:
         """Saves a contract."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def get(self, contract_id: "ContractId") -> Optional["Contract"]:
         """Retrieves a contract by its ID."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class PlayerRepositoryInterface(ABC):  # pragma: no cover
@@ -47,14 +47,14 @@ class PlayerRepositoryInterface(ABC):  # pragma: no cover
     @abstractmethod
     def save(self, player: "Player") -> None:
         """Saves a player."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def get(self, player_id: "PlayerId") -> Optional["Player"]:
         """Retrieves a player by its ID."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def get_by_name(self, name: str) -> Optional["Player"]:
         """Retrieves a player by their name."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover

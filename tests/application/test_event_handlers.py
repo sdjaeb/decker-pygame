@@ -1,7 +1,7 @@
 import uuid
 from unittest.mock import Mock
 
-from decker_pygame.application.event_handlers import create_event_logging_handler
+from decker_pygame.application.domain_event_handlers import create_event_logging_handler
 from decker_pygame.application.logging_service import LoggingService
 from decker_pygame.domain.events import PlayerCreated
 from decker_pygame.domain.ids import PlayerId

@@ -6,7 +6,7 @@ from decker_pygame.domain.ids import ContractId
 from decker_pygame.ports.repository_interfaces import ContractRepositoryInterface
 from decker_pygame.ports.service_interfaces import ContractServiceInterface
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.domain.contract import Contract
 
 
