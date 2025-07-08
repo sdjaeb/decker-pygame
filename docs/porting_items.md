@@ -66,7 +66,7 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **CharDataDialog.cpp/h** (`Ported as CharDataView`)
 - **ContractDataDialog.cpp/h** (`Ported as ContractDataView`)
 - **ContractListDialog.cpp/h** (`Ported as ContractListView`)
-- **DeckDataDialog.cpp/h**
+- **DeckDataDialog.cpp/h** (`In Progress as DeckView`)
 - **EntryDlg.cpp/h**
 - **FileAccessDlg.cpp/h**
 - **HomeView.cpp/h**
@@ -77,12 +77,12 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **NewCharDlg.cpp/h**
 - **NewProjectDlg.cpp/h**
 - **OptionsDlg.cpp/h**
-- **OrderDlg.cpp/h**
+- **OrderDlg.cpp/h** (`In Progress as OrderView`)
 - **ProjectDataDlg.cpp/h**
 - **RestDlg.cpp/h**
 - **ShopItem.cpp/h**
 - **SoundEditDlg.cpp/h**
-- **TransferDlg.cpp/h**
+- **TransferDlg.cpp/h** (`In Progress as TransferView`)
 
 **Porting Priority:** 3
 
