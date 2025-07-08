@@ -5,11 +5,21 @@ from decker_pygame.application.contract_service import (
     ContractService,
     ContractSummaryDTO,
 )
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.contract import Contract
-from decker_pygame.domain.contract_repository_interface import (
-    ContractRepositoryInterface,
-)
 from decker_pygame.domain.ids import AreaId, ContractId
+from decker_pygame.ports.repository_interfaces import ContractRepositoryInterface
+
+
+def test_contract_service_initialization():
+    """Tests that the service initializes correctly."""
+    mock_repo = Mock(spec=ContractRepositoryInterface)
+    mock_dispatcher = Mock(spec=EventDispatcher)
+
+    service = ContractService(contract_repo=mock_repo, event_dispatcher=mock_dispatcher)
+
+    assert service.contract_repo is mock_repo
+    assert service.event_dispatcher is mock_dispatcher
 
 
 def test_get_available_contracts():

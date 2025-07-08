@@ -11,11 +11,9 @@ from decker_pygame.application.crafting_service import (
 )
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.character_repository_interface import (
-    CharacterRepositoryInterface,
-)
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.ids import CharacterId
+from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 
 
 @pytest.fixture

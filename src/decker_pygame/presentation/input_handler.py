@@ -1,0 +1,50 @@
+from typing import TYPE_CHECKING
+
+import pygame
+
+from decker_pygame.settings import DEV_SETTINGS
+
+if TYPE_CHECKING:  # pragma: no cover
+    from decker_pygame.ports.service_interfaces import LoggingServiceInterface
+    from decker_pygame.presentation.game import Game
+
+
+class PygameInputHandler:
+    """
+    A dedicated Presentation Adapter for handling user input.
+    Translates raw Pygame events into calls to the Game object.
+    """
+
+    def __init__(self, game: "Game", logging_service: "LoggingServiceInterface"):
+        self._game = game
+        self._logging_service = logging_service
+        self._key_map = {
+            pygame.K_b: self._game.toggle_build_view,
+            pygame.K_c: self._game.toggle_char_data_view,
+            pygame.K_l: self._game.toggle_contract_list_view,
+            pygame.K_d: self._game.toggle_contract_data_view,
+            pygame.K_q: self._game.quit,
+        }
+
+    def handle_events(self) -> None:
+        """
+        Process the event queue and delegate to appropriate handlers.
+        """
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self._game.quit()
+                return  # Exit early if quitting
+
+            if event.type == pygame.KEYDOWN:
+                if action := self._key_map.get(event.key):
+                    action()
+
+                if DEV_SETTINGS.enabled:
+                    self._logging_service.log(
+                        "Key Press", {"key": pygame.key.name(event.key)}
+                    )
+
+            # Delegate events to active views that need to handle mouse clicks, etc.
+            for view in [self._game.build_view, self._game.char_data_view]:
+                if view:
+                    view.handle_event(event)

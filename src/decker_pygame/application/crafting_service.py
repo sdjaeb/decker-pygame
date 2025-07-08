@@ -1,9 +1,8 @@
 from decker_pygame.application.event_dispatcher import EventDispatcher
-from decker_pygame.domain.character_repository_interface import (
-    CharacterRepositoryInterface,
-)
 from decker_pygame.domain.crafting import Schematic
 from decker_pygame.domain.ids import CharacterId
+from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
+from decker_pygame.ports.service_interfaces import CraftingServiceInterface
 
 
 class CraftingError(Exception):
@@ -24,7 +23,7 @@ class InsufficientResourcesError(CraftingError):
     pass
 
 
-class CraftingService:
+class CraftingService(CraftingServiceInterface):
     """Application service for crafting-related operations."""
 
     def __init__(

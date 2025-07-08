@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import PlayerId
 from decker_pygame.domain.player import Player
-from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
+from decker_pygame.ports.repository_interfaces import PlayerRepositoryInterface
+from decker_pygame.ports.service_interfaces import PlayerServiceInterface
 
 
 class PlayerCreationPreconditionError(Exception):
@@ -23,7 +24,7 @@ class PlayerStatusDTO:
     max_health: int
 
 
-class PlayerService:
+class PlayerService(PlayerServiceInterface):
     """Application service for player-related operations."""
 
     def __init__(

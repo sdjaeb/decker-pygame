@@ -1,11 +1,14 @@
 import pygame
 
-from decker_pygame.application.character_service import CharacterService
-from decker_pygame.application.contract_service import ContractService
-from decker_pygame.application.crafting_service import CraftingError, CraftingService
-from decker_pygame.application.logging_service import LoggingService
-from decker_pygame.application.player_service import PlayerService
+from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.ports.service_interfaces import (
+    CharacterServiceInterface,
+    ContractServiceInterface,
+    CraftingServiceInterface,
+    LoggingServiceInterface,
+    PlayerServiceInterface,
+)
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
@@ -15,10 +18,10 @@ from decker_pygame.presentation.components.contract_data_view import ContractDat
 from decker_pygame.presentation.components.contract_list_view import ContractListView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
 from decker_pygame.settings import (
     BLACK,
-    DEV_SETTINGS,
     FPS,
     GFX,
     SCREEN_HEIGHT,
@@ -39,14 +42,15 @@ class Game:
     active_bar: ActiveBar
     alarm_bar: AlarmBar
     health_bar: HealthBar
-    player_service: PlayerService
-    character_service: CharacterService
-    contract_service: ContractService
+    player_service: PlayerServiceInterface
+    character_service: CharacterServiceInterface
+    contract_service: ContractServiceInterface
+    crafting_service: CraftingServiceInterface
     player_id: PlayerId
-    crafting_service: CraftingService
     character_id: CharacterId
-    logging_service: LoggingService
+    logging_service: LoggingServiceInterface
     message_view: MessageView
+    input_handler: PygameInputHandler
     build_view: BuildView | None = None
     char_data_view: CharDataView | None = None
     contract_list_view: ContractListView | None = None
@@ -54,25 +58,25 @@ class Game:
 
     def __init__(
         self,
-        player_service: PlayerService,
+        player_service: PlayerServiceInterface,
         player_id: PlayerId,
-        character_service: CharacterService,
-        contract_service: ContractService,
-        crafting_service: CraftingService,
+        character_service: CharacterServiceInterface,
+        contract_service: ContractServiceInterface,
+        crafting_service: CraftingServiceInterface,
         character_id: CharacterId,
-        logging_service: LoggingService,
+        logging_service: LoggingServiceInterface,
     ) -> None:
         """
         Initialize the Game.
 
         Args:
-            player_service (PlayerService): Service for player operations.
+            player_service (PlayerServiceInterface): Service for player ops.
             player_id (PlayerId): The current player's ID.
-            character_service (CharacterService): Service for character operations.
-            contract_service (ContractService): Service for contract operations.
-            crafting_service (CraftingService): Service for crafting operations.
+            character_service (CharacterServiceInterface): Service for character ops.
+            contract_service (ContractServiceInterface): Service for contract ops.
+            crafting_service (CraftingServiceInterface): Service for crafting ops.
             character_id (CharacterId): The current character's ID.
-            logging_service (LoggingService): Service for logging.
+            logging_service (LoggingServiceInterface): Service for logging.
         """
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
@@ -86,6 +90,7 @@ class Game:
         self.crafting_service = crafting_service
         self.character_id = character_id
         self.logging_service = logging_service
+        self.input_handler = PygameInputHandler(self, logging_service)
 
         self._load_assets()
 
@@ -123,45 +128,11 @@ class Game:
         )
         self.all_sprites.add(self.message_view)
 
-    def _handle_events(self) -> None:
-        """
-        Handle user input and system events.
+    def quit(self) -> None:
+        """Signals the game to exit the main loop."""
+        self.is_running = False
 
-        Returns:
-            None
-        """
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.is_running = False
-
-            if event.type == pygame.KEYDOWN:
-                self._handle_keydown(event)
-
-                if DEV_SETTINGS.enabled:
-                    self.logging_service.log(
-                        "Key Press", {"key": pygame.key.name(event.key)}
-                    )
-
-            if self.build_view:
-                self.build_view.handle_event(event)
-
-            if self.char_data_view:
-                self.char_data_view.handle_event(event)
-
-    def _handle_keydown(self, event: pygame.event.Event) -> None:
-        """Handles key down events."""
-        if event.key == pygame.K_b:
-            self._toggle_build_view()
-        if event.key == pygame.K_c:
-            self._toggle_char_data_view()
-        if event.key == pygame.K_l:
-            self._toggle_contract_list_view()
-        if event.key == pygame.K_d:
-            self._toggle_contract_data_view()
-        if event.key == pygame.K_q:
-            self.is_running = False
-
-    def _toggle_build_view(self) -> None:
+    def toggle_build_view(self) -> None:
         """Opens or closes the build view."""
         if self.build_view:
             self.all_sprites.remove(self.build_view)
@@ -194,46 +165,41 @@ class Game:
         """Callback to handle increasing a skill."""
         try:
             self.character_service.increase_skill(self.character_id, skill_name)
-            self._toggle_char_data_view()  # Close
-            self._toggle_char_data_view()  # and re-open to refresh
+            self.toggle_char_data_view()  # Close
+            self.toggle_char_data_view()  # and re-open to refresh
         except Exception as e:
             self.show_message(f"Error: {e}")
 
     def _on_decrease_skill(self, skill_name: str) -> None:
         """Callback to handle decreasing a skill."""
         self.character_service.decrease_skill(self.character_id, skill_name)
-        self._toggle_char_data_view()  # Close
-        self._toggle_char_data_view()  # and re-open to refresh
+        self.toggle_char_data_view()  # Close
+        self.toggle_char_data_view()  # and re-open to refresh
 
-    def _toggle_char_data_view(self) -> None:
+    def toggle_char_data_view(self) -> None:
         """Opens or closes the character data view."""
         if self.char_data_view:
             self.all_sprites.remove(self.char_data_view)
             self.char_data_view = None
         else:
-            char_data = self.character_service.get_character_data(self.character_id)
-            player_status = self.player_service.get_player_status(self.player_id)
+            view_data = self.character_service.get_character_view_data(
+                self.character_id, self.player_id
+            )
 
-            if not char_data or not player_status:
+            if not view_data:
                 print("Could not retrieve character/player data.")
                 return
 
             self.char_data_view = CharDataView(
                 position=(150, 100),
-                size=(400, 450),
-                character_name=char_data.name,
-                reputation=char_data.reputation,
-                money=char_data.credits,
-                health=player_status.current_health,
-                skills=char_data.skills,
-                unused_skill_points=char_data.unused_skill_points,
-                on_close=self._toggle_char_data_view,
+                data=view_data,
+                on_close=self.toggle_char_data_view,
                 on_increase_skill=self._on_increase_skill,
                 on_decrease_skill=self._on_decrease_skill,
             )
             self.all_sprites.add(self.char_data_view)
 
-    def _toggle_contract_list_view(self) -> None:
+    def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
         if self.contract_list_view:
             self.all_sprites.remove(self.contract_list_view)
@@ -244,7 +210,7 @@ class Game:
             )
             self.all_sprites.add(self.contract_list_view)
 
-    def _toggle_contract_data_view(self) -> None:
+    def toggle_contract_data_view(self) -> None:
         """Opens or closes the contract data view."""
         if self.contract_data_view:
             self.all_sprites.remove(self.contract_data_view)
@@ -283,7 +249,7 @@ class Game:
             None
         """
         while self.is_running:
-            self._handle_events()
+            self.input_handler.handle_events()
             self._update()
 
             self.screen.fill(BLACK)

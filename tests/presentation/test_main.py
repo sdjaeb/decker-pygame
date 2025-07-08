@@ -16,6 +16,7 @@ def test_main_function(mocker: MockerFixture) -> None:
     and runs the game, without starting a real Pygame window.
     """
     # Patch all dependencies within the main module
+    mock_pygame_init = mocker.patch("decker_pygame.presentation.main.pygame.init")
     mock_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFilePlayerRepository"
     )
@@ -89,6 +90,7 @@ def test_main_function(mocker: MockerFixture) -> None:
     )
     mock_char_service_class.assert_called_once_with(
         character_repo=mock_char_repo_class.return_value,
+        player_service=mock_player_service_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
     )
     mock_crafting_service_class.assert_called_once_with(
@@ -133,6 +135,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         logging_service=mock_logging_service_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
+    mock_pygame_init.assert_called_once()
 
 
 def test_main_function_dev_mode(mocker: MockerFixture) -> None:
@@ -140,6 +143,7 @@ def test_main_function_dev_mode(mocker: MockerFixture) -> None:
     Tests that the main function correctly applies dev settings when enabled.
     """
     # Patch all dependencies to prevent side effects
+    mocker.patch("decker_pygame.presentation.main.pygame.init")
     mocker.patch("decker_pygame.presentation.main.JsonFilePlayerRepository")
     mock_char_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFileCharacterRepository"

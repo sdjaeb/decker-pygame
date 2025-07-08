@@ -2,10 +2,8 @@ import json
 import os
 
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.character_repository_interface import (
-    CharacterRepositoryInterface,
-)
 from decker_pygame.domain.ids import CharacterId
+from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 
 
 class JsonFileCharacterRepository(CharacterRepositoryInterface):

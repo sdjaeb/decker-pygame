@@ -1,6 +1,8 @@
 import json
 from typing import Any, Protocol
 
+from decker_pygame.ports.service_interfaces import LoggingServiceInterface
+
 
 class LogWriter(Protocol):
     """A protocol for log writing strategies."""
@@ -18,7 +20,7 @@ class ConsoleLogWriter:
         print(f"LOG: {json.dumps(log_entry, indent=2)}")
 
 
-class LoggingService:
+class LoggingService(LoggingServiceInterface):
     """A service for dispatching log messages to various writers."""
 
     def __init__(self, writers: list[LogWriter] | None = None) -> None:

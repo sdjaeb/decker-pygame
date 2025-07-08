@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
+from decker_pygame.application.character_service import CharacterViewData
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.presentation.components.char_data_view import CharDataView
 
@@ -42,16 +43,18 @@ def test_char_data_view_initialization():
             inst.rect = pygame.Rect(0, 0, 10, 10)
         mock_button_class.side_effect = mock_button_instances
 
-        view = CharDataView(
-            position=(10, 20),
-            # Increase size to fit new elements
-            size=(400, 450),
-            character_name="Testy",
+        view_data = CharacterViewData(
+            name="Testy",
             reputation=10,
-            money=1234,
+            credits=1234,
             health=88,
             skills={"hacking": 5, "crafting": 2},
             unused_skill_points=10,
+        )
+
+        view = CharDataView(
+            position=(10, 20),
+            data=view_data,
             on_close=mock_on_close,
             on_increase_skill=mock_inc_skill,
             on_decrease_skill=mock_dec_skill,
@@ -97,16 +100,17 @@ def test_char_data_view_close_button_click():
             inst.rect = pygame.Rect(0, 0, 10, 10)
         mock_button_class.side_effect = mock_button_instances
 
-        view = CharDataView(
-            position=(50, 50),
-            # Increase size to fit new elements
-            size=(400, 450),
-            character_name="Testy",
+        view_data = CharacterViewData(
+            name="Testy",
             reputation=10,
-            money=1234,
+            credits=1234,
             health=88,
             skills={"hacking": 5},
             unused_skill_points=10,
+        )
+        view = CharDataView(
+            position=(50, 50),
+            data=view_data,
             on_close=mock_on_close,
             on_increase_skill=mock_inc_skill,
             on_decrease_skill=mock_dec_skill,
