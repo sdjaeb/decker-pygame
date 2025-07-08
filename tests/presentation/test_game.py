@@ -6,7 +6,9 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.character_service import CharacterDataDTO
+from decker_pygame.application.character_service import (
+    CharacterViewData,
+)
 from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.application.player_service import PlayerStatusDTO
 from decker_pygame.domain.ids import CharacterId, PlayerId
@@ -346,18 +348,16 @@ def test_game_toggles_char_data_view(game_with_mocks: Mocks):
     mocks = game_with_mocks
     game = mocks.game
 
-    # Mock the DTOs returned by the services
-    char_dto = CharacterDataDTO(
+    # Mock the aggregated View Model DTO from the character service
+    view_data = CharacterViewData(
         name="Testy",
         credits=500,
         reputation=10,
         skills={"hacking": 5},
         unused_skill_points=10,
+        health=88,
     )
-    mocks.character_service.get_character_data.return_value = char_dto
-
-    player_dto = PlayerStatusDTO(current_health=88, max_health=100)
-    mocks.player_service.get_player_status.return_value = player_dto
+    mocks.character_service.get_character_view_data.return_value = view_data
 
     assert game.char_data_view is None
 
@@ -365,21 +365,10 @@ def test_game_toggles_char_data_view(game_with_mocks: Mocks):
     with patch("decker_pygame.presentation.game.CharDataView") as mock_view_class:
         game.toggle_char_data_view()
 
-        mocks.character_service.get_character_data.assert_called_once_with(
-            game.character_id
-        )
-        mocks.player_service.get_player_status.assert_called_once_with(game.player_id)
-
         # Check that the view was instantiated with the correct data
         mock_view_class.assert_called_once_with(
             position=(150, 100),
-            size=(400, 450),
-            character_name="Testy",
-            reputation=10,
-            money=500,
-            health=88,
-            skills={"hacking": 5},
-            unused_skill_points=10,
+            data=view_data,
             on_close=game.toggle_char_data_view,
             on_increase_skill=game._on_increase_skill,
             on_decrease_skill=game._on_decrease_skill,
@@ -396,11 +385,8 @@ def test_toggle_char_data_view_no_data(game_with_mocks: Mocks, capsys):
     mocks = game_with_mocks
     game = mocks.game
 
-    # Case 1: Character data is missing
-    mocks.character_service.get_character_data.return_value = None
-    mocks.player_service.get_player_status.return_value = PlayerStatusDTO(
-        current_health=100, max_health=100
-    )
+    # Simulate the service returning no data
+    mocks.character_service.get_character_view_data.return_value = None
 
     # Call the public method
     game.toggle_char_data_view()

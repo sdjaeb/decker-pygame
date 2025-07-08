@@ -182,22 +182,17 @@ class Game:
             self.all_sprites.remove(self.char_data_view)
             self.char_data_view = None
         else:
-            char_data = self.character_service.get_character_data(self.character_id)
-            player_status = self.player_service.get_player_status(self.player_id)
+            view_data = self.character_service.get_character_view_data(
+                self.character_id, self.player_id
+            )
 
-            if not char_data or not player_status:
+            if not view_data:
                 print("Could not retrieve character/player data.")
                 return
 
             self.char_data_view = CharDataView(
                 position=(150, 100),
-                size=(400, 450),
-                character_name=char_data.name,
-                reputation=char_data.reputation,
-                money=char_data.credits,
-                health=player_status.current_health,
-                skills=char_data.skills,
-                unused_skill_points=char_data.unused_skill_points,
+                data=view_data,
                 on_close=self.toggle_char_data_view,
                 on_increase_skill=self._on_increase_skill,
                 on_decrease_skill=self._on_decrease_skill,

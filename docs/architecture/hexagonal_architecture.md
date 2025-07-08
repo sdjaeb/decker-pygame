@@ -6,7 +6,7 @@ This document describes how we apply the principles of Hexagonal Architecture (a
 
 The "hexagon" at the center of our architecture contains the pure, unadulterated logic of our application. It has no knowledge of how it is being used or what technologies are used to persist its data.
 
--   **Domain Layer (`src/decker_pygame/domain`):** This is the innermost part of the core. It contains our Aggregates (`Character`, `Player`), domain events, and repository interfaces. It is pure business logic.
+-   **Domain Layer (`src/decker_pygame/domain`):** This is the innermost part of the core. It contains our Aggregates (`Character`, `Player`) and domain events. It is pure business logic.
 -   **Application Layer (`src/decker_pygame/application`):** This layer surrounds the domain. It contains our Application Services (`CharacterService`, `CraftingService`) which orchestrate the domain objects to execute specific use cases (e.g., `increase_skill`).
 
 The Core is completely independent and can be tested without any UI or database.
@@ -15,35 +15,37 @@ The Core is completely independent and can be tested without any UI or database.
 
 Ports are the interfaces that define how the Core communicates with the outside world. They are part of the Core but are defined from the Core's point of view. A port is an API that the Core *needs* to function.
 
+All port interfaces are explicitly defined in the `src/decker_pygame/ports` directory.
 We have two main types of ports:
 
 ### 2.1. Driving Ports (Input)
 
-These define how external actors can drive the application. In our architecture, the public methods of our **Application Services** serve as our driving ports.
+These define how external actors can drive the application. In our architecture, the **Service Interfaces** are our driving ports.
 
-**Example:** The `CharacterService` exposes the `increase_skill(character_id, skill_name)` method. This is a port that the UI (an adapter) can use to command the application to perform an action.
+**Example:** The `CharacterServiceInterface` in `ports/service_interfaces.py` defines the contract for character-related use cases, such as `increase_skill(...)` and `get_character_view_data(...)`.
 
 ```python
-# src/decker_pygame/application/character_service.py
+# src/decker_pygame/ports/service_interfaces.py
 
-class CharacterService:
-    def increase_skill(self, character_id: CharacterId, skill_name: str) -> None:
-        # ... implementation
+class CharacterServiceInterface(ABC):
+    @abstractmethod
+    def increase_skill(self, character_id: "CharacterId", skill_name: str) -> None:
+        ...
 ```
 
 ### 2.2. Driven Ports (Output)
 
 These define what the Core needs from the outside world, typically for data persistence or other infrastructure tasks. In our architecture, the **Repository Interfaces** are our driven ports.
 
-**Example:** The `CharacterRepositoryInterface` defines the contract that the Core needs for storing and retrieving `Character` aggregates. The Core doesn't know or care *how* they are stored (JSON, SQL, etc.), only that this contract is fulfilled.
+**Example**: The `CharacterRepositoryInterface` in `ports/repository_interfaces.py` defines the contract that the Core needs for storing and retrieving `Character` aggregates. The Core doesn't know or care how they are stored (JSON, SQL, etc.), only that this contract is fulfilled.
 
 ```python
-# src/decker_pygame/domain/character_repository_interface.py
+# src/decker_pygame/ports/repository_interfaces.py
 
 class CharacterRepositoryInterface(ABC):
     @abstractmethod
     def save(self, character: "Character") -> None:
-        # ...
+        ...
 ```
 
 ## 3. Adapters
@@ -54,7 +56,8 @@ Adapters are the components that live outside the Core. They connect the Core's 
 
 These are the components that call into the Core's driving ports.
 
--   **UI Components (`src/decker_pygame/presentation`):** Our Pygame components, like `CharDataView`, are driving adapters. When a user clicks a `+` button, the view's callback calls the `character_service.increase_skill(...)` method, thus "driving" the application.
+-   **Input Handler (`src/decker_pygame/presentation/input_handler.py`):** The `PygameInputHandler` is a dedicated driving adapter. Its sole responsibility is to translate raw Pygame events (like key presses) into calls to methods on the `Game` object.
+-   **UI Components (`src/decker_pygame/presentation/components`):** Our Pygame components, like `CharDataView`, are also driving adapters. When a user clicks a `+` button, the view's callback calls a method on the `Game` class, which in turn calls the appropriate Application Service (e.g., `character_service.increase_skill(...)`).
 
 ### 3.2. Driven Adapters
 
@@ -62,26 +65,27 @@ These are the concrete implementations of the Core's driven ports.
 
 -   **Infrastructure (`src/decker_pygame/infrastructure`):** Our `JsonFileCharacterRepository` is a driven adapter. It implements the `CharacterRepositoryInterface` port, translating the Core's request to save a character into the specific action of writing a JSON file to disk.
 
-## 4. Future Improvements
-## 4. Explicit Ports and Adapters
 
-To make our architecture even more robust and self-documenting, we have made the roles of Ports and Adapters more explicit.
+## 4. Data Flow and View Models
 
-### 4.1. Explicit Port Modules
+To maintain a clean boundary between the application and presentation layers, we use dedicated **View Model DTOs**.
 
-All port interfaces, both driving and driven, are now located in a dedicated `src/decker_pygame/ports` directory.
+**Example:** The `CharacterService` provides a `get_character_view_data()` method. This method is a query that assembles a `CharacterViewData` DTO, which contains all the specific fields required by the `CharDataView` component. This prevents the presentation layer from needing to make multiple service calls and assemble data itself, keeping it "dumb" and focused on rendering.
 
--   **Driving Port Interfaces (`ports/service_interfaces.py`):** These are abstract base classes (e.g., `CharacterServiceInterface`) that define the use cases the application offers. The Application Services in `src/decker_pygame/application` provide the concrete implementations of these interfaces.
+```python
+# src/decker_pygame/application/character_service.py
 
--   **Driven Port Interfaces (`ports/repository_interfaces.py`):** These are the abstract base classes for our repositories (e.g., `CharacterRepositoryInterface`). They define the persistence contract required by the Core.
+@dataclass(frozen=True)
+class CharacterViewData:
+    name: str
+    credits: int
+    reputation: int
+    skills: dict[str, int]
+    unused_skill_points: int
+    health: int
+```
 
-This explicit separation makes it immediately clear what the application's boundaries are.
-
-### 4.2. Decoupled Presentation Logic
-
-The `Game` class delegates the task of interpreting user input to a dedicated **Presentation Adapter** (e.g., `PygameEventHandler`). This adapter's sole responsibility is to translate raw Pygame events (like key presses) into calls to the appropriate methods on our Application Services (our driving ports). This further decouples the UI from the core application logic.
-
-### 4.3. External API Adapters
+## 5. External API Adapters (Future)
 
 When we need to communicate with external services (e.g., a high-score server), we follow a standard pattern:
 

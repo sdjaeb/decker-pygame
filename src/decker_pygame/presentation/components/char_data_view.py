@@ -3,6 +3,7 @@ from functools import partial
 
 import pygame
 
+from decker_pygame.application.character_service import CharacterViewData
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import UI_FACE, UI_FONT
 
@@ -25,27 +26,16 @@ class CharDataView(pygame.sprite.Sprite):
     def __init__(
         self,
         position: tuple[int, int],
-        size: tuple[int, int],
-        character_name: str,
-        reputation: int,
-        money: int,
-        health: int,
-        skills: dict[str, int],
-        unused_skill_points: int,
+        data: CharacterViewData,
         on_close: Callable[[], None],
         on_increase_skill: Callable[[str], None],
         on_decrease_skill: Callable[[str], None],
     ):
         """Initialize the CharDataView."""
         super().__init__()
-        self.image = pygame.Surface(size)
+        self.image = pygame.Surface((400, 450))  # Standard size
         self.rect = self.image.get_rect(topleft=position)
-        self._character_name = character_name
-        self._reputation = reputation
-        self._money = money
-        self._health = health
-        self._skills = skills
-        self._unused_skill_points = unused_skill_points
+        self._data = data
         self._on_close = on_close
         self._on_increase_skill = on_increase_skill
         self._on_decrease_skill = on_decrease_skill
@@ -105,10 +95,10 @@ class CharDataView(pygame.sprite.Sprite):
 
         y_offset = self._padding
         for text in [
-            f"Name: {self._character_name}",
-            f"Reputation: {self._reputation}",
-            f"Money: ${self._money}",
-            f"Health: {self._health}%",
+            f"Name: {self._data.name}",
+            f"Reputation: {self._data.reputation}",
+            f"Money: ${self._data.credits}",
+            f"Health: {self._data.health}%",
         ]:
             text_surface = self._font.render(text, True, self._font_color)
             text_rect = text_surface.get_rect(topleft=(self._padding, y_offset))
@@ -116,8 +106,10 @@ class CharDataView(pygame.sprite.Sprite):
             y_offset += self._line_height
 
         # --- Skills ---
-        y_offset += self._padding  # Add a little space before skills
-        skills_header_text = f"Skills: (Points Available: {self._unused_skill_points})"
+        y_offset += self._padding
+        skills_header_text = (
+            f"Skills: (Points Available: {self._data.unused_skill_points})"
+        )
         skills_header = self._font.render(skills_header_text, True, self._font_color)
         self.image.blit(skills_header, (self._padding, y_offset))
         y_offset += self._line_height
@@ -125,7 +117,7 @@ class CharDataView(pygame.sprite.Sprite):
         button_size = (20, 20)
         value_width = 40
 
-        for skill, value in self._skills.items():
+        for skill, value in self._data.skills.items():
             skill_label_text = f"  {skill.title()}:"
             skill_label_surface = self._font.render(
                 skill_label_text, True, self._font_color
@@ -159,7 +151,7 @@ class CharDataView(pygame.sprite.Sprite):
 
             # --- Increase Button ---
             cost_to_increase = value + 1
-            if self._unused_skill_points >= cost_to_increase:
+            if self._data.unused_skill_points >= cost_to_increase:
                 inc_button = Button(
                     (x_offset, y_offset - 2),
                     button_size,

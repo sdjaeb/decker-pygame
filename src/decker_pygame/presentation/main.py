@@ -52,7 +52,9 @@ def main() -> None:
         player_repo=player_repo, event_dispatcher=event_dispatcher
     )
     character_service = CharacterService(
-        character_repo=character_repo, event_dispatcher=event_dispatcher
+        character_repo=character_repo,
+        player_service=player_service,
+        event_dispatcher=event_dispatcher,
     )
     crafting_service = CraftingService(
         character_repo=character_repo, event_dispatcher=event_dispatcher

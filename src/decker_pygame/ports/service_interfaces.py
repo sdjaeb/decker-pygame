@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
-    from decker_pygame.application.character_service import CharacterDataDTO
+    from decker_pygame.application.character_service import (
+        CharacterDataDTO,
+        CharacterViewData,
+    )
     from decker_pygame.application.contract_service import ContractSummaryDTO
     from decker_pygame.application.player_service import PlayerStatusDTO
     from decker_pygame.domain.crafting import Schematic
@@ -24,6 +27,12 @@ class CharacterServiceInterface(ABC):  # pragma: no cover
 
     @abstractmethod
     def decrease_skill(self, character_id: "CharacterId", skill_name: str) -> None:
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_character_view_data(
+        self, character_id: "CharacterId", player_id: "PlayerId"
+    ) -> "CharacterViewData | None":
         raise NotImplementedError  # pragma: no cover
 
 
