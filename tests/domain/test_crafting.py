@@ -3,20 +3,20 @@ from decker_pygame.domain.crafting import RequiredResource, Schematic
 
 def test_schematic_serialization_roundtrip():
     """Tests that a Schematic can be serialized and deserialized correctly."""
-    original_schematic = Schematic(
-        name="IcePick v1 Schematic",
+    schematic = Schematic(
+        name="IcePick",
         produces_item_name="IcePick v1",
-        cost=[RequiredResource(name="credits", quantity=500)],
+        produces_item_size=10,
+        cost=[RequiredResource("credits", 100)],
     )
-
-    schematic_dict = original_schematic.to_dict()
+    schematic_dict = schematic.to_dict()
 
     assert schematic_dict == {
-        "name": "IcePick v1 Schematic",
+        "name": "IcePick",
         "produces_item_name": "IcePick v1",
-        "cost": [{"name": "credits", "quantity": 500}],
+        "produces_item_size": 10,
+        "cost": [{"name": "credits", "quantity": 100}],
     }
 
     reconstituted_schematic = Schematic.from_dict(schematic_dict)
-
-    assert reconstituted_schematic == original_schematic
+    assert reconstituted_schematic == schematic

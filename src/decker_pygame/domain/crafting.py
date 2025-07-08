@@ -20,6 +20,7 @@ class Schematic:
 
     name: str
     produces_item_name: str
+    produces_item_size: int
     cost: list[RequiredResource]
 
     def to_dict(self) -> dict[str, Any]:
@@ -27,6 +28,7 @@ class Schematic:
         return {
             "name": self.name,
             "produces_item_name": self.produces_item_name,
+            "produces_item_size": self.produces_item_size,
             "cost": [c.__dict__ for c in self.cost],
         }
 
@@ -36,5 +38,6 @@ class Schematic:
         return cls(
             name=data["name"],
             produces_item_name=data["produces_item_name"],
+            produces_item_size=data["produces_item_size"],
             cost=[RequiredResource(**c_data) for c_data in data["cost"]],
         )

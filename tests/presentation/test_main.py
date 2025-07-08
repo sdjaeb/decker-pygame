@@ -5,7 +5,7 @@ from pytest_mock import MockerFixture
 
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.events import ItemCrafted, PlayerCreated
-from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.presentation.main import main
 from decker_pygame.settings import PATHS
 
@@ -25,6 +25,12 @@ def test_main_function(mocker: MockerFixture) -> None:
     )
     mock_contract_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFileContractRepository"
+    )
+    mock_deck_repo_class = mocker.patch(
+        "decker_pygame.presentation.main.JsonFileDeckRepository"
+    )
+    mock_deck_service_class = mocker.patch(
+        "decker_pygame.presentation.main.DeckService"
     )
     mock_char_service_class = mocker.patch(
         "decker_pygame.presentation.main.CharacterService"
@@ -67,6 +73,9 @@ def test_main_function(mocker: MockerFixture) -> None:
         deckard_player_id,
         rynn_player_id,
     ]
+    mock_deck_service_instance = mock_deck_service_class.return_value
+    mock_deck_id = DeckId(uuid.uuid4())
+    mock_deck_service_instance.create_deck.return_value = mock_deck_id
 
     # Configure the mock character that will be returned by the factory
     mock_character = mock_character_create.return_value
@@ -83,6 +92,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         writers=[mock_console_writer_class.return_value]
     )
     mock_contract_repo_class.assert_called_once_with(base_path=PATHS.contracts_data)
+    mock_deck_repo_class.assert_called_once_with(base_path=PATHS.decks_data)
 
     mock_player_service_class.assert_called_once_with(
         player_repo=mock_repo_class.return_value,
@@ -97,6 +107,10 @@ def test_main_function(mocker: MockerFixture) -> None:
         character_repo=mock_char_repo_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
     )
+    mock_deck_service_class.assert_called_once_with(
+        deck_repo=mock_deck_repo_class.return_value,
+        event_dispatcher=mock_dispatcher_class.return_value,
+    )
 
     create_calls = [call(name="Deckard"), call(name="Rynn")]
     mock_player_service_instance.create_new_player.assert_has_calls(
@@ -104,7 +118,14 @@ def test_main_function(mocker: MockerFixture) -> None:
     )
 
     # Assert character creation and saving
-    mock_character_create.assert_called_once()
+    mock_character_create.assert_called_once_with(
+        character_id=ANY,
+        name="Rynn",
+        deck_id=mock_deck_id,
+        initial_skills={"crafting": 5},
+        initial_credits=2000,
+        initial_skill_points=5,
+    )
     mock_char_repo_class.return_value.save.assert_called_once_with(mock_character)
 
     mock_event_handler_factory.assert_called_once_with(

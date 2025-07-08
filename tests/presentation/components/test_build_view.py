@@ -22,11 +22,13 @@ def schematics_list() -> list[Schematic]:
         Schematic(
             name="IcePick v1",
             produces_item_name="IcePick v1",
+            produces_item_size=10,
             cost=[RequiredResource(name="credits", quantity=500)],
         ),
         Schematic(
             name="Hammer",
             produces_item_name="Hammer",
+            produces_item_size=20,
             cost=[RequiredResource(name="credits", quantity=1000)],
         ),
     ]

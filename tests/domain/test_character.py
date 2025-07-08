@@ -5,7 +5,7 @@ import pytest
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, SkillDecreased, SkillIncreased
-from decker_pygame.domain.ids import CharacterId
+from decker_pygame.domain.ids import CharacterId, DeckId
 
 
 @pytest.fixture
@@ -13,6 +13,7 @@ def character() -> Character:
     """Returns a character instance for testing."""
     return Character.create(
         character_id=CharacterId(uuid.uuid4()),
+        deck_id=DeckId(uuid.uuid4()),
         name="Testy",
         initial_skills={"hacking": 2},
         initial_credits=100,
@@ -70,21 +71,21 @@ def test_craft_success(character: Character):
     schematic = Schematic(
         name="IcePick v1",
         produces_item_name="IcePick v1",
+        produces_item_size=10,
         cost=[RequiredResource(name="credits", quantity=50)],
     )
 
     initial_credits = character.credits
-    initial_inventory_size = len(character.inventory)
 
     character.craft(schematic)
 
     assert character.credits == initial_credits - 50
-    assert len(character.inventory) == initial_inventory_size + 1
-    assert character.inventory[-1].name == "IcePick v1"
 
     craft_event = next(e for e in character.events if isinstance(e, ItemCrafted))
     assert craft_event.schematic_name == "IcePick v1"
     assert craft_event.item_name == "IcePick v1"
+    # The character.craft method no longer manages inventory, but the event
+    # should still contain the details of the crafted program.
 
 
 def test_craft_insufficient_credits(character: Character):
@@ -92,6 +93,7 @@ def test_craft_insufficient_credits(character: Character):
     schematic = Schematic(
         name="Expensive Thing",
         produces_item_name="Expensive Thing",
+        produces_item_size=100,
         cost=[RequiredResource(name="credits", quantity=9999)],
     )
     character.credits = 100
