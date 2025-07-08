@@ -6,6 +6,7 @@ from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
     ContractServiceInterface,
     CraftingServiceInterface,
+    DeckServiceInterface,
     LoggingServiceInterface,
     PlayerServiceInterface,
 )
@@ -16,6 +17,7 @@ from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.contract_data_view import ContractDataView
 from decker_pygame.presentation.components.contract_list_view import ContractListView
+from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.input_handler import PygameInputHandler
@@ -46,6 +48,7 @@ class Game:
     character_service: CharacterServiceInterface
     contract_service: ContractServiceInterface
     crafting_service: CraftingServiceInterface
+    deck_service: DeckServiceInterface
     player_id: PlayerId
     character_id: CharacterId
     logging_service: LoggingServiceInterface
@@ -53,6 +56,7 @@ class Game:
     input_handler: PygameInputHandler
     build_view: BuildView | None = None
     char_data_view: CharDataView | None = None
+    deck_view: DeckView | None = None
     contract_list_view: ContractListView | None = None
     contract_data_view: ContractDataView | None = None
 
@@ -63,6 +67,7 @@ class Game:
         character_service: CharacterServiceInterface,
         contract_service: ContractServiceInterface,
         crafting_service: CraftingServiceInterface,
+        deck_service: DeckServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -75,6 +80,7 @@ class Game:
             character_service (CharacterServiceInterface): Service for character ops.
             contract_service (ContractServiceInterface): Service for contract ops.
             crafting_service (CraftingServiceInterface): Service for crafting ops.
+            deck_service (DeckServiceInterface): Service for deck operations.
             character_id (CharacterId): The current character's ID.
             logging_service (LoggingServiceInterface): Service for logging.
         """
@@ -88,6 +94,7 @@ class Game:
         self.contract_service = contract_service
         self.player_id = player_id
         self.crafting_service = crafting_service
+        self.deck_service = deck_service
         self.character_id = character_id
         self.logging_service = logging_service
         self.input_handler = PygameInputHandler(self, logging_service)
@@ -198,6 +205,25 @@ class Game:
                 on_decrease_skill=self._on_decrease_skill,
             )
             self.all_sprites.add(self.char_data_view)
+
+    def toggle_deck_view(self) -> None:
+        """Opens or closes the deck view."""
+        if self.deck_view:
+            self.all_sprites.remove(self.deck_view)
+            self.deck_view = None
+        else:
+            char_data = self.character_service.get_character_data(self.character_id)
+            if not char_data:
+                print("Could not retrieve character data to find deck.")
+                return
+
+            deck_data = self.deck_service.get_deck_view_data(char_data.deck_id)
+            if not deck_data:
+                print("Could not retrieve deck data.")
+                return
+
+            self.deck_view = DeckView(data=deck_data, on_close=self.toggle_deck_view)
+            self.all_sprites.add(self.deck_view)
 
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""

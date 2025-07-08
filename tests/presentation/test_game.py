@@ -7,15 +7,18 @@ import pygame
 import pytest
 
 from decker_pygame.application.character_service import (
+    CharacterDataDTO,
     CharacterViewData,
 )
 from decker_pygame.application.crafting_service import CraftingError
+from decker_pygame.application.deck_service import DeckViewData
 from decker_pygame.application.player_service import PlayerStatusDTO
-from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
     ContractServiceInterface,
     CraftingServiceInterface,
+    DeckServiceInterface,
     LoggingServiceInterface,
     PlayerServiceInterface,
 )
@@ -43,6 +46,7 @@ class Mocks:
     character_service: Mock
     contract_service: Mock
     crafting_service: Mock
+    deck_service: Mock
     logging_service: Mock
 
 
@@ -55,6 +59,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_character_service = Mock(spec=CharacterServiceInterface)
     mock_contract_service = Mock(spec=ContractServiceInterface)
     mock_crafting_service = Mock(spec=CraftingServiceInterface)
+    mock_deck_service = Mock(spec=DeckServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
@@ -78,6 +83,7 @@ def game_with_mocks() -> Generator[Mocks]:
             character_service=mock_character_service,
             contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
+            deck_service=mock_deck_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -88,6 +94,7 @@ def game_with_mocks() -> Generator[Mocks]:
             character_service=mock_character_service,
             contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
+            deck_service=mock_deck_service,
             logging_service=mock_logging_service,
         )
 
@@ -102,6 +109,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.character_service is mocks.character_service
     assert game.contract_service is mocks.contract_service
     assert game.crafting_service is mocks.crafting_service
+    assert game.deck_service is mocks.deck_service
     assert game.logging_service is mocks.logging_service
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.character_id, uuid.UUID)
@@ -135,6 +143,7 @@ def test_game_load_assets_with_icons():
             character_service=Mock(spec=CharacterServiceInterface),
             contract_service=Mock(spec=ContractServiceInterface),
             crafting_service=Mock(spec=CraftingServiceInterface),
+            deck_service=Mock(spec=DeckServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -171,6 +180,7 @@ def test_game_load_assets_no_icons():
             character_service=Mock(spec=CharacterServiceInterface),
             contract_service=Mock(spec=ContractServiceInterface),
             crafting_service=Mock(spec=CraftingServiceInterface),
+            deck_service=Mock(spec=DeckServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -467,3 +477,67 @@ def test_game_toggles_contract_data_view(game_with_mocks: Mocks):
     # Call again to close the view
     game.toggle_contract_data_view()
     assert game.contract_data_view is None
+
+
+def test_game_toggles_deck_view(game_with_mocks: Mocks):
+    """Tests that the toggle_deck_view method opens and closes the view."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Mock the DTOs returned by the services
+    mock_deck_id = DeckId(uuid.uuid4())
+    char_dto = CharacterDataDTO(
+        name="Testy",
+        credits=500,
+        skills={},
+        unused_skill_points=0,
+        deck_id=mock_deck_id,
+    )
+    mocks.character_service.get_character_data.return_value = char_dto
+
+    deck_data = DeckViewData(programs=[])
+    mocks.deck_service.get_deck_view_data.return_value = deck_data
+
+    assert game.deck_view is None
+
+    # Call the public method to open the view
+    with patch("decker_pygame.presentation.game.DeckView") as mock_view_class:
+        game.toggle_deck_view()
+
+        # Assert that the correct services were called
+        mocks.character_service.get_character_data.assert_called_once_with(
+            game.character_id
+        )
+        mocks.deck_service.get_deck_view_data.assert_called_once_with(mock_deck_id)
+
+        # Check that the view was instantiated with the correct data
+        mock_view_class.assert_called_once_with(
+            data=deck_data, on_close=game.toggle_deck_view
+        )
+        assert game.deck_view is mock_view_class.return_value
+
+    # Call again to close the view
+    game.toggle_deck_view()
+    assert game.deck_view is None
+
+
+def test_toggle_deck_view_no_data(game_with_mocks: Mocks, capsys):
+    """Tests that the deck view is not opened if data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Case 1: Character data is missing
+    mocks.character_service.get_character_data.return_value = None
+    game.toggle_deck_view()
+    assert game.deck_view is None
+    assert "Could not retrieve character data" in capsys.readouterr().out
+
+    # Case 2: Deck data is missing
+    # We need to configure the mock DTO to have a deck_id for the service call
+    mock_char_data = Mock(spec=CharacterDataDTO)
+    mock_char_data.deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = mock_char_data
+    mocks.deck_service.get_deck_view_data.return_value = None
+    game.toggle_deck_view()
+    assert game.deck_view is None
+    assert "Could not retrieve deck data" in capsys.readouterr().out

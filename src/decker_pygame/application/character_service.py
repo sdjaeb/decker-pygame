@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 from decker_pygame.ports.service_interfaces import CharacterServiceInterface
 
@@ -20,6 +20,7 @@ class CharacterDataDTO:
     credits: int
     skills: dict[str, int]
     unused_skill_points: int
+    deck_id: DeckId
     reputation: int = 0  # Placeholder for now
 
 
@@ -85,6 +86,7 @@ class CharacterService(CharacterServiceInterface):
             credits=character.credits,
             skills=character.skills,
             unused_skill_points=character.unused_skill_points,
+            deck_id=character.deck_id,
         )
 
     def get_character_view_data(

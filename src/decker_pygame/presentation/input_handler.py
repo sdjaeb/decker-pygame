@@ -23,6 +23,7 @@ class PygameInputHandler:
             pygame.K_c: self._game.toggle_char_data_view,
             pygame.K_l: self._game.toggle_contract_list_view,
             pygame.K_d: self._game.toggle_contract_data_view,
+            pygame.K_p: self._game.toggle_deck_view,
             pygame.K_q: self._game.quit,
         }
 
@@ -45,6 +46,10 @@ class PygameInputHandler:
                     )
 
             # Delegate events to active views that need to handle mouse clicks, etc.
-            for view in [self._game.build_view, self._game.char_data_view]:
+            for view in [
+                self._game.build_view,
+                self._game.char_data_view,
+                self._game.deck_view,
+            ]:
                 if view:
                     view.handle_event(event)

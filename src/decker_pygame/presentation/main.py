@@ -128,6 +128,7 @@ def main() -> None:
         contract_service=contract_service,
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
+        deck_service=deck_service,
         logging_service=logging_service,
     )
 

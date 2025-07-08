@@ -153,6 +153,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         contract_service=mock_contract_service_class.return_value,
         crafting_service=mock_crafting_service_class.return_value,
         character_id=mock_character.id,
+        deck_service=mock_deck_service_class.return_value,
         logging_service=mock_logging_service_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
