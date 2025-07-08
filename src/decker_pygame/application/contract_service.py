@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import ContractId
 from decker_pygame.ports.repository_interfaces import ContractRepositoryInterface
+from decker_pygame.ports.service_interfaces import ContractServiceInterface
 
 if TYPE_CHECKING:
     from decker_pygame.domain.contract import Contract
@@ -31,7 +32,7 @@ class ContractSummaryDTO:
         )
 
 
-class ContractService:
+class ContractService(ContractServiceInterface):
     """Application service for contract-related operations."""
 
     def __init__(

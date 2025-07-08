@@ -1,11 +1,14 @@
 import pygame
 
-from decker_pygame.application.character_service import CharacterService
-from decker_pygame.application.contract_service import ContractService
-from decker_pygame.application.crafting_service import CraftingError, CraftingService
-from decker_pygame.application.logging_service import LoggingService
-from decker_pygame.application.player_service import PlayerService
+from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.ports.service_interfaces import (
+    CharacterServiceInterface,
+    ContractServiceInterface,
+    CraftingServiceInterface,
+    LoggingServiceInterface,
+    PlayerServiceInterface,
+)
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
@@ -39,13 +42,13 @@ class Game:
     active_bar: ActiveBar
     alarm_bar: AlarmBar
     health_bar: HealthBar
-    player_service: PlayerService
-    character_service: CharacterService
-    contract_service: ContractService
+    player_service: PlayerServiceInterface
+    character_service: CharacterServiceInterface
+    contract_service: ContractServiceInterface
+    crafting_service: CraftingServiceInterface
     player_id: PlayerId
-    crafting_service: CraftingService
     character_id: CharacterId
-    logging_service: LoggingService
+    logging_service: LoggingServiceInterface
     message_view: MessageView
     build_view: BuildView | None = None
     char_data_view: CharDataView | None = None
@@ -54,25 +57,25 @@ class Game:
 
     def __init__(
         self,
-        player_service: PlayerService,
+        player_service: PlayerServiceInterface,
         player_id: PlayerId,
-        character_service: CharacterService,
-        contract_service: ContractService,
-        crafting_service: CraftingService,
+        character_service: CharacterServiceInterface,
+        contract_service: ContractServiceInterface,
+        crafting_service: CraftingServiceInterface,
         character_id: CharacterId,
-        logging_service: LoggingService,
+        logging_service: LoggingServiceInterface,
     ) -> None:
         """
         Initialize the Game.
 
         Args:
-            player_service (PlayerService): Service for player operations.
+            player_service (PlayerServiceInterface): Service for player ops.
             player_id (PlayerId): The current player's ID.
-            character_service (CharacterService): Service for character operations.
-            contract_service (ContractService): Service for contract operations.
-            crafting_service (CraftingService): Service for crafting operations.
+            character_service (CharacterServiceInterface): Service for character ops.
+            contract_service (ContractServiceInterface): Service for contract ops.
+            crafting_service (CraftingServiceInterface): Service for crafting ops.
             character_id (CharacterId): The current character's ID.
-            logging_service (LoggingService): Service for logging.
+            logging_service (LoggingServiceInterface): Service for logging.
         """
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)

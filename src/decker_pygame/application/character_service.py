@@ -5,6 +5,7 @@ from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.ids import CharacterId
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
+from decker_pygame.ports.service_interfaces import CharacterServiceInterface
 
 
 @dataclass(frozen=True)
@@ -22,7 +23,7 @@ class CharacterServiceError(Exception):
     """Base exception for character service errors."""
 
 
-class CharacterService:
+class CharacterService(CharacterServiceInterface):
     """Application service for character-related operations."""
 
     def __init__(

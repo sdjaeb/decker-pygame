@@ -5,15 +5,17 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.character_service import (
-    CharacterDataDTO,
-    CharacterService,
-)
-from decker_pygame.application.contract_service import ContractService
-from decker_pygame.application.crafting_service import CraftingError, CraftingService
-from decker_pygame.application.logging_service import LoggingService
-from decker_pygame.application.player_service import PlayerService, PlayerStatusDTO
+from decker_pygame.application.character_service import CharacterDataDTO
+from decker_pygame.application.crafting_service import CraftingError
+from decker_pygame.application.player_service import PlayerStatusDTO
 from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.ports.service_interfaces import (
+    CharacterServiceInterface,
+    ContractServiceInterface,
+    CraftingServiceInterface,
+    LoggingServiceInterface,
+    PlayerServiceInterface,
+)
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.health_bar import HealthBar
@@ -35,11 +37,11 @@ def game_with_mocks() -> Generator[tuple[Game, Mock, Mock, Mock, Mock, Mock]]:
     """
     Provides a fully mocked Game instance and its mocked dependencies.
     """
-    mock_player_service = Mock(autospec=PlayerService)
-    mock_character_service = Mock(autospec=CharacterService)
-    mock_contract_service = Mock(autospec=ContractService)
-    mock_crafting_service = Mock(autospec=CraftingService)
-    mock_logging_service = Mock(autospec=LoggingService)
+    mock_player_service = Mock(spec=PlayerServiceInterface)
+    mock_character_service = Mock(spec=CharacterServiceInterface)
+    mock_contract_service = Mock(spec=ContractServiceInterface)
+    mock_crafting_service = Mock(spec=CraftingServiceInterface)
+    mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
 
@@ -120,13 +122,13 @@ def test_game_load_assets_with_icons():
 
         # We don't need a real service or ID for this test
         game = Game(
-            player_service=Mock(autospec=PlayerService),
+            player_service=Mock(spec=PlayerServiceInterface),
             player_id=Mock(spec=PlayerId),
-            character_service=Mock(autospec=CharacterService),
-            contract_service=Mock(autospec=ContractService),
-            crafting_service=Mock(autospec=CraftingService),
+            character_service=Mock(spec=CharacterServiceInterface),
+            contract_service=Mock(spec=ContractServiceInterface),
+            crafting_service=Mock(spec=CraftingServiceInterface),
             character_id=Mock(spec=CharacterId),
-            logging_service=Mock(autospec=LoggingService),
+            logging_service=Mock(spec=LoggingServiceInterface),
         )
 
         # Assert that the scaling logic was called
@@ -155,13 +157,13 @@ def test_game_load_assets_no_icons():
         mock_scale_icons.return_value = []
 
         Game(
-            player_service=Mock(autospec=PlayerService),
+            player_service=Mock(spec=PlayerServiceInterface),
             player_id=Mock(spec=PlayerId),
-            character_service=Mock(autospec=CharacterService),
-            contract_service=Mock(autospec=ContractService),
-            crafting_service=Mock(autospec=CraftingService),
+            character_service=Mock(spec=CharacterServiceInterface),
+            contract_service=Mock(spec=ContractServiceInterface),
+            crafting_service=Mock(spec=CraftingServiceInterface),
             character_id=Mock(spec=CharacterId),
-            logging_service=Mock(autospec=LoggingService),
+            logging_service=Mock(spec=LoggingServiceInterface),
         )
 
         mock_scale_icons.assert_called_once_with(
