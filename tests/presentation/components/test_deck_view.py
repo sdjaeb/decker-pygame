@@ -19,6 +19,7 @@ def pygame_context():
 def test_deck_view_initialization():
     """Tests that the DeckView initializes and renders its data."""
     mock_on_close = Mock()
+    mock_on_order = Mock()
     view_data = DeckViewData(
         programs=[
             DeckProgramDTO(name="IcePick", size=10),
@@ -44,7 +45,7 @@ def test_deck_view_initialization():
         mock_button_instance.rect = pygame.Rect(0, 0, 10, 10)
         mock_button_class.return_value = mock_button_instance
 
-        view = DeckView(data=view_data, on_close=mock_on_close)
+        view = DeckView(data=view_data, on_close=mock_on_close, on_order=mock_on_order)
 
         assert view is not None
         # Title + 2 programs
@@ -55,12 +56,14 @@ def test_deck_view_initialization():
         assert "- IcePick (10MB)" in rendered_texts
         assert "- Hammer (20MB)" in rendered_texts
 
-        mock_button_class.assert_called_once()
+        # Close button + Order button
+        assert mock_button_class.call_count == 2
 
 
 def test_deck_view_close_button_click():
     """Tests that the view correctly delegates events to its close button."""
     mock_on_close = Mock()
+    mock_on_order = Mock()
     view_data = DeckViewData(programs=[])
 
     # Patch dependencies to isolate the test
@@ -82,7 +85,7 @@ def test_deck_view_close_button_click():
         mock_button_instance.rect = pygame.Rect(0, 0, 10, 10)
         mock_button_class.return_value = mock_button_instance
 
-        view = DeckView(data=view_data, on_close=mock_on_close)
+        view = DeckView(data=view_data, on_close=mock_on_close, on_order=mock_on_order)
 
         # We can test the event delegation by checking if the button's method is called
         with patch.object(view._close_button, "handle_event") as mock_button_handler:

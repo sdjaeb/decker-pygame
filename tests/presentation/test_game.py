@@ -23,6 +23,7 @@ from decker_pygame.ports.service_interfaces import (
     PlayerServiceInterface,
 )
 from decker_pygame.presentation.components.build_view import BuildView
+from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.game import Game
@@ -512,7 +513,9 @@ def test_game_toggles_deck_view(game_with_mocks: Mocks):
 
         # Check that the view was instantiated with the correct data
         mock_view_class.assert_called_once_with(
-            data=deck_data, on_close=game.toggle_deck_view
+            data=deck_data,
+            on_close=game.toggle_deck_view,
+            on_order=game._on_order_deck,
         )
         assert game.deck_view is mock_view_class.return_value
 
@@ -540,4 +543,65 @@ def test_toggle_deck_view_no_data(game_with_mocks: Mocks, capsys):
     mocks.deck_service.get_deck_view_data.return_value = None
     game.toggle_deck_view()
     assert game.deck_view is None
+    assert "Could not retrieve deck data" in capsys.readouterr().out
+
+
+def test_on_order_deck_success(game_with_mocks: Mocks):
+    """Tests the successful path for the _on_order_deck callback."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Set up a mock deck_view to be removed
+    game.deck_view = Mock(spec=DeckView)
+    game.all_sprites.add(game.deck_view)
+    assert game.deck_view in game.all_sprites
+
+    # Configure services to return valid data
+    mock_deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
+    mocks.deck_service.get_deck_view_data.return_value = DeckViewData(programs=[])
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_order_deck()
+
+        # Assertions
+        mocks.character_service.get_character_data.assert_called_once_with(
+            game.character_id
+        )
+        mocks.deck_service.get_deck_view_data.assert_called_once_with(mock_deck_id)
+        assert game.deck_view is None
+        assert len(game.all_sprites) == 4  # The base sprites
+        mock_show_message.assert_called_once_with(
+            "Order Deck functionality coming soon!"
+        )
+
+
+def test_on_order_deck_no_char_data(game_with_mocks: Mocks, capsys):
+    """Tests the _on_order_deck callback when character data is not found."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    mocks.character_service.get_character_data.return_value = None
+
+    game._on_order_deck()
+
+    mocks.deck_service.get_deck_view_data.assert_not_called()
+    assert "Could not retrieve character data" in capsys.readouterr().out
+
+
+def test_on_order_deck_no_deck_data(game_with_mocks: Mocks, capsys):
+    """Tests the _on_order_deck callback when deck data is not found."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # We need to configure the mock DTO to have a deck_id for the service call
+    mock_char_data = Mock(spec=CharacterDataDTO)
+    mock_char_data.deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = mock_char_data
+    mocks.deck_service.get_deck_view_data.return_value = None
+
+    game._on_order_deck()
+
     assert "Could not retrieve deck data" in capsys.readouterr().out

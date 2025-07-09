@@ -72,6 +72,16 @@ class DeckServiceInterface(ABC):  # pragma: no cover
         """Retrieves and aggregates all data needed for the deck view."""
         raise NotImplementedError  # pragma: no cover
 
+    @abstractmethod
+    def move_program_up(self, deck_id: "DeckId", program_name: str) -> None:
+        """Moves a program up in the deck order."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def move_program_down(self, deck_id: "DeckId", program_name: str) -> None:
+        """Moves a program down in the deck order."""
+        raise NotImplementedError  # pragma: no cover
+
 
 class PlayerServiceInterface(ABC):  # pragma: no cover
     """Defines the input port for player-related use cases."""

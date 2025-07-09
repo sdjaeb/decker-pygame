@@ -19,6 +19,38 @@ class Deck(AggregateRoot):
         # In the future, this is where we would check for deck memory limits.
         self.programs.append(program)
 
+    def move_program_up(self, program_name: str) -> None:
+        """Moves a specified program one position up in the order."""
+        try:
+            index = next(
+                i for i, p in enumerate(self.programs) if p.name == program_name
+            )
+        except StopIteration:
+            raise ValueError(f"Program '{program_name}' not found in deck.") from None
+
+        if index > 0:
+            # Swap with the previous item
+            self.programs[index], self.programs[index - 1] = (
+                self.programs[index - 1],
+                self.programs[index],
+            )
+
+    def move_program_down(self, program_name: str) -> None:
+        """Moves a specified program one position down in the order."""
+        try:
+            index = next(
+                i for i, p in enumerate(self.programs) if p.name == program_name
+            )
+        except StopIteration:
+            raise ValueError(f"Program '{program_name}' not found in deck.") from None
+
+        if index < len(self.programs) - 1:
+            # Swap with the next item
+            self.programs[index], self.programs[index + 1] = (
+                self.programs[index + 1],
+                self.programs[index],
+            )
+
     def to_dict(self) -> dict[str, Any]:
         """
         Serialize the aggregate to a dictionary.

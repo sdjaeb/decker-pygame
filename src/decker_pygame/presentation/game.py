@@ -222,7 +222,11 @@ class Game:
                 print("Could not retrieve deck data.")
                 return
 
-            self.deck_view = DeckView(data=deck_data, on_close=self.toggle_deck_view)
+            self.deck_view = DeckView(
+                data=deck_data,
+                on_close=self.toggle_deck_view,
+                on_order=self._on_order_deck,
+            )
             self.all_sprites.add(self.deck_view)
 
     def toggle_contract_list_view(self) -> None:
@@ -285,3 +289,33 @@ class Game:
             self.clock.tick(FPS)
 
         pygame.quit()
+
+    def _on_order_deck(self) -> None:
+        """
+        Callback for when the 'Order' button is clicked in the DeckView.
+        Opens the OrderView.
+        """
+        char_data = self.character_service.get_character_data(self.character_id)
+        if not char_data:
+            print("Could not retrieve character data to find deck.")
+            return
+
+        deck_data = self.deck_service.get_deck_view_data(char_data.deck_id)
+        if not deck_data:
+            print("Could not retrieve deck data.")
+            return
+
+        # Close the current DeckView before opening OrderView
+        if self.deck_view:
+            self.all_sprites.remove(self.deck_view)
+            self.deck_view = None
+
+        # TODO: Implement OrderView and its callbacks
+        # self.order_view = OrderView(
+        #     data=deck_data,
+        #     on_close=self.toggle_deck_view, # Go back to DeckView
+        #     on_move_up=self._on_move_program_up,
+        #     on_move_down=self._on_move_program_down,
+        # )
+        # self.all_sprites.add(self.order_view)
+        self.show_message("Order Deck functionality coming soon!")

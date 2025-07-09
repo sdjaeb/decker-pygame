@@ -16,10 +16,16 @@ class DeckView(pygame.sprite.Sprite):
     rect: pygame.Rect
     _components: pygame.sprite.Group[pygame.sprite.Sprite]
 
-    def __init__(self, data: DeckViewData, on_close: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        data: DeckViewData,
+        on_close: Callable[[], None],
+        on_order: Callable[[], None],
+    ) -> None:
         super().__init__()
         self._data = data
         self._on_close = on_close
+        self._on_order = on_order
 
         self.image = pygame.Surface((400, 450))
         self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
@@ -39,7 +45,13 @@ class DeckView(pygame.sprite.Sprite):
             text="Close",
             on_click=self._on_close,
         )
-        self._components.add(self._close_button)
+        self._order_button = Button(
+            position=(self.image.get_width() - 180, self.image.get_height() - 40),
+            size=(80, 30),
+            text="Order",
+            on_click=self._on_order,
+        )
+        self._components.add(self._close_button, self._order_button)
 
         self._render_data()
 
