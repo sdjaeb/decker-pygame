@@ -76,16 +76,17 @@ def test_craft_success(character: Character):
     )
 
     initial_credits = character.credits
+    initial_storage_size = len(character.stored_programs)
 
     character.craft(schematic)
 
     assert character.credits == initial_credits - 50
+    assert len(character.stored_programs) == initial_storage_size + 1
+    assert character.stored_programs[-1].name == "IcePick v1"
 
     craft_event = next(e for e in character.events if isinstance(e, ItemCrafted))
     assert craft_event.schematic_name == "IcePick v1"
     assert craft_event.item_name == "IcePick v1"
-    # The character.craft method no longer manages inventory, but the event
-    # should still contain the details of the crafted program.
 
 
 def test_craft_insufficient_credits(character: Character):

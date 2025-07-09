@@ -7,7 +7,10 @@ if TYPE_CHECKING:  # pragma: no cover
         CharacterViewData,
     )
     from decker_pygame.application.contract_service import ContractSummaryDTO
-    from decker_pygame.application.deck_service import DeckViewData
+    from decker_pygame.application.deck_service import (
+        DeckViewData,
+        TransferViewData,
+    )
     from decker_pygame.application.player_service import PlayerStatusDTO
     from decker_pygame.domain.crafting import Schematic
     from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
@@ -80,6 +83,12 @@ class DeckServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def move_program_down(self, deck_id: "DeckId", program_name: str) -> None:
         """Moves a program down in the deck order."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_transfer_view_data(
+        self, character_id: "CharacterId"
+    ) -> "TransferViewData | None":
         raise NotImplementedError  # pragma: no cover
 
 

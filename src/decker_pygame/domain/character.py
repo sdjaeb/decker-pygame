@@ -23,6 +23,7 @@ class Character(AggregateRoot):
         name: str,
         skills: dict[str, int],
         deck_id: DeckId,
+        stored_programs: list[Program],
         schematics: list[Schematic],
         credits: int,
         unused_skill_points: int,
@@ -35,6 +36,7 @@ class Character(AggregateRoot):
             name (str): Character's name.
             skills (Dict[str, int]): Mapping of skill names to values.
             deck_id (DeckId): The ID of the character's deck.
+            stored_programs (list[Program]): List of programs not in the active deck.
             schematics (list[Schematic]): List of known program schematics.
             credits (int): Amount of credits the character has.
             unused_skill_points (int): Points available to spend on skills.
@@ -43,6 +45,7 @@ class Character(AggregateRoot):
         self.name = name
         self.skills = skills
         self.deck_id = deck_id
+        self.stored_programs = stored_programs
         self.credits = credits
         self.schematics = schematics
         self.unused_skill_points = unused_skill_points
@@ -76,6 +79,7 @@ class Character(AggregateRoot):
             name=name,
             skills=initial_skills,
             deck_id=deck_id,
+            stored_programs=[],
             schematics=[],
             credits=initial_credits,
             unused_skill_points=initial_skill_points,
@@ -113,8 +117,7 @@ class Character(AggregateRoot):
             name=schematic.produces_item_name,
             size=schematic.produces_item_size,
         )
-        # Note: The application service will now be responsible for adding this
-        # to the deck.
+        self.stored_programs.append(new_program)
 
         # Emit the domain event
         self._events.append(
@@ -185,6 +188,7 @@ class Character(AggregateRoot):
             "name": self.name,
             "skills": self.skills,
             "deck_id": str(self.deck_id),
+            "stored_programs": [p.to_dict() for p in self.stored_programs],
             "schematics": [s.to_dict() for s in self.schematics],
             "credits": self.credits,
             "unused_skill_points": self.unused_skill_points,
@@ -206,6 +210,9 @@ class Character(AggregateRoot):
             name=data["name"],
             skills=data["skills"],
             deck_id=DeckId(uuid.UUID(data["deck_id"])),
+            stored_programs=[
+                Program.from_dict(p_data) for p_data in data.get("stored_programs", [])
+            ],
             schematics=[Schematic.from_dict(s_data) for s_data in data["schematics"]],
             credits=data["credits"],
             unused_skill_points=data["unused_skill_points"],

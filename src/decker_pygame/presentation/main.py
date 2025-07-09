@@ -67,7 +67,11 @@ def main() -> None:
     contract_service = ContractService(
         contract_repo=contract_repo, event_dispatcher=event_dispatcher
     )
-    deck_service = DeckService(deck_repo=deck_repo, event_dispatcher=event_dispatcher)
+    deck_service = DeckService(
+        deck_repo=deck_repo,
+        event_dispatcher=event_dispatcher,
+        character_repo=character_repo,
+    )
 
     # 3. Set up generic event handlers
     event_logger = create_event_logging_handler(logging_service)

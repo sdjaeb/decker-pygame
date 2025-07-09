@@ -19,6 +19,7 @@ def test_save_and_get_character():
             name="Testy",
             skills={"hacking": 1},
             deck_id=deck_id,
+            stored_programs=[],
             schematics=[],
             credits=100,
             unused_skill_points=5,
