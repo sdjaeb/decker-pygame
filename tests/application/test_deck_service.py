@@ -176,3 +176,103 @@ def test_get_transfer_view_data_not_found(
     mock_char_repo.get.return_value = mock_character
     mock_deck_repo.get.return_value = None
     assert deck_service.get_transfer_view_data(CharacterId(uuid.uuid4())) is None
+
+
+def test_move_program_to_deck(
+    deck_service: DeckService, mock_deck_repo: Mock, mock_char_repo: Mock
+):
+    """Tests moving a program from storage to the deck."""
+    char_id = CharacterId(uuid.uuid4())
+    program_name = "IcePick"
+    program_to_move = Program(id=ProgramId(uuid.uuid4()), name=program_name, size=10)
+
+    mock_character = Mock(spec=Character)
+    mock_character.deck_id = DeckId(uuid.uuid4())
+    mock_character.remove_stored_program.return_value = program_to_move
+    mock_char_repo.get.return_value = mock_character
+
+    mock_deck = Mock(spec=Deck)
+    mock_deck_repo.get.return_value = mock_deck
+
+    deck_service.move_program_to_deck(char_id, program_name)
+
+    mock_char_repo.get.assert_called_once_with(char_id)
+    mock_deck_repo.get.assert_called_once_with(mock_character.deck_id)
+    mock_character.remove_stored_program.assert_called_once_with(program_name)
+    mock_deck.add_program.assert_called_once_with(program_to_move)
+    mock_char_repo.save.assert_called_once_with(mock_character)
+    mock_deck_repo.save.assert_called_once_with(mock_deck)
+
+
+def test_move_program_to_storage(
+    deck_service: DeckService, mock_deck_repo: Mock, mock_char_repo: Mock
+):
+    """Tests moving a program from the deck to storage."""
+    char_id = CharacterId(uuid.uuid4())
+    program_name = "Hammer"
+    program_to_move = Program(id=ProgramId(uuid.uuid4()), name=program_name, size=20)
+
+    mock_character = Mock(spec=Character)
+    mock_character.deck_id = DeckId(uuid.uuid4())
+    mock_character.stored_programs = []
+    mock_char_repo.get.return_value = mock_character
+
+    mock_deck = Mock(spec=Deck)
+    mock_deck.remove_program.return_value = program_to_move
+    mock_deck_repo.get.return_value = mock_deck
+
+    deck_service.move_program_to_storage(char_id, program_name)
+
+    mock_char_repo.get.assert_called_once_with(char_id)
+    mock_deck_repo.get.assert_called_once_with(mock_character.deck_id)
+    mock_deck.remove_program.assert_called_once_with(program_name)
+    assert mock_character.stored_programs == [program_to_move]
+    mock_char_repo.save.assert_called_once_with(mock_character)
+    mock_deck_repo.save.assert_called_once_with(mock_deck)
+
+
+def test_move_program_transfer_fails_if_not_found(
+    deck_service: DeckService, mock_deck_repo: Mock, mock_char_repo: Mock
+):
+    """Tests that transfer use cases raise an error if the program is not found."""
+    char_id = CharacterId(uuid.uuid4())
+    program_name = "Ghost"
+
+    mock_character = Mock(spec=Character)
+    mock_character.deck_id = DeckId(uuid.uuid4())
+    mock_character.remove_stored_program.side_effect = ValueError("not found")
+    mock_char_repo.get.return_value = mock_character
+
+    mock_deck = Mock(spec=Deck)
+    mock_deck.remove_program.side_effect = ValueError("not found")
+    mock_deck_repo.get.return_value = mock_deck
+
+    with pytest.raises(DeckServiceError, match="not found"):
+        deck_service.move_program_to_deck(char_id, program_name)
+
+    with pytest.raises(DeckServiceError, match="not found"):
+        deck_service.move_program_to_storage(char_id, program_name)
+
+
+def test_move_program_transfer_repo_failure(
+    deck_service: DeckService, mock_deck_repo: Mock, mock_char_repo: Mock
+):
+    """Tests that transfer fails if character or deck is not found."""
+    char_id = CharacterId(uuid.uuid4())
+
+    # Case 1: Character not found
+    mock_char_repo.get.return_value = None
+    with pytest.raises(DeckServiceError, match="Character.*not found"):
+        deck_service.move_program_to_deck(char_id, "any")
+    with pytest.raises(DeckServiceError, match="Character.*not found"):
+        deck_service.move_program_to_storage(char_id, "any")
+
+    # Case 2: Deck not found
+    mock_character = Mock(spec=Character)
+    mock_character.deck_id = DeckId(uuid.uuid4())
+    mock_char_repo.get.return_value = mock_character
+    mock_deck_repo.get.return_value = None
+    with pytest.raises(DeckServiceError, match="Deck.*not found"):
+        deck_service.move_program_to_deck(char_id, "any")
+    with pytest.raises(DeckServiceError, match="Deck.*not found"):
+        deck_service.move_program_to_storage(char_id, "any")

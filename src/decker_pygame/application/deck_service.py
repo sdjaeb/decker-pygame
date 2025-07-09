@@ -102,6 +102,48 @@ class DeckService(DeckServiceInterface):
             deck_programs=deck_programs, stored_programs=stored_programs
         )
 
+    def move_program_to_deck(
+        self, character_id: CharacterId, program_name: str
+    ) -> None:
+        """Moves a program from a character's storage to their deck."""
+        character = self.character_repo.get(character_id)
+        if not character:
+            raise DeckServiceError(f"Character with ID {character_id} not found.")
+
+        deck = self.deck_repo.get(character.deck_id)
+        if not deck:
+            raise DeckServiceError(f"Deck with ID {character.deck_id} not found.")
+
+        try:
+            program_to_move = character.remove_stored_program(program_name)
+            deck.add_program(program_to_move)
+        except ValueError as e:
+            raise DeckServiceError(str(e)) from e
+
+        self.character_repo.save(character)
+        self.deck_repo.save(deck)
+
+    def move_program_to_storage(
+        self, character_id: CharacterId, program_name: str
+    ) -> None:
+        """Moves a program from a character's deck to their storage."""
+        character = self.character_repo.get(character_id)
+        if not character:
+            raise DeckServiceError(f"Character with ID {character_id} not found.")
+
+        deck = self.deck_repo.get(character.deck_id)
+        if not deck:
+            raise DeckServiceError(f"Deck with ID {character.deck_id} not found.")
+
+        try:
+            program_to_move = deck.remove_program(program_name)
+            character.stored_programs.append(program_to_move)
+        except ValueError as e:
+            raise DeckServiceError(str(e)) from e
+
+        self.character_repo.save(character)
+        self.deck_repo.save(deck)
+
     def _execute_deck_change(
         self, deck_id: DeckId, change_func: Callable[[Deck], None]
     ) -> None:

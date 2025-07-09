@@ -20,6 +20,7 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
 from decker_pygame.settings import (
@@ -57,6 +58,7 @@ class Game:
     build_view: BuildView | None = None
     char_data_view: CharDataView | None = None
     deck_view: DeckView | None = None
+    transfer_view: TransferView | None = None
     contract_list_view: ContractListView | None = None
     contract_data_view: ContractDataView | None = None
 
@@ -214,12 +216,14 @@ class Game:
         else:
             char_data = self.character_service.get_character_data(self.character_id)
             if not char_data:
-                print("Could not retrieve character data to find deck.")
+                self.show_message(
+                    "Error: Could not retrieve character data to find deck."
+                )
                 return
 
             deck_data = self.deck_service.get_deck_view_data(char_data.deck_id)
             if not deck_data:
-                print("Could not retrieve deck data.")
+                self.show_message("Error: Could not retrieve deck data.")
                 return
 
             self.deck_view = DeckView(
@@ -228,6 +232,43 @@ class Game:
                 on_order=self._on_order_deck,
             )
             self.all_sprites.add(self.deck_view)
+
+    def _on_move_program_to_deck(self, program_name: str) -> None:
+        """Callback to handle moving a program to the deck."""
+        try:
+            self.deck_service.move_program_to_deck(self.character_id, program_name)
+            self.toggle_transfer_view()  # Close
+            self.toggle_transfer_view()  # and re-open to refresh
+        except Exception as e:
+            self.show_message(f"Error: {e}")
+
+    def _on_move_program_to_storage(self, program_name: str) -> None:
+        """Callback to handle moving a program to storage."""
+        try:
+            self.deck_service.move_program_to_storage(self.character_id, program_name)
+            self.toggle_transfer_view()  # Close
+            self.toggle_transfer_view()  # and re-open to refresh
+        except Exception as e:
+            self.show_message(f"Error: {e}")
+
+    def toggle_transfer_view(self) -> None:
+        """Opens or closes the program transfer view."""
+        if self.transfer_view:
+            self.all_sprites.remove(self.transfer_view)
+            self.transfer_view = None
+        else:
+            view_data = self.deck_service.get_transfer_view_data(self.character_id)
+            if not view_data:
+                self.show_message("Error: Could not retrieve transfer data.")
+                return
+
+            self.transfer_view = TransferView(
+                data=view_data,
+                on_close=self.toggle_transfer_view,
+                on_move_to_deck=self._on_move_program_to_deck,
+                on_move_to_storage=self._on_move_program_to_storage,
+            )
+            self.all_sprites.add(self.transfer_view)
 
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
@@ -297,12 +338,12 @@ class Game:
         """
         char_data = self.character_service.get_character_data(self.character_id)
         if not char_data:
-            print("Could not retrieve character data to find deck.")
+            self.show_message("Error: Could not retrieve character data to find deck.")
             return
 
         deck_data = self.deck_service.get_deck_view_data(char_data.deck_id)
         if not deck_data:
-            print("Could not retrieve deck data.")
+            self.show_message("Error: Could not retrieve deck data.")
             return
 
         # Close the current DeckView before opening OrderView

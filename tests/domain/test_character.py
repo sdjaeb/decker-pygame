@@ -5,7 +5,8 @@ import pytest
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, SkillDecreased, SkillIncreased
-from decker_pygame.domain.ids import CharacterId, DeckId
+from decker_pygame.domain.ids import CharacterId, DeckId, ProgramId
+from decker_pygame.domain.program import Program
 
 
 @pytest.fixture
@@ -101,3 +102,22 @@ def test_craft_insufficient_credits(character: Character):
 
     with pytest.raises(ValueError, match="Insufficient credits"):
         character.craft(schematic)
+
+
+def test_remove_stored_program_success(character: Character):
+    """Tests that a program can be successfully removed from storage."""
+    program = Program(id=ProgramId(uuid.uuid4()), name="TestProg", size=10)
+    character.stored_programs.append(program)
+
+    assert len(character.stored_programs) == 1
+
+    removed_program = character.remove_stored_program("TestProg")
+
+    assert len(character.stored_programs) == 0
+    assert removed_program is program
+
+
+def test_remove_stored_program_not_found(character: Character):
+    """Tests that removing a non-existent program raises a ValueError."""
+    with pytest.raises(ValueError, match="not found in storage"):
+        character.remove_stored_program("NonExistent")

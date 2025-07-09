@@ -19,6 +19,16 @@ class Deck(AggregateRoot):
         # In the future, this is where we would check for deck memory limits.
         self.programs.append(program)
 
+    def remove_program(self, program_name: str) -> Program:
+        """Finds, removes, and returns a program from the deck."""
+        try:
+            index = next(
+                i for i, p in enumerate(self.programs) if p.name == program_name
+            )
+        except StopIteration:
+            raise ValueError(f"Program '{program_name}' not found in deck.") from None
+        return self.programs.pop(index)
+
     def move_program_up(self, program_name: str) -> None:
         """Moves a specified program one position up in the order."""
         try:

@@ -129,6 +129,18 @@ class Character(AggregateRoot):
             )
         )
 
+    def remove_stored_program(self, program_name: str) -> Program:
+        """Finds, removes, and returns a program from storage."""
+        try:
+            index = next(
+                i for i, p in enumerate(self.stored_programs) if p.name == program_name
+            )
+        except StopIteration:
+            raise ValueError(
+                f"Program '{program_name}' not found in storage."
+            ) from None
+        return self.stored_programs.pop(index)
+
     @emits(SkillIncreased)
     def increase_skill(self, skill_name: str) -> None:
         """Increases a skill level if there are enough points."""

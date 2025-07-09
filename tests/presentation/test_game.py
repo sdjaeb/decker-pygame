@@ -11,7 +11,11 @@ from decker_pygame.application.character_service import (
     CharacterViewData,
 )
 from decker_pygame.application.crafting_service import CraftingError
-from decker_pygame.application.deck_service import DeckViewData
+from decker_pygame.application.deck_service import (
+    DeckServiceError,
+    DeckViewData,
+    TransferViewData,
+)
 from decker_pygame.application.player_service import PlayerStatusDTO
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.service_interfaces import (
@@ -26,6 +30,7 @@ from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
 from decker_pygame.settings import GFX
 
@@ -524,26 +529,134 @@ def test_game_toggles_deck_view(game_with_mocks: Mocks):
     assert game.deck_view is None
 
 
-def test_toggle_deck_view_no_data(game_with_mocks: Mocks, capsys):
-    """Tests that the deck view is not opened if data is missing."""
+def test_toggle_deck_view_no_char_data(game_with_mocks: Mocks):
+    """Tests that the deck view is not opened if character data is missing."""
     mocks = game_with_mocks
     game = mocks.game
 
-    # Case 1: Character data is missing
     mocks.character_service.get_character_data.return_value = None
-    game.toggle_deck_view()
-    assert game.deck_view is None
-    assert "Could not retrieve character data" in capsys.readouterr().out
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_deck_view()
+        assert game.deck_view is None
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve character data to find deck."
+        )
 
-    # Case 2: Deck data is missing
-    # We need to configure the mock DTO to have a deck_id for the service call
+
+def test_toggle_deck_view_no_deck_data(game_with_mocks: Mocks):
+    """Tests that the deck view is not opened if deck data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+
     mock_char_data = Mock(spec=CharacterDataDTO)
     mock_char_data.deck_id = DeckId(uuid.uuid4())
     mocks.character_service.get_character_data.return_value = mock_char_data
     mocks.deck_service.get_deck_view_data.return_value = None
-    game.toggle_deck_view()
-    assert game.deck_view is None
-    assert "Could not retrieve deck data" in capsys.readouterr().out
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_deck_view()
+        assert game.deck_view is None
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve deck data."
+        )
+
+
+def test_game_toggles_transfer_view(game_with_mocks: Mocks):
+    """Tests that the toggle_transfer_view method opens and closes the view."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Mock the DTO from the service
+    transfer_data = TransferViewData(deck_programs=[], stored_programs=[])
+    mocks.deck_service.get_transfer_view_data.return_value = transfer_data
+
+    assert game.transfer_view is None
+
+    # Call the public method to open the view
+    with patch(
+        "decker_pygame.presentation.game.TransferView", spec=TransferView
+    ) as mock_view_class:
+        game.toggle_transfer_view()
+
+        mocks.deck_service.get_transfer_view_data.assert_called_once_with(
+            game.character_id
+        )
+        mock_view_class.assert_called_once_with(
+            data=transfer_data,
+            on_close=game.toggle_transfer_view,
+            on_move_to_deck=game._on_move_program_to_deck,
+            on_move_to_storage=game._on_move_program_to_storage,
+        )
+        assert game.transfer_view is mock_view_class.return_value
+        assert game.transfer_view in game.all_sprites
+
+    # Call again to close the view
+    game.toggle_transfer_view()
+    assert game.transfer_view is None
+
+
+def test_toggle_transfer_view_no_data(game_with_mocks: Mocks):
+    """Tests that the transfer view is not opened if data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.deck_service.get_transfer_view_data.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_transfer_view()
+        assert game.transfer_view is None
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve transfer data."
+        )
+
+
+def test_on_move_program_to_deck(game_with_mocks: Mocks):
+    """Tests the callback for moving a program to the deck."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with patch.object(game, "toggle_transfer_view") as mock_toggle:
+        game._on_move_program_to_deck("IcePick")
+
+        mocks.deck_service.move_program_to_deck.assert_called_once_with(
+            game.character_id, "IcePick"
+        )
+        assert mock_toggle.call_count == 2  # Close and re-open
+
+
+def test_on_move_program_to_storage(game_with_mocks: Mocks):
+    """Tests the callback for moving a program to storage."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with patch.object(game, "toggle_transfer_view") as mock_toggle:
+        game._on_move_program_to_storage("Hammer")
+
+        mocks.deck_service.move_program_to_storage.assert_called_once_with(
+            game.character_id, "Hammer"
+        )
+        assert mock_toggle.call_count == 2  # Close and re-open
+
+
+@pytest.mark.parametrize(
+    "method_to_test, service_method_to_mock",
+    [
+        ("_on_move_program_to_deck", "move_program_to_deck"),
+        ("_on_move_program_to_storage", "move_program_to_storage"),
+    ],
+)
+def test_on_move_program_failure(
+    game_with_mocks: Mocks, method_to_test: str, service_method_to_mock: str
+):
+    """Tests the transfer callbacks when the service raises an error."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_service_method = getattr(mocks.deck_service, service_method_to_mock)
+    mock_service_method.side_effect = DeckServiceError("Service Error")
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game_method = getattr(game, method_to_test)
+        game_method("AnyProgram")
+        mock_show_message.assert_called_once_with("Error: Service Error")
 
 
 def test_on_order_deck_success(game_with_mocks: Mocks):
@@ -578,30 +691,34 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
         )
 
 
-def test_on_order_deck_no_char_data(game_with_mocks: Mocks, capsys):
+def test_on_order_deck_no_char_data(game_with_mocks: Mocks):
     """Tests the _on_order_deck callback when character data is not found."""
     mocks = game_with_mocks
     game = mocks.game
 
     mocks.character_service.get_character_data.return_value = None
 
-    game._on_order_deck()
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_order_deck()
 
-    mocks.deck_service.get_deck_view_data.assert_not_called()
-    assert "Could not retrieve character data" in capsys.readouterr().out
+        mocks.deck_service.get_deck_view_data.assert_not_called()
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve character data to find deck."
+        )
 
 
-def test_on_order_deck_no_deck_data(game_with_mocks: Mocks, capsys):
+def test_on_order_deck_no_deck_data(game_with_mocks: Mocks):
     """Tests the _on_order_deck callback when deck data is not found."""
     mocks = game_with_mocks
     game = mocks.game
 
-    # We need to configure the mock DTO to have a deck_id for the service call
     mock_char_data = Mock(spec=CharacterDataDTO)
     mock_char_data.deck_id = DeckId(uuid.uuid4())
     mocks.character_service.get_character_data.return_value = mock_char_data
     mocks.deck_service.get_deck_view_data.return_value = None
 
-    game._on_order_deck()
-
-    assert "Could not retrieve deck data" in capsys.readouterr().out
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_order_deck()
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve deck data."
+        )

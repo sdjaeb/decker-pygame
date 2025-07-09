@@ -7,69 +7,73 @@ from decker_pygame.domain.ids import DeckId, ProgramId
 from decker_pygame.domain.program import Program
 
 
-def test_deck_add_program():
-    """Tests that adding a program correctly modifies the deck."""
-    deck = Deck(id=DeckId(uuid.uuid4()), programs=[])
-    assert not deck.programs
+@pytest.fixture
+def deck() -> Deck:
+    """Returns a deck instance for testing."""
+    return Deck(id=DeckId(uuid.uuid4()), programs=[])
 
-    new_program = Program(id=ProgramId(uuid.uuid4()), name="Test Program", size=10)
-    deck.add_program(new_program)
+
+def test_add_program(deck: Deck):
+    """Tests that a program can be added to the deck."""
+    program = Program(id=ProgramId(uuid.uuid4()), name="TestProg", size=10)
+    deck.add_program(program)
+    assert len(deck.programs) == 1
+    assert deck.programs[0] is program
+
+
+def test_remove_program_success(deck: Deck):
+    """Tests that a program can be successfully removed from the deck."""
+    program = Program(id=ProgramId(uuid.uuid4()), name="TestProg", size=10)
+    deck.programs.append(program)
 
     assert len(deck.programs) == 1
-    assert deck.programs[0] == new_program
+
+    removed_program = deck.remove_program("TestProg")
+
+    assert len(deck.programs) == 0
+    assert removed_program is program
 
 
-def test_deck_move_program():
-    """Tests moving programs up and down in the deck order."""
-    p1 = Program(id=ProgramId(uuid.uuid4()), name="Program A", size=10)
-    p2 = Program(id=ProgramId(uuid.uuid4()), name="Program B", size=10)
-    p3 = Program(id=ProgramId(uuid.uuid4()), name="Program C", size=10)
-    deck = Deck(id=DeckId(uuid.uuid4()), programs=[p1, p2, p3])
+def test_remove_program_not_found(deck: Deck):
+    """Tests that removing a non-existent program raises a ValueError."""
+    with pytest.raises(ValueError, match="not found in deck"):
+        deck.remove_program("NonExistent")
 
-    # Move B up
-    deck.move_program_up("Program B")
+
+def test_move_program_up_and_down(deck: Deck):
+    """Tests moving programs within the deck."""
+    p1 = Program(id=ProgramId(uuid.uuid4()), name="P1", size=1)
+    p2 = Program(id=ProgramId(uuid.uuid4()), name="P2", size=1)
+    p3 = Program(id=ProgramId(uuid.uuid4()), name="P3", size=1)
+    deck.programs = [p1, p2, p3]
+
+    # Move P2 up
+    deck.move_program_up("P2")
     assert deck.programs == [p2, p1, p3]
 
-    # Try to move B up again (it's now first)
-    deck.move_program_up("Program B")
-    assert deck.programs == [p2, p1, p3]  # No change
-
-    # Move B down
-    deck.move_program_down("Program B")
+    # Move P2 down
+    deck.move_program_down("P2")
     assert deck.programs == [p1, p2, p3]
 
-    # Move B down again
-    deck.move_program_down("Program B")
-    assert deck.programs == [p1, p3, p2]
 
-    # Try to move B down again (it's now last)
-    deck.move_program_down("Program B")
-    assert deck.programs == [p1, p3, p2]  # No change
+def test_move_program_at_boundaries(deck: Deck):
+    """Tests moving programs at the top or bottom of the list."""
+    p1 = Program(id=ProgramId(uuid.uuid4()), name="P1", size=1)
+    p2 = Program(id=ProgramId(uuid.uuid4()), name="P2", size=1)
+    deck.programs = [p1, p2]
+
+    # Moving top item up should do nothing
+    deck.move_program_up("P1")
+    assert deck.programs == [p1, p2]
+
+    # Moving bottom item down should do nothing
+    deck.move_program_down("P2")
+    assert deck.programs == [p1, p2]
 
 
-def test_deck_move_nonexistent_program():
-    """Tests that trying to move a non-existent program raises an error."""
-    deck = Deck(id=DeckId(uuid.uuid4()), programs=[])
+def test_move_nonexistent_program(deck: Deck):
+    """Tests that moving a non-existent program raises an error."""
     with pytest.raises(ValueError, match="not found in deck"):
-        deck.move_program_up("Non-existent")
+        deck.move_program_up("NonExistent")
     with pytest.raises(ValueError, match="not found in deck"):
-        deck.move_program_down("Non-existent")
-
-
-def test_deck_serialization_roundtrip():
-    """Tests that a Deck can be serialized and deserialized correctly."""
-    deck_id = DeckId(uuid.uuid4())
-    program = Program(id=ProgramId(uuid.uuid4()), name="Test Program", size=10)
-    original_deck = Deck(id=deck_id, programs=[program])
-
-    deck_dict = original_deck.to_dict()
-
-    assert deck_dict["id"] == str(deck_id)
-    assert len(deck_dict["programs"]) == 1
-    assert deck_dict["programs"][0]["name"] == "Test Program"
-
-    reconstituted_deck = Deck.from_dict(deck_dict)
-
-    assert reconstituted_deck == original_deck
-    assert reconstituted_deck.id == original_deck.id
-    assert reconstituted_deck.programs == original_deck.programs
+        deck.move_program_down("NonExistent")

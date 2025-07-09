@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from functools import partial
 
 import pygame
 
@@ -16,10 +17,18 @@ class TransferView(pygame.sprite.Sprite):
     rect: pygame.Rect
     _components: pygame.sprite.Group[pygame.sprite.Sprite]
 
-    def __init__(self, data: TransferViewData, on_close: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        data: TransferViewData,
+        on_close: Callable[[], None],
+        on_move_to_deck: Callable[[str], None],
+        on_move_to_storage: Callable[[str], None],
+    ) -> None:
         super().__init__()
         self._data = data
         self._on_close = on_close
+        self._on_move_to_deck = on_move_to_deck
+        self._on_move_to_storage = on_move_to_storage
 
         self.image = pygame.Surface((600, 450))
         self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
@@ -46,6 +55,7 @@ class TransferView(pygame.sprite.Sprite):
     def _render_data(self) -> None:
         """Renders the deck and storage data onto the view's surface."""
         self.image.fill(self._background_color)
+        button_size = (100, 20)
 
         # Render Stored Programs on the left
         y_offset = self._padding
@@ -53,6 +63,17 @@ class TransferView(pygame.sprite.Sprite):
             text = f"- {program.name} ({program.size}MB)"
             surface = self._font.render(text, True, self._font_color)
             self.image.blit(surface, (self._padding, y_offset))
+
+            # Add "To Deck >" button
+            button_x = self.image.get_width() // 2 - button_size[0] - self._padding
+            to_deck_button = Button(
+                (button_x, y_offset - 2),
+                button_size,
+                "To Deck >",
+                partial(self._on_move_to_deck, program.name),
+            )
+            self._components.add(to_deck_button)
+
             y_offset += self._line_height
 
         # Render Deck Programs on the right
@@ -62,6 +83,17 @@ class TransferView(pygame.sprite.Sprite):
             text = f"- {program.name} ({program.size}MB)"
             surface = self._font.render(text, True, self._font_color)
             self.image.blit(surface, (x_offset, y_offset))
+
+            # Add "< To Storage" button
+            button_x = self.image.get_width() - button_size[0] - self._padding
+            to_storage_button = Button(
+                (button_x, y_offset - 2),
+                button_size,
+                "< To Storage",
+                partial(self._on_move_to_storage, program.name),
+            )
+            self._components.add(to_storage_button)
+
             y_offset += self._line_height
 
         self._components.draw(self.image)

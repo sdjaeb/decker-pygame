@@ -91,6 +91,18 @@ class DeckServiceInterface(ABC):  # pragma: no cover
     ) -> "TransferViewData | None":
         raise NotImplementedError  # pragma: no cover
 
+    @abstractmethod
+    def move_program_to_deck(
+        self, character_id: "CharacterId", program_name: str
+    ) -> None:
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def move_program_to_storage(
+        self, character_id: "CharacterId", program_name: str
+    ) -> None:
+        raise NotImplementedError  # pragma: no cover
+
 
 class PlayerServiceInterface(ABC):  # pragma: no cover
     """Defines the input port for player-related use cases."""
