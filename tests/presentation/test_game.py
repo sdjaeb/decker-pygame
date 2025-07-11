@@ -30,9 +30,11 @@ from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
-from decker_pygame.settings import GFX
+from decker_pygame.presentation.input_handler import PygameInputHandler
+from decker_pygame.settings import FPS, GFX
 
 
 @pytest.fixture(autouse=True)
@@ -76,13 +78,17 @@ def game_with_mocks() -> Generator[Mocks]:
         patch("pygame.display.set_caption"),
         patch("pygame.display.flip"),
         patch("pygame.time.Clock"),
-        patch("decker_pygame.presentation.game.PygameInputHandler"),
+        patch(
+            "decker_pygame.presentation.game.PygameInputHandler",
+            spec=PygameInputHandler,
+        ),
         patch(
             "decker_pygame.presentation.game.load_spritesheet",
             return_value=([pygame.Surface((16, 16))], (16, 16)),
         ),
         patch("decker_pygame.presentation.game.scale_icons") as mock_scale_icons,
     ):
+        mock_scale_icons.return_value = [pygame.Surface((32, 32))]
         game = Game(
             player_service=mock_player_service,
             player_id=dummy_player_id,
@@ -93,7 +99,6 @@ def game_with_mocks() -> Generator[Mocks]:
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
-        mock_scale_icons.return_value = [pygame.Surface((32, 32))]
         yield Mocks(
             game=game,
             player_service=mock_player_service,
@@ -197,32 +202,39 @@ def test_game_load_assets_no_icons():
         mock_active_bar.assert_called_once_with(position=(0, 0), image_list=[])
 
 
-def test_game_run_loop_quits(game_with_mocks: Mocks):
-    """Tests that the main game loop runs, calls its methods, and can be exited."""
-    mocks = game_with_mocks
-    game = mocks.game
+def test_run_loop_calls_methods(game_with_mocks: Mocks):
+    """Tests that the main loop calls its core methods."""
+    game = game_with_mocks.game
 
-    # Configure mock to prevent TypeError in _update
-    mocks.player_service.get_player_status.return_value = PlayerStatusDTO(
+    # Configure mocks
+    # Configure the mock input handler to quit the game on the first call.
+    # We use `type: ignore` because Pylance cannot statically determine that
+    # the mock objects will have these attributes at runtime.
+    game.input_handler.handle_events.side_effect = game.quit  # type: ignore[attr-defined]
+    game.player_service.get_player_status.return_value = PlayerStatusDTO(  # type: ignore[attr-defined]
         current_health=100, max_health=100
     )
 
-    # This function will be the side_effect for the mock input handler.
-    # It allows us to control the game loop from outside for the test.
-    def quit_on_second_call(*args, **kwargs):
-        # The mock's own call_count tells us which iteration we are on.
-        if game.input_handler.handle_events.call_count == 2:  # type: ignore[attribute-error]
-            game.quit()
+    with patch.object(game, "_update", wraps=game._update) as spy_update:
+        with patch.object(game.all_sprites, "draw") as mock_draw:
+            game.run()
 
-    game.input_handler.handle_events.side_effect = quit_on_second_call  # type: ignore[attribute-error]
+    game.input_handler.handle_events.assert_called_once()  # type: ignore[attr-defined]
+    spy_update.assert_called_once()
+    mock_draw.assert_called_once_with(game.screen)
+    game.clock.tick.assert_called_once_with(FPS)  # type: ignore[attr-defined]
 
-    with patch("pygame.quit") as mock_pygame_quit:
+
+def test_run_calls_pygame_quit(game_with_mocks: Mocks):
+    """Tests that pygame.quit() is called when the game loop finishes."""
+    game = game_with_mocks.game
+    game.is_running = False  # Prevent the loop from running
+
+    # The patch target must be where the name is looked up. In this case,
+    # it's in the 'game' module's namespace.
+    with patch("decker_pygame.presentation.game.pygame.quit") as mock_pygame_quit:
         game.run()
 
-    # The loop should have run twice before quitting
-    assert game.input_handler.handle_events.call_count == 2  # type: ignore[attribute-error]
-    assert game.clock.tick.call_count == 2  # type: ignore[attribute-error]
-    # The final pygame.quit() should be called
     mock_pygame_quit.assert_called_once()
 
 
@@ -315,7 +327,7 @@ def test_game_toggles_build_view(game_with_mocks: Mocks):
     assert len(game.all_sprites) == 4
 
 
-def test_game_toggle_build_view_no_schematics(game_with_mocks: Mocks, capsys):
+def test_game_toggle_build_view_no_schematics(game_with_mocks: Mocks):
     """Tests that the build view is not opened if the character has no schematics."""
     mocks = game_with_mocks
     game = mocks.game
@@ -324,39 +336,36 @@ def test_game_toggle_build_view_no_schematics(game_with_mocks: Mocks, capsys):
 
     assert game.build_view is None
 
-    # Call the public method
-    game.toggle_build_view()
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_build_view()
+        assert game.build_view is None  # View should not be created
+        mock_show_message.assert_called_once_with("No schematics known.")
 
-    assert game.build_view is None  # View should not be created
-    assert "No schematics known" in capsys.readouterr().out
 
-
-def test_game_handle_build_click(game_with_mocks: Mocks):
-    """Tests the callback function that handles build clicks."""
+def test_game_handle_build_click_success(game_with_mocks: Mocks):
+    """Tests the success path of the build click callback."""
     mocks = game_with_mocks
     game = mocks.game
     schematic_name = "TestSchematic"
 
-    # Spy on the show_message method to verify it's called
-    with patch.object(game, "show_message") as spy_show_message:
-        # Test success case
+    with patch.object(game, "show_message") as mock_show_message:
         game._handle_build_click(schematic_name)
         mocks.crafting_service.craft_item.assert_called_once_with(
             game.character_id, schematic_name
         )
-        spy_show_message.assert_called_once_with(
-            f"Successfully crafted {schematic_name}!"
-        )
+        # On success, the message is handled by an event handler, not this method.
+        mock_show_message.assert_not_called()
 
-        # Test failure case
-        mocks.crafting_service.craft_item.reset_mock()
-        spy_show_message.reset_mock()
+
+def test_game_handle_build_click_failure(game_with_mocks: Mocks):
+    """Tests the failure path of the build click callback."""
+    mocks = game_with_mocks
+    game = mocks.game
+    schematic_name = "TestSchematic"
+    with patch.object(game, "show_message") as mock_show_message:
         mocks.crafting_service.craft_item.side_effect = CraftingError("Test Error")
         game._handle_build_click(schematic_name)
-        mocks.crafting_service.craft_item.assert_called_once_with(
-            game.character_id, schematic_name
-        )
-        spy_show_message.assert_called_once_with("Crafting failed: Test Error")
+        mock_show_message.assert_called_once_with("Crafting failed: Test Error")
 
 
 def test_game_toggles_char_data_view(game_with_mocks: Mocks):
@@ -396,7 +405,7 @@ def test_game_toggles_char_data_view(game_with_mocks: Mocks):
     assert game.char_data_view is None
 
 
-def test_toggle_char_data_view_no_data(game_with_mocks: Mocks, capsys):
+def test_toggle_char_data_view_no_data(game_with_mocks: Mocks):
     """Tests that the char data view is not opened if data is missing."""
     mocks = game_with_mocks
     game = mocks.game
@@ -404,11 +413,12 @@ def test_toggle_char_data_view_no_data(game_with_mocks: Mocks, capsys):
     # Simulate the service returning no data
     mocks.character_service.get_character_view_data.return_value = None
 
-    # Call the public method
-    game.toggle_char_data_view()
-    # View should not be created
-    assert game.char_data_view is None
-    assert "Could not retrieve character/player data" in capsys.readouterr().out
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_char_data_view()
+        assert game.char_data_view is None
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve character/player data."
+        )
 
 
 def test_game_on_increase_skill(game_with_mocks: Mocks):
@@ -433,7 +443,6 @@ def test_game_on_increase_skill_failure(game_with_mocks: Mocks):
 
     with patch.object(game, "show_message") as mock_show_message:
         game._on_increase_skill("hacking")
-
         mock_show_message.assert_called_once_with("Error: Service Error")
 
 
@@ -448,7 +457,7 @@ def test_game_on_decrease_skill(game_with_mocks: Mocks):
         mocks.character_service.decrease_skill.assert_called_once_with(
             game.character_id, "hacking"
         )
-        assert mock_toggle.call_count == 2  # Close and re-open
+        assert mock_toggle.call_count == 2
 
 
 def test_game_toggles_contract_list_view(game_with_mocks: Mocks):
@@ -543,6 +552,37 @@ def test_toggle_deck_view_no_char_data(game_with_mocks: Mocks):
         )
 
 
+def test_on_move_program_order_refresh_fails(game_with_mocks: Mocks):
+    """Tests the re-order callbacks when the refresh action fails."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
+
+    with patch.object(game, "_on_order_deck", side_effect=Exception("Refresh Error")):
+        with patch.object(game, "show_message") as mock_show_message:
+            # Test moving up
+            game._on_move_program_up("IcePick")
+            mocks.deck_service.move_program_up.assert_called_once_with(
+                mock_deck_id, "IcePick"
+            )
+            mock_show_message.assert_called_once_with("Error: Refresh Error")
+
+        # Reset mocks for the next test
+        mocks.deck_service.reset_mock()
+        mock_show_message.reset_mock()
+
+        with patch.object(game, "show_message") as mock_show_message:
+            # Test moving down
+            game._on_move_program_down("Hammer")
+            mocks.deck_service.move_program_down.assert_called_once_with(
+                mock_deck_id, "Hammer"
+            )
+            mock_show_message.assert_called_once_with("Error: Refresh Error")
+
+
 def test_toggle_deck_view_no_deck_data(game_with_mocks: Mocks):
     """Tests that the deck view is not opened if deck data is missing."""
     mocks = game_with_mocks
@@ -620,7 +660,7 @@ def test_on_move_program_to_deck(game_with_mocks: Mocks):
         mocks.deck_service.move_program_to_deck.assert_called_once_with(
             game.character_id, "IcePick"
         )
-        assert mock_toggle.call_count == 2  # Close and re-open
+        assert mock_toggle.call_count == 2
 
 
 def test_on_move_program_to_storage(game_with_mocks: Mocks):
@@ -634,7 +674,7 @@ def test_on_move_program_to_storage(game_with_mocks: Mocks):
         mocks.deck_service.move_program_to_storage.assert_called_once_with(
             game.character_id, "Hammer"
         )
-        assert mock_toggle.call_count == 2  # Close and re-open
+        assert mock_toggle.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -667,16 +707,19 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
     # Set up a mock deck_view to be removed
     game.deck_view = Mock(spec=DeckView)
     game.all_sprites.add(game.deck_view)
-    assert game.deck_view in game.all_sprites
+    assert len(game.all_sprites) == 5
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
     mocks.character_service.get_character_data.return_value = CharacterDataDTO(
         name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
     )
-    mocks.deck_service.get_deck_view_data.return_value = DeckViewData(programs=[])
+    deck_data = DeckViewData(programs=[])
+    mocks.deck_service.get_deck_view_data.return_value = deck_data
 
-    with patch.object(game, "show_message") as mock_show_message:
+    with patch(
+        "decker_pygame.presentation.game.OrderView", spec=OrderView
+    ) as mock_order_view_class:
         game._on_order_deck()
 
         # Assertions
@@ -684,11 +727,16 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
             game.character_id
         )
         mocks.deck_service.get_deck_view_data.assert_called_once_with(mock_deck_id)
-        assert game.deck_view is None
-        assert len(game.all_sprites) == 4  # The base sprites
-        mock_show_message.assert_called_once_with(
-            "Order Deck functionality coming soon!"
+        assert game.deck_view is None  # The old view should be gone
+        mock_order_view_class.assert_called_once_with(
+            data=deck_data,
+            on_close=game.toggle_deck_view,
+            on_move_up=game._on_move_program_up,
+            on_move_down=game._on_move_program_down,
         )
+        assert game.order_view is mock_order_view_class.return_value
+        assert game.order_view in game.all_sprites
+        assert len(game.all_sprites) == 5  # 4 base + 1 new OrderView
 
 
 def test_on_order_deck_no_char_data(game_with_mocks: Mocks):
@@ -721,4 +769,99 @@ def test_on_order_deck_no_deck_data(game_with_mocks: Mocks):
         game._on_order_deck()
         mock_show_message.assert_called_once_with(
             "Error: Could not retrieve deck data."
+        )
+
+
+def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
+    """Tests that calling _on_order_deck removes an existing OrderView."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Set up a mock order_view to be removed, simulating a refresh
+    existing_order_view = Mock(spec=OrderView)
+    game.order_view = existing_order_view
+    game.all_sprites.add(existing_order_view)
+    assert len(game.all_sprites) == 5
+
+    # Configure services to return valid data
+    mock_deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
+    deck_data = DeckViewData(programs=[])
+    mocks.deck_service.get_deck_view_data.return_value = deck_data
+
+    with patch(
+        "decker_pygame.presentation.game.OrderView", spec=OrderView
+    ) as mock_order_view_class:
+        new_order_view_instance = mock_order_view_class.return_value
+        game._on_order_deck()
+
+        # Assertions
+        assert existing_order_view not in game.all_sprites
+        mock_order_view_class.assert_called_once()
+        assert game.order_view is new_order_view_instance
+        assert game.order_view in game.all_sprites
+        assert len(game.all_sprites) == 5
+
+
+def test_on_move_program_up_and_down(game_with_mocks: Mocks):
+    """Tests the callbacks for moving a program in the deck order."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
+
+    with patch.object(game, "_on_order_deck") as mock_refresh:
+        # Test moving up
+        game._on_move_program_up("IcePick")
+        mocks.deck_service.move_program_up.assert_called_once_with(
+            mock_deck_id, "IcePick"
+        )
+        mock_refresh.assert_called_once()
+
+        mock_refresh.reset_mock()
+
+        # Test moving down
+        game._on_move_program_down("Hammer")
+        mocks.deck_service.move_program_down.assert_called_once_with(
+            mock_deck_id, "Hammer"
+        )
+        mock_refresh.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "method_to_test, service_method_to_mock",
+    [
+        ("_on_move_program_up", "move_program_up"),
+        ("_on_move_program_down", "move_program_down"),
+    ],
+)
+def test_on_move_program_order_failure(
+    game_with_mocks: Mocks, method_to_test: str, service_method_to_mock: str
+):
+    """Tests the re-order callbacks when the service raises an error."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_deck_id = DeckId(uuid.uuid4())
+    game_method = getattr(game, method_to_test)
+
+    # Test service error case
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
+    mock_service_method = getattr(mocks.deck_service, service_method_to_mock)
+    mock_service_method.side_effect = DeckServiceError("Service Error")
+    with patch.object(game, "show_message") as mock_show_message:
+        game_method("AnyProgram")
+        mock_show_message.assert_called_once_with("Error: Service Error")
+
+    # Test character not found case
+    mocks.character_service.get_character_data.return_value = None
+    with patch.object(game, "show_message") as mock_show_message:
+        game_method("AnyProgram")
+        mock_show_message.assert_called_once_with(
+            "Error: Could not find character to modify deck."
         )
