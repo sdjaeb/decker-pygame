@@ -39,7 +39,7 @@ These instructions will get you a copy of the project up and running on your loc
 3.  **Install the project and its development dependencies:**
     This command installs the project in "editable" mode (`-e`) and includes all development tools specified in `pyproject.toml`.
     ```bash
-    uv pip install -e .[dev]
+    uv pip install -e ".[dev]"
     ```
 
 ## 🧑‍💻 Development

@@ -10,7 +10,7 @@ from decker_pygame.domain.events import (
     SkillDecreased,
     SkillIncreased,
 )
-from decker_pygame.domain.ids import AggregateId, CharacterId, ProgramId
+from decker_pygame.domain.ids import AggregateId, CharacterId, DeckId, ProgramId
 from decker_pygame.domain.program import Program
 
 
@@ -22,7 +22,8 @@ class Character(AggregateRoot):
         id: CharacterId,
         name: str,
         skills: dict[str, int],
-        inventory: list[Program],
+        deck_id: DeckId,
+        stored_programs: list[Program],
         schematics: list[Schematic],
         credits: int,
         unused_skill_points: int,
@@ -34,7 +35,8 @@ class Character(AggregateRoot):
             id (CharacterId): Unique identifier for the character.
             name (str): Character's name.
             skills (Dict[str, int]): Mapping of skill names to values.
-            inventory (List[Program]): List of owned programs.
+            deck_id (DeckId): The ID of the character's deck.
+            stored_programs (list[Program]): List of programs not in the active deck.
             schematics (list[Schematic]): List of known program schematics.
             credits (int): Amount of credits the character has.
             unused_skill_points (int): Points available to spend on skills.
@@ -42,7 +44,8 @@ class Character(AggregateRoot):
         super().__init__(id=AggregateId(id))
         self.name = name
         self.skills = skills
-        self.inventory = inventory
+        self.deck_id = deck_id
+        self.stored_programs = stored_programs
         self.credits = credits
         self.schematics = schematics
         self.unused_skill_points = unused_skill_points
@@ -52,6 +55,7 @@ class Character(AggregateRoot):
     def create(
         character_id: CharacterId,
         name: str,
+        deck_id: DeckId,
         initial_skills: dict[str, int],
         initial_credits: int,
         initial_skill_points: int,
@@ -62,6 +66,7 @@ class Character(AggregateRoot):
         Args:
             character_id (CharacterId): Unique identifier for the character.
             name (str): Character's name.
+            deck_id (DeckId): The ID of the character's associated deck.
             initial_skills (Dict[str, int]): Initial skills.
             initial_credits (int): Starting credits.
             initial_skill_points (int): Starting skill points.
@@ -73,7 +78,8 @@ class Character(AggregateRoot):
             id=character_id,
             name=name,
             skills=initial_skills,
-            inventory=[],
+            deck_id=deck_id,
+            stored_programs=[],
             schematics=[],
             credits=initial_credits,
             unused_skill_points=initial_skill_points,
@@ -107,9 +113,11 @@ class Character(AggregateRoot):
 
         # Create the new program and add it to inventory
         new_program = Program(
-            id=ProgramId(uuid.uuid4()), name=schematic.produces_item_name
+            id=ProgramId(uuid.uuid4()),
+            name=schematic.produces_item_name,
+            size=schematic.produces_item_size,
         )
-        self.inventory.append(new_program)
+        self.stored_programs.append(new_program)
 
         # Emit the domain event
         self._events.append(
@@ -120,6 +128,18 @@ class Character(AggregateRoot):
                 item_name=new_program.name,
             )
         )
+
+    def remove_stored_program(self, program_name: str) -> Program:
+        """Finds, removes, and returns a program from storage."""
+        try:
+            index = next(
+                i for i, p in enumerate(self.stored_programs) if p.name == program_name
+            )
+        except StopIteration:
+            raise ValueError(
+                f"Program '{program_name}' not found in storage."
+            ) from None
+        return self.stored_programs.pop(index)
 
     @emits(SkillIncreased)
     def increase_skill(self, skill_name: str) -> None:
@@ -179,7 +199,8 @@ class Character(AggregateRoot):
             "id": str(self.id),
             "name": self.name,
             "skills": self.skills,
-            "inventory": [prog.to_dict() for prog in self.inventory],
+            "deck_id": str(self.deck_id),
+            "stored_programs": [p.to_dict() for p in self.stored_programs],
             "schematics": [s.to_dict() for s in self.schematics],
             "credits": self.credits,
             "unused_skill_points": self.unused_skill_points,
@@ -200,7 +221,10 @@ class Character(AggregateRoot):
             id=CharacterId(uuid.UUID(data["id"])),
             name=data["name"],
             skills=data["skills"],
-            inventory=[Program.from_dict(p_data) for p_data in data["inventory"]],
+            deck_id=DeckId(uuid.UUID(data["deck_id"])),
+            stored_programs=[
+                Program.from_dict(p_data) for p_data in data.get("stored_programs", [])
+            ],
             schematics=[Schematic.from_dict(s_data) for s_data in data["schematics"]],
             credits=data["credits"],
             unused_skill_points=data["unused_skill_points"],

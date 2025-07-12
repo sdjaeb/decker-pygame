@@ -48,8 +48,9 @@ class Paths:
 
     base_path: str = "data"
     characters_data: str = "data/characters"
-    players_data: str = "data/players"
     contracts_data: str = "data/contracts"
+    decks_data: str = "data/decks"
+    players_data: str = "data/players"
 
 
 PATHS = Paths()

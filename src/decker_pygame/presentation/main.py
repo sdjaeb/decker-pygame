@@ -7,6 +7,7 @@ import pygame
 from decker_pygame.application.character_service import CharacterService
 from decker_pygame.application.contract_service import ContractService
 from decker_pygame.application.crafting_service import CraftingService
+from decker_pygame.application.deck_service import DeckService
 from decker_pygame.application.domain_event_handlers import (
     create_event_logging_handler,
     is_special_player,
@@ -24,6 +25,9 @@ from decker_pygame.infrastructure.json_character_repository import (
 )
 from decker_pygame.infrastructure.json_contract_repository import (
     JsonFileContractRepository,
+)
+from decker_pygame.infrastructure.json_deck_repository import (
+    JsonFileDeckRepository,
 )
 from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
 from decker_pygame.presentation.game import Game
@@ -44,6 +48,7 @@ def main() -> None:
     character_repo = JsonFileCharacterRepository(base_path=PATHS.characters_data)
     player_repo = JsonFilePlayerRepository(base_path=PATHS.players_data)
     contract_repo = JsonFileContractRepository(base_path=PATHS.contracts_data)
+    deck_repo = JsonFileDeckRepository(base_path=PATHS.decks_data)
     event_dispatcher = EventDispatcher()
     logging_service = LoggingService(writers=[ConsoleLogWriter()])
 
@@ -61,6 +66,11 @@ def main() -> None:
     )
     contract_service = ContractService(
         contract_repo=contract_repo, event_dispatcher=event_dispatcher
+    )
+    deck_service = DeckService(
+        deck_repo=deck_repo,
+        event_dispatcher=event_dispatcher,
+        character_repo=character_repo,
     )
 
     # 3. Set up generic event handlers
@@ -81,9 +91,11 @@ def main() -> None:
 
     # Create a character and give them a schematic to test with
     character_id = CharacterId(uuid.uuid4())
+    deck_id = deck_service.create_deck()
     character = Character.create(
         character_id=character_id,
         name="Rynn",
+        deck_id=deck_id,
         initial_skills={"crafting": 5},
         initial_credits=2000,
         initial_skill_points=5,
@@ -91,6 +103,7 @@ def main() -> None:
     schematic = Schematic(
         name="IcePick v1",
         produces_item_name="IcePick v1",
+        produces_item_size=10,
         cost=[RequiredResource(name="credits", quantity=500)],
     )
     character.schematics.append(schematic)
@@ -103,6 +116,7 @@ def main() -> None:
         debug_schematic = Schematic(
             name="Debug Blaster",
             produces_item_name="Debug Blaster 9000",
+            produces_item_size=50,
             cost=[RequiredResource(name="credits", quantity=1)],
         )
         character.schematics.append(debug_schematic)
@@ -118,6 +132,7 @@ def main() -> None:
         contract_service=contract_service,
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
+        deck_service=deck_service,
         logging_service=logging_service,
     )
 

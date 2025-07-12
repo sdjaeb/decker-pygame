@@ -12,7 +12,7 @@ class Program(Entity):
     attributes and have no unique identity.
     """
 
-    def __init__(self, id: ProgramId, name: str) -> None:
+    def __init__(self, id: ProgramId, name: str, size: int) -> None:
         """
         Initialize a Program.
 
@@ -22,6 +22,7 @@ class Program(Entity):
         """
         super().__init__(id=id)
         self.name = name
+        self.size = size
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -30,7 +31,7 @@ class Program(Entity):
         Returns:
             A dictionary representation of the Program.
         """
-        return {"id": str(self.id), "name": self.name}
+        return {"id": str(self.id), "name": self.name, "size": self.size}
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Program":
@@ -43,4 +44,6 @@ class Program(Entity):
         Returns:
             A Program instance.
         """
-        return cls(id=ProgramId(uuid.UUID(data["id"])), name=data["name"])
+        return cls(
+            id=ProgramId(uuid.UUID(data["id"])), name=data["name"], size=data["size"]
+        )

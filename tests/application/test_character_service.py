@@ -11,7 +11,7 @@ from decker_pygame.application.character_service import (
 )
 from decker_pygame.application.player_service import PlayerStatusDTO
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 from decker_pygame.ports.service_interfaces import PlayerServiceInterface
 
@@ -64,6 +64,7 @@ def test_get_character_data_success():
     mock_character.credits = 1234
     mock_character.skills = {"hacking": 5}
     mock_character.unused_skill_points = 10
+    mock_character.deck_id = DeckId(uuid.uuid4())
     # For now, reputation is not on the domain model, so the DTO default is used
     mock_repo.get.return_value = mock_character
 
@@ -80,6 +81,7 @@ def test_get_character_data_success():
     assert dto.credits == 1234
     assert dto.skills == {"hacking": 5}
     assert dto.unused_skill_points == 10
+    assert dto.deck_id == mock_character.deck_id
     assert dto.reputation == 0  # Using default for now
 
 
@@ -137,11 +139,16 @@ def test_get_character_view_data_success(
     """Tests successfully aggregating data for the character view."""
     service, _, _, _, mock_player_service, char_id = service_with_mock_char
     dummy_player_id = PlayerId(uuid.uuid4())
+    dummy_deck_id = DeckId(uuid.uuid4())
 
     # Configure mocks to return valid DTOs
     service.get_character_data = Mock(
         return_value=CharacterDataDTO(
-            name="Testy", credits=100, skills={"a": 1}, unused_skill_points=2
+            name="Testy",
+            credits=100,
+            skills={"a": 1},
+            unused_skill_points=2,
+            deck_id=dummy_deck_id,
         )
     )
     mock_player_service.get_player_status.return_value = PlayerStatusDTO(

@@ -7,9 +7,13 @@ if TYPE_CHECKING:  # pragma: no cover
         CharacterViewData,
     )
     from decker_pygame.application.contract_service import ContractSummaryDTO
+    from decker_pygame.application.deck_service import (
+        DeckViewData,
+        TransferViewData,
+    )
     from decker_pygame.application.player_service import PlayerStatusDTO
     from decker_pygame.domain.crafting import Schematic
-    from decker_pygame.domain.ids import CharacterId, PlayerId
+    from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 
 
 class CharacterServiceInterface(ABC):  # pragma: no cover
@@ -55,6 +59,48 @@ class CraftingServiceInterface(ABC):  # pragma: no cover
 
     @abstractmethod
     def craft_item(self, character_id: "CharacterId", schematic_name: str) -> None:
+        raise NotImplementedError  # pragma: no cover
+
+
+class DeckServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for deck-related use cases."""
+
+    @abstractmethod
+    def create_deck(self) -> "DeckId":
+        """Creates a new, empty deck and returns its ID."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_deck_view_data(self, deck_id: "DeckId") -> "DeckViewData | None":
+        """Retrieves and aggregates all data needed for the deck view."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def move_program_up(self, deck_id: "DeckId", program_name: str) -> None:
+        """Moves a program up in the deck order."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def move_program_down(self, deck_id: "DeckId", program_name: str) -> None:
+        """Moves a program down in the deck order."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_transfer_view_data(
+        self, character_id: "CharacterId"
+    ) -> "TransferViewData | None":
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def move_program_to_deck(
+        self, character_id: "CharacterId", program_name: str
+    ) -> None:
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def move_program_to_storage(
+        self, character_id: "CharacterId", program_name: str
+    ) -> None:
         raise NotImplementedError  # pragma: no cover
 
 

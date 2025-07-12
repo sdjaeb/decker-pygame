@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.domain.character import Character
     from decker_pygame.domain.contract import Contract
-    from decker_pygame.domain.ids import CharacterId, ContractId, PlayerId
+    from decker_pygame.domain.deck import Deck
+    from decker_pygame.domain.ids import CharacterId, ContractId, DeckId, PlayerId
     from decker_pygame.domain.player import Player
 
 
@@ -38,6 +39,20 @@ class ContractRepositoryInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get(self, contract_id: "ContractId") -> Optional["Contract"]:
         """Retrieves a contract by its ID."""
+        raise NotImplementedError  # pragma: no cover
+
+
+class DeckRepositoryInterface(ABC):  # pragma: no cover
+    """Interface for a repository that manages Deck aggregates."""
+
+    @abstractmethod
+    def save(self, deck: "Deck") -> None:
+        """Saves a deck."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get(self, deck_id: "DeckId") -> Optional["Deck"]:
+        """Retrieves a deck by its ID."""
         raise NotImplementedError  # pragma: no cover
 
 

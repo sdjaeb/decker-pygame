@@ -5,7 +5,8 @@ import pytest
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, SkillDecreased, SkillIncreased
-from decker_pygame.domain.ids import CharacterId
+from decker_pygame.domain.ids import CharacterId, DeckId, ProgramId
+from decker_pygame.domain.program import Program
 
 
 @pytest.fixture
@@ -13,6 +14,7 @@ def character() -> Character:
     """Returns a character instance for testing."""
     return Character.create(
         character_id=CharacterId(uuid.uuid4()),
+        deck_id=DeckId(uuid.uuid4()),
         name="Testy",
         initial_skills={"hacking": 2},
         initial_credits=100,
@@ -70,17 +72,18 @@ def test_craft_success(character: Character):
     schematic = Schematic(
         name="IcePick v1",
         produces_item_name="IcePick v1",
+        produces_item_size=10,
         cost=[RequiredResource(name="credits", quantity=50)],
     )
 
     initial_credits = character.credits
-    initial_inventory_size = len(character.inventory)
+    initial_storage_size = len(character.stored_programs)
 
     character.craft(schematic)
 
     assert character.credits == initial_credits - 50
-    assert len(character.inventory) == initial_inventory_size + 1
-    assert character.inventory[-1].name == "IcePick v1"
+    assert len(character.stored_programs) == initial_storage_size + 1
+    assert character.stored_programs[-1].name == "IcePick v1"
 
     craft_event = next(e for e in character.events if isinstance(e, ItemCrafted))
     assert craft_event.schematic_name == "IcePick v1"
@@ -92,9 +95,29 @@ def test_craft_insufficient_credits(character: Character):
     schematic = Schematic(
         name="Expensive Thing",
         produces_item_name="Expensive Thing",
+        produces_item_size=100,
         cost=[RequiredResource(name="credits", quantity=9999)],
     )
     character.credits = 100
 
     with pytest.raises(ValueError, match="Insufficient credits"):
         character.craft(schematic)
+
+
+def test_remove_stored_program_success(character: Character):
+    """Tests that a program can be successfully removed from storage."""
+    program = Program(id=ProgramId(uuid.uuid4()), name="TestProg", size=10)
+    character.stored_programs.append(program)
+
+    assert len(character.stored_programs) == 1
+
+    removed_program = character.remove_stored_program("TestProg")
+
+    assert len(character.stored_programs) == 0
+    assert removed_program is program
+
+
+def test_remove_stored_program_not_found(character: Character):
+    """Tests that removing a non-existent program raises a ValueError."""
+    with pytest.raises(ValueError, match="not found in storage"):
+        character.remove_stored_program("NonExistent")
