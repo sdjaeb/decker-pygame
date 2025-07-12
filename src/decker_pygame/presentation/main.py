@@ -1,3 +1,10 @@
+"""The main entry point for the Decker-Pygame application.
+
+This module serves as the Composition Root of the application. It is responsible
+for initializing all layers of the architecture (infrastructure, application,
+presentation), wiring up their dependencies, and starting the main game loop.
+"""
+
 import os
 import tempfile
 import uuid
@@ -35,8 +42,8 @@ from decker_pygame.settings import DEV_SETTINGS, PATHS
 
 
 def main() -> None:
-    """
-    Main entry point for the game.
+    """Main entry point for the game.
+
     This is the "Composition Root" where we wire up our dependencies.
     """
     pygame.init()

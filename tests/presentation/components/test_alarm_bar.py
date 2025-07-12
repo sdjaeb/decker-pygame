@@ -15,6 +15,8 @@ def alarm_bar_instance():
 
 
 class TestAlarmBar:
+    """Tests for the AlarmBar component."""
+
     def test_initialization(self, alarm_bar_instance: AlarmBar):
         """Tests that the alarm bar initializes correctly as a sprite."""
         bar = alarm_bar_instance

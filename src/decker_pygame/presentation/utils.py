@@ -1,9 +1,14 @@
+"""A collection of utility functions for the Pygame presentation layer.
+
+This module provides helper functions for common tasks such as rendering wrapped
+text, scaling surfaces, and ensuring sprites have valid `rect` attributes.
+"""
+
 import pygame
 
 
 def get_and_ensure_rect(sprite: pygame.sprite.Sprite) -> pygame.Rect:
-    """
-    Gets a sprite's rect, creating it from the image if necessary.
+    """Gets a sprite's rect, creating it from the image if necessary.
 
     This is a defensive check to make composite sprites more robust. It ensures
     a sprite has a valid `rect` attribute and returns it.
@@ -18,13 +23,9 @@ def get_and_ensure_rect(sprite: pygame.sprite.Sprite) -> pygame.Rect:
         AttributeError: If the sprite is missing a `rect` and also lacks a
                         valid `image` from which a `rect` could be created.
     """
-    if (
-        hasattr(sprite, "rect")
-        and sprite.rect is not None
-        and isinstance(sprite.rect, pygame.Rect)
-    ):
+    if hasattr(sprite, "rect") and isinstance(sprite.rect, pygame.Rect):
         return sprite.rect
-    if hasattr(sprite, "image") and sprite.image is not None:
+    if hasattr(sprite, "image") and isinstance(sprite.image, pygame.Surface):
         sprite.rect = sprite.image.get_rect()
         return sprite.rect
 
@@ -42,8 +43,7 @@ def render_text_wrapped(
     rect: pygame.Rect,
     padding: int = 0,
 ) -> None:
-    """
-    Renders multi-line text onto a surface with word wrapping.
+    """Renders multi-line text onto a surface with word wrapping.
 
     This function modifies the provided surface in-place.
 
@@ -80,8 +80,7 @@ def render_text_wrapped(
 def scale_icons(
     icons: list[pygame.Surface], target_size: tuple[int, int]
 ) -> list[pygame.Surface]:
-    """
-    Scales a list of pygame.Surface objects to a target size.
+    """Scales a list of pygame.Surface objects to a target size.
 
     Args:
         icons: A list of surfaces to scale.

@@ -7,9 +7,7 @@ from decker_pygame.domain.ids import CharacterId, PlayerId
 
 
 def test_event_dispatcher():
-    """
-    Verify that the dispatcher calls the correct subscriber for an event.
-    """
+    """Verify that the dispatcher calls the correct subscriber for an event."""
     # Arrange
     dispatcher = EventDispatcher()
     mock_subscriber = Mock()
@@ -34,9 +32,7 @@ def test_event_dispatcher():
 
 
 def test_event_dispatcher_with_condition():
-    """
-    Verify that conditional subscribers are only called when their condition is met.
-    """
+    """Verify that conditional subscribers are only called if their condition is met."""
     # Arrange
     dispatcher = EventDispatcher()
     conditional_subscriber = Mock()

@@ -1,3 +1,5 @@
+"""Provides the base class for Entities in the domain model."""
+
 import uuid
 from typing import Any
 
@@ -5,8 +7,7 @@ EntityId = uuid.UUID  # Type alias for clarity
 
 
 class Entity:
-    """
-    DDD Entity base class.
+    """DDD Entity base class.
 
     An Entity is an object defined by its identity rather than its attributes.
     Entities are compared by their unique identifier, not by value.
@@ -14,8 +15,7 @@ class Entity:
     """
 
     def __init__(self, id: EntityId) -> None:
-        """
-        Initialize the entity with a unique identifier.
+        """Initialize the entity with a unique identifier.
 
         Args:
             id (EntityId): The unique identifier for the entity.
@@ -24,8 +24,7 @@ class Entity:
 
     @property
     def id(self) -> EntityId:
-        """
-        The unique identifier for the entity (read-only).
+        """The unique identifier for the entity (read-only).
 
         Returns:
             EntityId: The entity's unique identifier.
@@ -33,8 +32,7 @@ class Entity:
         return self._id
 
     def __eq__(self, other: Any) -> bool:
-        """
-        Check equality based on entity ID.
+        """Check equality based on entity ID.
 
         Args:
             other (Any): The object to compare.
@@ -47,8 +45,7 @@ class Entity:
         return self.id == other.id
 
     def __hash__(self) -> int:
-        """
-        Return a hash based on the entity ID.
+        """Return a hash based on the entity ID.
 
         Returns:
             int: The hash value.

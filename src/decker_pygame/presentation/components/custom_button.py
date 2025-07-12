@@ -1,3 +1,5 @@
+"""This module defines a reusable CustomButton component."""
+
 from collections.abc import Callable
 
 import pygame
@@ -15,8 +17,7 @@ class CustomButton(Clickable):
         image_down: pygame.Surface,
         on_click: Callable[[], None],
     ):
-        """
-        Initialize the CustomButton.
+        """Initialize the CustomButton.
 
         Args:
             position: The (x, y) position of the top-left corner.
@@ -33,8 +34,7 @@ class CustomButton(Clickable):
         self._is_pressed = False
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """
-        Handle a single pygame event.
+        """Handle a single pygame event.
 
         This method checks for mouse button events to trigger the button's action
         and update its visual state.

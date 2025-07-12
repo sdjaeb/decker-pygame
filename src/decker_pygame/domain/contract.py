@@ -1,3 +1,5 @@
+"""This module defines the Contract aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -17,8 +19,7 @@ class Contract(AggregateRoot):
         description: str,
         reward_credits: int,
     ) -> None:
-        """
-        Initialize a Contract.
+        """Initialize a Contract.
 
         Args:
             id (ContractId): Unique identifier for the contract.
@@ -36,8 +37,7 @@ class Contract(AggregateRoot):
         self.reward_credits = reward_credits
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the entity to a dictionary.
+        """Serialize the entity to a dictionary.
 
         Returns:
             A dictionary representation of the Contract.
@@ -53,8 +53,7 @@ class Contract(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Contract":
-        """
-        Reconstitute a Contract from a dictionary.
+        """Reconstitute a Contract from a dictionary.
 
         Args:
             data: The dictionary data.

@@ -1,3 +1,5 @@
+"""This module defines the Player aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -11,8 +13,7 @@ class Player(AggregateRoot):
     """The Player aggregate root."""
 
     def __init__(self, id: PlayerId, name: str, health: int) -> None:
-        """
-        Initialize a Player aggregate.
+        """Initialize a Player aggregate.
 
         Args:
             id (PlayerId): Unique identifier for the player.
@@ -26,8 +27,7 @@ class Player(AggregateRoot):
     @staticmethod
     @emits(PlayerCreated)
     def create(player_id: PlayerId, name: str, initial_health: int) -> "Player":
-        """
-        Factory to create a new player, raising a PlayerCreated domain event.
+        """Factory to create a new player, raising a PlayerCreated domain event.
 
         Args:
             player_id (PlayerId): Unique identifier for the new player.
@@ -48,8 +48,7 @@ class Player(AggregateRoot):
         return player
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
             A dictionary representation of the Player.
@@ -62,8 +61,7 @@ class Player(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Player":
-        """
-        Reconstitute a Player from a dictionary.
+        """Reconstitute a Player from a dictionary.
 
         Args:
             data: The dictionary data.

@@ -1,11 +1,13 @@
+"""This module defines the MapView component."""
+
 import pygame
 
 from decker_pygame.settings import MAP_VIEW
 
 
 class MapView(pygame.sprite.Sprite):
-    """
-    A sprite that displays a 2D map of nodes and connections.
+    """A sprite that displays a 2D map of nodes and connections.
+
     Ported from MapView.cpp/h.
     """
 
@@ -19,8 +21,7 @@ class MapView(pygame.sprite.Sprite):
         nodes: dict[str, tuple[int, int]],
         connections: list[tuple[str, str]],
     ):
-        """
-        Initialize the MapView.
+        """Initialize the MapView.
 
         Args:
             position: The (x, y) position of the top-left corner.

@@ -1,3 +1,5 @@
+"""This module defines the ActiveBar component for the main game UI."""
+
 import pygame
 import pygame.sprite
 
@@ -5,8 +7,8 @@ from decker_pygame.settings import GFX, UI_FACE
 
 
 class ActiveBar(pygame.sprite.Sprite):
-    """
-    Represents the active programs bar, showing icons for active software.
+    """Represents the active programs bar, showing icons for active software.
+
     Ported from ActiveBar.cpp and ActiveBar.h.
     """
 
@@ -18,8 +20,7 @@ class ActiveBar(pygame.sprite.Sprite):
     def __init__(
         self, position: tuple[int, int], image_list: list[pygame.Surface]
     ) -> None:
-        """
-        Initializes the ActiveBar.
+        """Initializes the ActiveBar.
 
         Args:
             position: The (x, y) position of the top-left corner of the bar.
@@ -85,8 +86,7 @@ class ActiveBar(pygame.sprite.Sprite):
             self.update()
 
     def get_active_program(self, slot: int) -> int | None:
-        """
-        Gets the program ID from a specific slot.
+        """Gets the program ID from a specific slot.
 
         Returns:
             The program_id if the slot is active, otherwise None.
@@ -97,8 +97,8 @@ class ActiveBar(pygame.sprite.Sprite):
         return self.active_programs.get(slot)
 
     def update(self) -> None:
-        """
-        Redraws the active bar surface based on the current state.
+        """Redraws the active bar surface based on the current state.
+
         This is the equivalent of OnPaint in the original C++ code.
         """
         self.image.fill(UI_FACE)

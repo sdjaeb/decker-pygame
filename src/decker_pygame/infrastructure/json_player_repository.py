@@ -1,3 +1,5 @@
+"""A JSON file-based implementation of the Player repository interface."""
+
 import json
 import os
 from typing import Any
@@ -8,12 +10,17 @@ from decker_pygame.ports.repository_interfaces import PlayerRepositoryInterface
 
 
 class JsonFilePlayerRepository(PlayerRepositoryInterface):
-    """
-    A concrete repository that persists Player aggregates to JSON files.
+    """A concrete repository that persists Player aggregates to JSON files.
+
     Each player is stored in a separate file named after its ID.
     """
 
     def __init__(self, base_path: str) -> None:
+        """Initialize the repository with a base directory for storage.
+
+        Args:
+            base_path: Directory where player files are stored.
+        """
         self._base_path = base_path
         os.makedirs(self._base_path, exist_ok=True)
 

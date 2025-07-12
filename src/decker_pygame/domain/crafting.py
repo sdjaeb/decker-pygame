@@ -1,12 +1,12 @@
+"""This module defines the value objects related to the crafting subdomain."""
+
 from dataclasses import dataclass
 from typing import Any
 
 
 @dataclass(frozen=True)
 class RequiredResource:
-    """
-    A Value Object representing a resource needed for crafting.
-    """
+    """A Value Object representing a resource needed for crafting."""
 
     name: str
     quantity: int
@@ -14,9 +14,7 @@ class RequiredResource:
 
 @dataclass(frozen=True)
 class Schematic:
-    """
-    A Value Object representing the recipe to build an item.
-    """
+    """A Value Object representing the recipe to build an item."""
 
     name: str
     produces_item_name: str

@@ -1,3 +1,5 @@
+"""This module defines the DeckView component."""
+
 from collections.abc import Callable
 
 import pygame
@@ -22,6 +24,13 @@ class DeckView(pygame.sprite.Sprite):
         on_close: Callable[[], None],
         on_order: Callable[[], None],
     ) -> None:
+        """Initialize the DeckView.
+
+        Args:
+            data: The data required to render the view.
+            on_close: A callback function to execute when the view is closed.
+            on_order: A callback function to execute when the order button is clicked.
+        """
         super().__init__()
         self._data = data
         self._on_close = on_close

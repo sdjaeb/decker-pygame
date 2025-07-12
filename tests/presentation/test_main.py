@@ -11,8 +11,8 @@ from decker_pygame.settings import PATHS
 
 
 def test_main_function(mocker: MockerFixture) -> None:
-    """
-    Test the main entry point function correctly wires up all layers
+    """Test the main entry point function correctly wires up all layers.
+
     and runs the game, without starting a real Pygame window.
     """
     # Patch all dependencies within the main module
@@ -162,9 +162,7 @@ def test_main_function(mocker: MockerFixture) -> None:
 
 
 def test_main_function_dev_mode(mocker: MockerFixture) -> None:
-    """
-    Tests that the main function correctly applies dev settings when enabled.
-    """
+    """Tests that the main function correctly applies dev settings when enabled."""
     # Patch all dependencies to prevent side effects
     mocker.patch("decker_pygame.presentation.main.pygame.init")
     mocker.patch("decker_pygame.presentation.main.JsonFilePlayerRepository")

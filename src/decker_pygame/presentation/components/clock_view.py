@@ -1,3 +1,5 @@
+"""This module defines the ClockView component for the main game UI."""
+
 import pygame
 
 from decker_pygame.settings import UI_FONT
@@ -10,8 +12,7 @@ class ClockView(pygame.sprite.Sprite):
     rect: pygame.Rect
 
     def __init__(self, position: tuple[int, int], initial_text: str = "00:00:00"):
-        """
-        Initialize the ClockView.
+        """Initialize the ClockView.
 
         Args:
             position: The (x, y) position of the top-left corner.
@@ -26,8 +27,7 @@ class ClockView(pygame.sprite.Sprite):
         self.set_text(initial_text)
 
     def set_text(self, text: str) -> None:
-        """
-        Update the displayed text. This redraws the sprite's image.
+        """Update the displayed text. This redraws the sprite's image.
 
         Args:
             text: The new text to display.

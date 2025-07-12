@@ -1,3 +1,8 @@
+"""This module defines the main Game class, which orchestrates the presentation layer.
+
+It handles the main game loop, event processing, and the display of all UI components.
+"""
+
 from collections.abc import Callable
 from typing import Optional, TypeVar
 
@@ -80,8 +85,7 @@ class Game:
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
-        """
-        Initialize the Game.
+        """Initialize the Game.
 
         Args:
             player_service (PlayerServiceInterface): Service for player ops.
@@ -111,8 +115,7 @@ class Game:
         self._load_assets()
 
     def _load_assets(self) -> None:
-        """
-        Load game assets (images, sounds, etc).
+        """Load game assets (images, sounds, etc).
 
         Returns:
             None
@@ -149,8 +152,7 @@ class Game:
         view_attr: str,
         view_factory: Callable[[], Optional[V]],
     ) -> None:
-        """
-        Generic method to open or close a view.
+        """Generic method to open or close a view.
 
         Args:
             view_attr: The name of the attribute on `self` that holds the view instance.
@@ -350,8 +352,7 @@ class Game:
         self.message_view.set_text(text)
 
     def _update(self) -> None:
-        """
-        Update game state.
+        """Update game state.
 
         Returns:
             None
@@ -366,8 +367,7 @@ class Game:
         self.all_sprites.update()
 
     def run(self) -> None:
-        """
-        Run the main game loop.
+        """Run the main game loop.
 
         Returns:
             None
@@ -385,8 +385,8 @@ class Game:
         pygame.quit()
 
     def _on_order_deck(self) -> None:
-        """
-        Callback for when the 'Order' button is clicked in the DeckView.
+        """Callback for when the 'Order' button is clicked in the DeckView.
+
         Opens the OrderView.
         """
         char_data = self.character_service.get_character_data(self.character_id)

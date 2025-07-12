@@ -1,3 +1,10 @@
+"""This module provides decorators for marking domain event producers and consumers.
+
+These decorators, `@emits` and `@handles`, are used for semantic clarity and
+discoverability within the event-driven architecture. They attach metadata to
+functions, making it explicit which events a function can create or react to.
+"""
+
 # ruff: noqa: UP047
 from collections.abc import Callable
 from functools import wraps
@@ -12,8 +19,7 @@ F = TypeVar("F", bound=Callable[[Any], None])
 
 
 def emits(*event_types: type[Event]) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """
-    A decorator to mark a function as an emitter of one or more domain events.
+    """A decorator to mark a function as an emitter of one or more domain events.
 
     This is primarily for semantic clarity and discoverability. It attaches a
     `_emits` attribute to the function for potential introspection.
@@ -34,8 +40,7 @@ def emits(*event_types: type[Event]) -> Callable[[Callable[P, R]], Callable[P, R
 
 
 def handles(*event_types: type[Event]) -> Callable[[F], F]:
-    """
-    A decorator to mark a function as a handler for one or more domain events.
+    """A decorator to mark a function as a handler for one or more domain events.
 
     This is for semantic clarity and discoverability.
 

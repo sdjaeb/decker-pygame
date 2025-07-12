@@ -93,6 +93,13 @@ cz commit
 
 `commitizen` will prompt you through the process of creating a great commit message. The `pre-commit` hook will ensure that all commits adhere to this standard.
 
+Before committing, the best practice for this workflow is to run the pre-commits before the cz commit - that way things aren't inadventently missed. It's fast and easy to run after every git add:
+
+```bash
+git add .
+pre-commit run --all
+```
+
 ### Development Mode
 
 To enable development mode for rapid prototyping (e.g., giving the character extra starting credits), you can set an environment variable before running the game:
@@ -118,7 +125,7 @@ If a hook fails (e.g., due to a linting error or a failing test), the commit wil
 
 ### Automated Releases (CI/CD)
 
-This project uses GitHub Actions to automate the release process. On every merge to the `main` branch, a CI/CD workflow automatically:
+This project uses GitHub Actions to automate the release process. On every push to the `main` branch, a CI/CD workflow automatically:
 
 1.  Determine the correct new version number based on your commit history (following Semantic Versioning).
 2.  Update the version in `pyproject.toml`.
@@ -136,12 +143,35 @@ git checkout main
 git pull
 ```
 
+### Manual Release Process
+
+This project uses `commitizen` to manage versioning and changelogs based on the Conventional Commits standard. When you are ready to create a new release, follow these steps:
+
+1.  **Ensure you are on the `main` branch** and have pulled the latest changes.
+2.  **Run the `commitizen` bump command:**
+    ```bash
+    cz bump --changelog
+    ```
+    This command will analyze your commit history, determine the correct version bump, update `pyproject.toml` and `CHANGELOG.md`, and create a new commit and tag.
+
+3.  **Push the new commit and tag to GitHub:**
+    ```bash
+    git push --follow-tags
+    ```
+    This command pushes both your new release commit and its associated version tag to the remote repository.
+
+
 ### Running Tests Manually
 
 To run the test suite manually at any time:
 
 ```bash
 pytest
+```
+
+To run the test suite to review test coverage at any time:
+```bash
+pytest --cov=src/decker_pygame --cov-report=term-missing
 ```
 
 ## Asset Management

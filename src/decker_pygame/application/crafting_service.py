@@ -1,3 +1,10 @@
+"""This module defines the application service for crafting-related operations.
+
+It includes the CraftingService, which orchestrates use cases like a character
+crafting an item from a known schematic, and the exceptions that can be raised
+during these operations.
+"""
+
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.crafting import Schematic
 from decker_pygame.domain.ids import CharacterId
@@ -31,13 +38,17 @@ class CraftingService(CraftingServiceInterface):
         character_repo: CharacterRepositoryInterface,
         event_dispatcher: EventDispatcher,
     ) -> None:
-        """Initialize the CraftingService."""
+        """Initialize the CraftingService.
+
+        Args:
+            character_repo: The repository for character aggregates.
+            event_dispatcher: The dispatcher for domain events.
+        """
         self.character_repo = character_repo
         self.event_dispatcher = event_dispatcher
 
     def get_character_schematics(self, character_id: CharacterId) -> list[Schematic]:
-        """
-        Retrieves the list of known schematics for a given character.
+        """Retrieves the list of known schematics for a given character.
 
         This is a query method to provide data to the presentation layer.
 
@@ -53,8 +64,7 @@ class CraftingService(CraftingServiceInterface):
         return character.schematics
 
     def craft_item(self, character_id: CharacterId, schematic_name: str) -> None:
-        """
-        Orchestrates the use case of a character crafting an item.
+        """Orchestrates the use case of a character crafting an item.
 
         Args:
             character_id: The ID of the character who is crafting.

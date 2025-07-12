@@ -1,3 +1,5 @@
+"""A JSON file-based implementation of the Deck repository interface."""
+
 import json
 import os
 from typing import Any

@@ -1,3 +1,10 @@
+"""This module provides the EventDispatcher class.
+
+The EventDispatcher is a central component in our event-driven architecture.
+It allows different parts of the application to communicate in a decoupled
+manner by subscribing to and dispatching domain events.
+"""
+
 from collections import defaultdict
 from collections.abc import Callable
 from typing import Any, TypeVar, cast
@@ -30,8 +37,7 @@ class EventDispatcher:
         *,
         condition: Condition[E] | None = None,
     ) -> None:
-        """
-        Register a subscriber for a specific event type.
+        """Register a subscriber for a specific event type.
 
         Args:
             event_type: The class of the event to subscribe to.
@@ -46,9 +52,7 @@ class EventDispatcher:
         )
 
     def dispatch(self, events: list[Event]) -> None:
-        """
-        Dispatch a list of events to all registered subscribers.
-        """
+        """Dispatch a list of events to all registered subscribers."""
         for event in events:
             event_type = type(event)
             if event_type in self._subscribers:

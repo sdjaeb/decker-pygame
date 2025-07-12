@@ -18,6 +18,7 @@ class ConcreteClickable(Clickable):
     """A concrete implementation of the abstract Clickable for testing."""
 
     def __init__(self, on_click: Mock):
+        """Initialize the concrete clickable."""
         super().__init__(on_click)
         # Provide a dummy rect required by the Sprite base class
         self.rect = pygame.Rect(0, 0, 10, 10)

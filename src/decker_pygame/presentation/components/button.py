@@ -1,3 +1,5 @@
+"""This module defines a generic Button component."""
+
 from collections.abc import Callable
 
 import pygame

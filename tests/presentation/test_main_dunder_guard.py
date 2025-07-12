@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 
 def test_main_dunder_guard() -> None:
-    """
-    Test that running the module as a script executes the main function,
+    """Test that running the module as a script executes the main function.
+
     which in turn runs the game.
     """
     # Patch Game at its source to prevent the real game loop from running.

@@ -5,7 +5,10 @@ from decker_pygame.settings import GFX, UI_FACE
 
 
 class TestActiveBar:
+    """Tests for the ActiveBar component."""
+
     def test_initialization(self):
+        """Tests that the ActiveBar initializes correctly."""
         pygame.init()
 
         # The image_list should contain images of the correct size as defined
@@ -126,6 +129,7 @@ class TestActiveBar:
         pygame.quit()
 
     def test_active_bar_eq_and_hash_repr(self, mocker):
+        """Tests the magic methods for equality, hashing, and representation."""
         import pygame
 
         from decker_pygame.presentation.components.active_bar import ActiveBar

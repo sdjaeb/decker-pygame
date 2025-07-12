@@ -1,3 +1,5 @@
+"""This module defines the BuildView component for the crafting UI."""
+
 from collections.abc import Callable
 
 import pygame
@@ -7,8 +9,8 @@ from decker_pygame.settings import UI_FACE, UI_FONT
 
 
 class BuildView(pygame.sprite.Sprite):
-    """
-    A UI component that displays a list of craftable schematics and handles
+    """A UI component that displays a list of craftable schematics.
+
     user interaction for crafting items. Ported from BuildDialog.cpp/h.
     """
 

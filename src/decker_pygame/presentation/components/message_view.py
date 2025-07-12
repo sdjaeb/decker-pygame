@@ -1,3 +1,5 @@
+"""This module defines the MessageView component for displaying text."""
+
 import pygame
 
 from decker_pygame.presentation.utils import render_text_wrapped
@@ -5,8 +7,8 @@ from decker_pygame.settings import UI_FONT
 
 
 class MessageView(pygame.sprite.Sprite):
-    """
-    A sprite that displays multi-line text with word wrapping.
+    """A sprite that displays multi-line text with word wrapping.
+
     Ported from MessageView.cpp/h.
     """
 
@@ -19,8 +21,7 @@ class MessageView(pygame.sprite.Sprite):
         size: tuple[int, int],
         background_color: pygame.Color,
     ):
-        """
-        Initialize the MessageView.
+        """Initialize the MessageView.
 
         Args:
             position: The (x, y) position of the top-left corner.

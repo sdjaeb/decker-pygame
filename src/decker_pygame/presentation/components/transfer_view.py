@@ -1,3 +1,5 @@
+"""This module defines the TransferView component for moving items."""
+
 from collections.abc import Callable
 from functools import partial
 
@@ -24,6 +26,14 @@ class TransferView(pygame.sprite.Sprite):
         on_move_to_deck: Callable[[str], None],
         on_move_to_storage: Callable[[str], None],
     ) -> None:
+        """Initialize the TransferView.
+
+        Args:
+            data: The data required to render the view.
+            on_close: A callback function to execute when the view is closed.
+            on_move_to_deck: Callback for moving an item to the deck.
+            on_move_to_storage: Callback for moving an item to storage.
+        """
         super().__init__()
         self._data = data
         self._on_close = on_close

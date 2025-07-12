@@ -1,3 +1,5 @@
+"""This module defines type aliases for all domain-specific IDs."""
+
 import uuid
 from typing import NewType
 

@@ -1,11 +1,13 @@
+"""This module defines the MatrixView component."""
+
 import pygame
 
 from decker_pygame.presentation.utils import get_and_ensure_rect
 
 
 class MatrixView(pygame.sprite.Sprite):
-    """
-    A composite sprite that acts as a container for other UI components,
+    """A composite sprite that acts as a container for other UI components.
+
     representing the main matrix interface view.
     Ported from MatrixView.cpp/h.
     """
@@ -20,8 +22,7 @@ class MatrixView(pygame.sprite.Sprite):
         size: tuple[int, int],
         background_color: pygame.Color,
     ):
-        """
-        Initialize the MatrixView.
+        """Initialize the MatrixView.
 
         Args:
             position: The (x, y) position of the top-left corner of the view.
@@ -39,8 +40,7 @@ class MatrixView(pygame.sprite.Sprite):
     def add_component(
         self, sprite: pygame.sprite.Sprite, relative_pos: tuple[int, int]
     ) -> None:
-        """
-        Adds a component to the view at a position relative to the view's top-left.
+        """Adds a component to the view at a position relative to the view's top-left.
 
         Args:
             sprite: The sprite component to add.
@@ -52,9 +52,7 @@ class MatrixView(pygame.sprite.Sprite):
         self.update()
 
     def update(self) -> None:
-        """
-        Updates all contained components and redraws them onto this view's surface.
-        """
+        """Update all contained components and redraw them on the view's surface."""
         self.components.update()
         self.image.fill(self._background_color)
         self.components.draw(self.image)

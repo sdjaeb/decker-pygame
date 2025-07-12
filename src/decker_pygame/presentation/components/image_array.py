@@ -1,9 +1,11 @@
+"""This module defines the ImageArray component."""
+
 import pygame
 
 
 class ImageArray(pygame.sprite.Sprite):
-    """
-    A sprite that can display one of several images from a list.
+    """A sprite that can display one of several images from a list.
+
     This is useful for animations or multi-state icons.
     Ported from ImageArray.cpp/h.
     """
@@ -14,8 +16,7 @@ class ImageArray(pygame.sprite.Sprite):
     _current_index: int
 
     def __init__(self, position: tuple[int, int], images: list[pygame.Surface]):
-        """
-        Initialize the ImageArray.
+        """Initialize the ImageArray.
 
         Args:
             position: The (x, y) position of the top-left corner.
@@ -34,8 +35,7 @@ class ImageArray(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=position)
 
     def set_image(self, index: int) -> None:
-        """
-        Set the currently displayed image by its index in the list.
+        """Set the currently displayed image by its index in the list.
 
         Args:
             index: The index of the image to display.

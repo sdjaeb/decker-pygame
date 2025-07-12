@@ -1,3 +1,5 @@
+"""This module defines the Area aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -16,8 +18,7 @@ class Area(AggregateRoot):
         security_level: int,
         contract_ids: list[ContractId],
     ) -> None:
-        """
-        Initialize an Area.
+        """Initialize an Area.
 
         Args:
             id (AreaId): Unique identifier for the area.
@@ -33,8 +34,7 @@ class Area(AggregateRoot):
         self.contract_ids = contract_ids
 
     def add_contract(self, contract_id: ContractId) -> None:
-        """
-        Add a contract to the area.
+        """Add a contract to the area.
 
         Args:
             contract_id (ContractId): The contract to add.
@@ -45,8 +45,7 @@ class Area(AggregateRoot):
         self.contract_ids.append(contract_id)
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
             A dictionary representation of the Area.
@@ -61,8 +60,7 @@ class Area(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Area":
-        """
-        Reconstitute an Area from a dictionary.
+        """Reconstitute an Area from a dictionary.
 
         Args:
             data: The dictionary data.

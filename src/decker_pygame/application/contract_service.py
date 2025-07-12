@@ -1,3 +1,10 @@
+"""This module defines the application service for contract-related operations.
+
+It includes the ContractService, which orchestrates use cases like retrieving
+available contracts, and the Data Transfer Objects (DTOs) used to pass contract
+data to the presentation layer.
+"""
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -40,6 +47,12 @@ class ContractService(ContractServiceInterface):
         contract_repo: ContractRepositoryInterface,
         event_dispatcher: EventDispatcher,
     ) -> None:
+        """Initialize the ContractService.
+
+        Args:
+            contract_repo: The repository for contract aggregates.
+            event_dispatcher: The dispatcher for domain events.
+        """
         self.contract_repo = contract_repo
         self.event_dispatcher = event_dispatcher
 

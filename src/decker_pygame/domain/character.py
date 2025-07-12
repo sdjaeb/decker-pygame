@@ -1,3 +1,5 @@
+"""This module defines the Character aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -28,8 +30,7 @@ class Character(AggregateRoot):
         credits: int,
         unused_skill_points: int,
     ) -> None:
-        """
-        Initialize a Character.
+        """Initialize a Character.
 
         Args:
             id (CharacterId): Unique identifier for the character.
@@ -60,8 +61,7 @@ class Character(AggregateRoot):
         initial_credits: int,
         initial_skill_points: int,
     ) -> "Character":
-        """
-        Factory to create a new character, raising a CharacterCreated domain event.
+        """Factory to create a new character, raising a CharacterCreated domain event.
 
         Args:
             character_id (CharacterId): Unique identifier for the character.
@@ -93,8 +93,7 @@ class Character(AggregateRoot):
 
     @emits(ItemCrafted)
     def craft(self, schematic: Schematic) -> None:
-        """
-        Crafts an item from a schematic, consuming resources and creating an event.
+        """Crafts an item from a schematic, consuming resources and creating an event.
 
         Note: Pre-condition checks (e.g., if the character has enough credits)
         are the responsibility of the calling Application Service. This method
@@ -189,8 +188,7 @@ class Character(AggregateRoot):
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
             A dictionary representation of the Character.
@@ -208,8 +206,7 @@ class Character(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Character":
-        """
-        Reconstitute a Character from a dictionary.
+        """Reconstitute a Character from a dictionary.
 
         Args:
             data: The dictionary data.

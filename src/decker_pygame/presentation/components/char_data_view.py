@@ -1,3 +1,5 @@
+"""This module defines the CharDataView component for the character stats UI."""
+
 from collections.abc import Callable
 from functools import partial
 
@@ -11,8 +13,8 @@ from .base_widgets import Clickable
 
 
 class CharDataView(pygame.sprite.Sprite):
-    """
-    A UI component that displays character data.
+    """A UI component that displays character data.
+
     Ported from CharDataDialog.cpp/h.
     """
 

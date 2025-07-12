@@ -1,11 +1,13 @@
+"""This module defines the ContractDataView component."""
+
 import pygame
 
 from decker_pygame.settings import UI_FACE, UI_FONT
 
 
 class ContractDataView(pygame.sprite.Sprite):
-    """
-    A UI component that displays contract data.
+    """A UI component that displays contract data.
+
     Ported from ContractDataDialog.cpp/h.
     """
 

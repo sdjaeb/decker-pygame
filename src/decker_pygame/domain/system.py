@@ -1,3 +1,5 @@
+"""This module defines the System aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -9,8 +11,7 @@ class System(AggregateRoot):
     """Represents a computer system that contains various nodes."""
 
     def __init__(self, id: SystemId, name: str, node_ids: list[NodeId]) -> None:
-        """
-        Initialize a System.
+        """Initialize a System.
 
         Args:
             id (SystemId): Unique identifier for the system.
@@ -22,8 +23,7 @@ class System(AggregateRoot):
         self.node_ids = node_ids
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
             A dictionary representation of the System.
@@ -36,8 +36,7 @@ class System(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "System":
-        """
-        Reconstitute a System from a dictionary.
+        """Reconstitute a System from a dictionary.
 
         Args:
             data: The dictionary data.

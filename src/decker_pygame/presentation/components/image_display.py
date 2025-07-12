@@ -1,9 +1,11 @@
+"""This module defines the ImageDisplay component."""
+
 import pygame
 
 
 class ImageDisplay(pygame.sprite.Sprite):
-    """
-    A simple sprite that displays a single, static image.
+    """A simple sprite that displays a single, static image.
+
     This is useful for backgrounds, logos, or other non-interactive elements.
     Ported from ImageDisplay.cpp/h.
     """
@@ -12,8 +14,7 @@ class ImageDisplay(pygame.sprite.Sprite):
     rect: pygame.Rect
 
     def __init__(self, position: tuple[int, int], image: pygame.Surface):
-        """
-        Initialize the ImageDisplay.
+        """Initialize the ImageDisplay.
 
         Args:
             position: The (x, y) position of the top-left corner.

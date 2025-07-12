@@ -1,3 +1,5 @@
+"""This module defines the Program entity."""
+
 import uuid
 from typing import Any
 
@@ -13,20 +15,19 @@ class Program(Entity):
     """
 
     def __init__(self, id: ProgramId, name: str, size: int) -> None:
-        """
-        Initialize a Program.
+        """Initialize a Program.
 
         Args:
             id (ProgramId): Unique identifier for the program.
             name (str): Name of the program.
+            size (int): The memory size of the program.
         """
         super().__init__(id=id)
         self.name = name
         self.size = size
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the entity to a dictionary.
+        """Serialize the entity to a dictionary.
 
         Returns:
             A dictionary representation of the Program.
@@ -35,8 +36,7 @@ class Program(Entity):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Program":
-        """
-        Reconstitute a Program from a dictionary.
+        """Reconstitute a Program from a dictionary.
 
         Args:
             data: The dictionary data.

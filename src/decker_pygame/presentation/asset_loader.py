@@ -1,3 +1,8 @@
+"""Provides utility functions for loading game assets.
+
+This includes helpers for loading images and spritesheets.
+"""
+
 from pathlib import Path
 
 import pygame
@@ -11,8 +16,7 @@ def load_images(
     size: tuple[int, int] | None = None,
     base_path: Path | None = None,
 ) -> list[pygame.Surface]:
-    """
-    Loads all images from a subdirectory within the main asset folder.
+    """Loads all images from a subdirectory within the main asset folder.
 
     Args:
         subdirectory: The name of the folder within the assets directory.
@@ -43,8 +47,7 @@ def load_spritesheet(
     base_path: Path | None = None,
     colorkey: ColorLike | None = None,
 ) -> tuple[list[pygame.Surface], tuple[int, int]]:
-    """
-    Loads images from a spritesheet by introspecting its dimensions.
+    """Loads images from a spritesheet by introspecting its dimensions.
 
     Args:
         filename: The filename of the spritesheet in the assets folder.

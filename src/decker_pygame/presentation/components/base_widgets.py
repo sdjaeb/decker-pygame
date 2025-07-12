@@ -1,3 +1,5 @@
+"""This module provides base classes and mixins for UI components."""
+
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
@@ -11,8 +13,7 @@ class Clickable(pygame.sprite.Sprite, ABC):
     rect: pygame.Rect
 
     def __init__(self, on_click: Callable[[], None]):
-        """
-        Initialize the Clickable component.
+        """Initialize the Clickable component.
 
         Args:
             on_click: A zero-argument function to call when clicked.

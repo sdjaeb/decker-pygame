@@ -1,3 +1,5 @@
+"""This module defines the Node entity."""
+
 import uuid
 from typing import Any
 
@@ -9,8 +11,7 @@ class Node(Entity):
     """Represents a single node within a System."""
 
     def __init__(self, id: NodeId, name: str) -> None:
-        """
-        Initialize a Node.
+        """Initialize a Node.
 
         Args:
             id (NodeId): Unique identifier for the node.
@@ -20,8 +21,7 @@ class Node(Entity):
         self.name = name
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the entity to a dictionary.
+        """Serialize the entity to a dictionary.
 
         Returns:
             A dictionary representation of the Node.
@@ -30,8 +30,7 @@ class Node(Entity):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Node":
-        """
-        Reconstitute a Node from a dictionary.
+        """Reconstitute a Node from a dictionary.
 
         Args:
             data: The dictionary data.
