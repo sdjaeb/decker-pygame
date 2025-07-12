@@ -7,6 +7,7 @@ making them easy to adjust.
 
 from pathlib import Path
 
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pygame.color import Color
 
 # --- General ---
@@ -34,9 +35,25 @@ class GfxSettings:
     program_icon_source_size: int = 16
     active_bar_image_size: int = 32
     active_bar_max_slots: int = 8
+    ui_button_sheet: str = "ui_bmps/buttons.bmp"
+    ui_button_size: int = 11
 
 
 GFX = GfxSettings()
+
+
+# --- Data Paths ---
+class Paths:
+    """A namespace for data storage paths."""
+
+    base_path: str = "data"
+    characters_data: str = "data/characters"
+    contracts_data: str = "data/contracts"
+    decks_data: str = "data/decks"
+    players_data: str = "data/players"
+
+
+PATHS = Paths()
 
 
 # --- Fonts ---
@@ -46,6 +63,7 @@ class UiFontSettings:
     default_font_name: str | None = None  # Use pygame default
     default_font_size: int = 18
     default_font_color: Color = Color(200, 200, 200)  # Light grey
+    dark_font_color: Color = Color(20, 20, 20)  # Near-black for light backgrounds
 
 
 UI_FONT = UiFontSettings()
@@ -99,3 +117,15 @@ MAP_VIEW = MapViewSettings()
 
 # --- Gameplay Constants ---
 MAX_ALERT_LEVEL = 100.0
+
+
+# --- Development Settings ---
+class DevSettings(BaseSettings):
+    """Settings for development and debugging, loaded from environment variables."""
+
+    enabled: bool = False
+
+    model_config = SettingsConfigDict(env_prefix="DECKER_DEV_")
+
+
+DEV_SETTINGS = DevSettings()

@@ -34,7 +34,7 @@ class MessageView(pygame.sprite.Sprite):
         self.font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
         )
-        self.font_color = UI_FONT.default_font_color
+        self.font_color = UI_FONT.dark_font_color
         self.line_height = self.font.get_linesize()
         self.padding = 5
 

@@ -1,52 +1,81 @@
-import json
 import os
+import shutil
 import tempfile
 import uuid
 
-from decker_pygame.domain.player import Player, PlayerId
-from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
+from decker_pygame.domain.ids import PlayerId
+from decker_pygame.domain.player import Player
+from decker_pygame.infrastructure.json_player_repository import (
+    JsonFilePlayerRepository,
+)
 
 
-def test_repository_creates_directory_on_init():
-    """Verify the repository creates its base directory if it doesn't exist."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        repo_path = os.path.join(tmpdir, "non_existent_dir")
-        assert not os.path.exists(repo_path)
+def test_get_by_name_no_directory():
+    """Tests that get_by_name returns None if the base directory doesn't exist."""
+    # Create a temporary directory, instantiate the repo, then remove the directory
+    # to simulate the condition where the path doesn't exist during the call.
+    temp_dir = tempfile.mkdtemp()
+    repo = JsonFilePlayerRepository(temp_dir)
+    shutil.rmtree(temp_dir)
+    assert repo.get_by_name("Deckard") is None
 
-        JsonFilePlayerRepository(base_path=repo_path)
 
-        assert os.path.exists(repo_path)
+def test_get_by_name():
+    """Tests retrieving a player by name from a directory with multiple files."""
+    base_path = tempfile.mkdtemp()
+    try:
+        repo = JsonFilePlayerRepository(base_path)
+
+        # Test with an empty directory
+        assert repo.get_by_name("Deckard") is None
+
+        # Create some players
+        player1_id = PlayerId(uuid.uuid4())
+        player1 = Player.create(player1_id, "Deckard", initial_health=100)
+        repo.save(player1)
+
+        player2_id = PlayerId(uuid.uuid4())
+        player2 = Player.create(player2_id, "Rynn", initial_health=90)
+        repo.save(player2)
+
+        # Add a non-json file to ensure it's ignored
+        with open(os.path.join(base_path, "ignore.txt"), "w") as f:
+            f.write("ignore me")
+
+        # Test finding an existing player
+        found_player = repo.get_by_name("Rynn")
+        assert found_player is not None
+        assert found_player.id == player2.id
+        assert found_player.name == "Rynn"
+        assert found_player.health == 90
+
+        # Test not finding a non-existent player
+        assert repo.get_by_name("Gaff") is None
+
+    finally:
+        if os.path.exists(base_path):
+            shutil.rmtree(base_path)
 
 
-def test_repository_can_save_and_get_player():
-    """Verify that a player can be saved and then retrieved."""
-    player_id = PlayerId(uuid.uuid4())
-    player = Player(id=player_id, name="Deckard", health=100)
+def test_get():
+    """Tests retrieving a player by ID."""
+    base_path = tempfile.mkdtemp()
+    try:
+        repo = JsonFilePlayerRepository(base_path)
+        player_id = PlayerId(uuid.uuid4())
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        repo = JsonFilePlayerRepository(base_path=tmpdir)
+        # Test getting a non-existent player
+        assert repo.get(player_id) is None
+
+        # Save a player and then get it
+        player = Player.create(player_id, "Deckard", initial_health=100)
         repo.save(player)
 
-        # Assert file system state
-        expected_file = os.path.join(tmpdir, f"{player_id}.json")
-        assert os.path.exists(expected_file)
-        with open(expected_file) as f:
-            data = json.load(f)
-            assert data["id"] == str(player_id)
+        found_player = repo.get(player_id)
+        assert found_player is not None
+        assert found_player.id == player.id
+        assert found_player.name == "Deckard"
 
-        # Assert repository get method
-        retrieved_player = repo.get(player_id)
-        assert (
-            retrieved_player is not None
-        )  # Ensure it's not None before checking attributes
-        assert retrieved_player == player  # Check equality based on ID
-        assert retrieved_player.name == player.name
-        assert retrieved_player.health == player.health
-
-
-def test_repository_get_returns_none_for_nonexistent_player():
-    """Verify that getting a non-existent player returns None."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        repo = JsonFilePlayerRepository(base_path=tmpdir)
-        non_existent_id = PlayerId(uuid.uuid4())
-        assert repo.get(non_existent_id) is None
+    finally:
+        if os.path.exists(base_path):
+            shutil.rmtree(base_path)

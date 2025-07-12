@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-decker = "decker_pygame.main:main"
+decker = "decker_pygame.presentation.main:main"
 
 [project.optional-dependencies]
 dev = [
@@ -44,6 +44,9 @@ exclude = [
 # C90 = mccabe (complexity checks)
 # UP = pyupgrade (finds outdated syntax)
 select = ["E", "W", "F", "I", "B", "C90", "UP"]
+# Disable UP045 to prevent rewriting Optional[T] to T | None, which can cause
+# issues with older libraries or mocking frameworks like unittest.mock.
+ignore = ["UP045"]
 
 [tool.ruff.format]
 quote-style = "double"

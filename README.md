@@ -39,19 +39,37 @@ These instructions will get you a copy of the project up and running on your loc
 3.  **Install the project and its development dependencies:**
     This command installs the project in "editable" mode (`-e`) and includes all development tools specified in `pyproject.toml`.
     ```bash
-    uv pip install -e .[dev]
+    uv pip install -e ".[dev]"
     ```
 
 ## 🧑‍💻 Development
 
-This project uses a suite of modern Python tools to ensure code quality and consistency.
+This project is built on a foundation of modern software engineering principles to ensure it is robust, maintainable, and a pleasure to work on. For a deep dive into our architecture and development practices, please see our project documentation.
 
-### Architecture
+### Documentation
 
-The codebase is structured following the principles of **Domain-Driven Design (DDD)** to ensure a clean separation of concerns and a focus on the core game logic.
+-   **[Architecture Overview](./docs/architecture.md):** The best starting point for understanding the project's structure.
+-   **[Domain-Driven Design Guide](./docs/architecture/ddd_implementation_guide.md):** The rules and patterns we follow for DDD.
+-   **[Hexagonal Architecture Guide](./docs/architecture/hexagonal_architecture.md):** How we use Ports & Adapters to isolate the core logic.
+-   **[Project Roadmap](./docs/architecture/roadmap.md):** What features and enhancements are planned for the future.
 
-- **[Implementation Guidelines](./docs/architecture/ddd_implementation_guide.md):** The rules and patterns we follow for DDD.
-- **[DDD Concepts in Our Codebase](./docs/architecture/ddd_concepts.md):** A guide mapping DDD theory to specific files in this project.
+### Project Philosophy & Architecture
+
+Our architecture is designed to manage complexity and promote a clean separation of concerns.
+
+-   **Domain-Driven Design (DDD):** We model the game's complex rules and logic at the very core of the application, isolated from technical details like databases or UI frameworks. This makes the business logic clear, explicit, and easy to test.
+
+-   **Hexagonal Architecture (Ports & Adapters):** This pattern provides the structure for our DDD approach. The core application (the "hexagon") defines "ports" (interfaces) it needs to communicate with the outside world. The UI and persistence layers are "adapters" that plug into these ports. This makes the core independent and allows us to swap out external components easily.
+
+-   **Event-Driven Foundation:** The system uses domain events to communicate significant state changes. This decouples components, allowing different parts of the application to react to events without being tightly bound to one another. This is a stepping stone towards our long-term goal of Event Sourcing.
+
+### Quality & Automation
+
+-   **100% Test Coverage:** We maintain a comprehensive test suite using `pytest` that covers every line of our application's logic. This provides a critical safety net, allowing for confident refactoring and rapid development.
+
+-   **Automated Quality Checks:** We use `pre-commit` to run `ruff` (for linting and formatting) and our `pytest` suite before every commit. This ensures that all code pushed to the repository adheres to our quality standards.
+
+-   **Continuous Integration & Delivery (CI/CD):** A GitHub Actions workflow automates the release process. When code is merged into `main`, it automatically calculates the next version number, updates the changelog, and creates a new release tag, ensuring a consistent and reliable release history.
 
 ### Pre-commit Hooks
 
@@ -74,6 +92,17 @@ cz commit
 ```
 
 `commitizen` will prompt you through the process of creating a great commit message. The `pre-commit` hook will ensure that all commits adhere to this standard.
+
+### Development Mode
+
+To enable development mode for rapid prototyping (e.g., giving the character extra starting credits), you can set an environment variable before running the game:
+
+```bash
+export DECKER_DEV_ENABLED=1
+decker
+```
+
+This allows for temporary, config-driven changes without affecting test coverage.
 
 #### What if a pre-commit hook fails?
 

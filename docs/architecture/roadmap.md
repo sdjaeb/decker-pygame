@@ -1,45 +1,31 @@
-# Architectural Roadmap
+# Project Roadmap
 
-This document outlines major architectural enhancements planned for the future. These items are critical for building a more robust, scalable, and maintainable system.
+This document outlines the major features and architectural enhancements planned for the project.
 
-## 1. Transition to Full Event Sourcing
+## 1. Core Gameplay Implementation
 
-Our current system is event-driven but uses state-oriented persistence. The goal is to transition to a full event-sourcing model where the event log is the single source of truth.
-
-**Tasks:**
--   **Create an Event Store:**
-    -   Define an `EventRepositoryInterface` in the `domain` layer.
-    -   Implement a `JsonEventRepository` in the `infrastructure` layer that appends events to a log file for each aggregate.
--   **Refactor Aggregates for Replay:**
-    -   Add a `replay(events: list[Event])` class method to `AggregateRoot`.
-    -   Implement private `_apply(event: Event)` methods within each aggregate (e.g., `_apply_player_created`) to handle state changes.
-    -   Remove the `from_dict` methods in favor of replaying events.
--   **Update Application Services:**
-    -   Modify services to fetch event streams from the `EventRepository`, replay them to get the current aggregate state, and then append new events.
-
-## 2. Implement the Saga Pattern for Process Management
-
-For long-running business processes that involve multiple aggregates or events over time, we will implement the Saga pattern.
+With the core architecture now stable, the primary focus is on implementing the gameplay features that make the game playable.
 
 **Tasks:**
--   **Design a Saga Base Class:** Create a `Saga` or `ProcessManager` base class in the `application` layer. It will be stateful and capable of listening for events and dispatching commands.
--   **Implement Saga Persistence:** Define a `SagaRepositoryInterface` and a corresponding `JsonSagaRepository` to save and load the state of active Sagas.
--   **Identify and Implement a Pilot Saga:** Choose a suitable first use case (e.g., a multi-step contract requiring data extraction and then a separate payout) and implement the concrete Saga, its event handlers, and the commands it dispatches.
+-   **Implement the Contract Loop:**
+    -   Make the `ContractListView` functional, allowing players to select from available contracts fetched via the `ContractService`.
+    -   Implement the "Accept Contract" flow, which will likely transition the game to a new "Matrix Run" state or view.
+    -   Define and implement the `MatrixRunView`, which will be the core hacking interface.
+-   **Externalize Game Data:**
+    -   Move hardcoded data (like initial schematics and contracts) from `main.py` into external JSON or YAML files.
+    -   Implement data loaders in the composition root to populate repositories at startup.
+-   **Player Progression:**
+    -   Flesh out the skill and credit systems.
+    -   Implement the "Upgrade Lifestyle" feature.
+    -   Design and implement hardware chips and crafting components.
+    -   Balance the in-game economy (contract rewards vs. item costs).
 
----
+## 2. Future Architectural Enhancements
 
-## 3. Open Questions & Next Steps
+These are long-term goals to be considered once the core gameplay is more mature.
 
-This section raises key questions to guide our next phase of development, spanning both technical architecture and game design.
-
-### Architectural Questions
-
--   **Read Models / Projections:** How will the UI get the data it needs to render? Should it query the domain aggregates directly (via services), or should we create separate, optimized read models (projections) that are updated by event handlers? The latter is more scalable but adds complexity.
--   **Command Handling:** Should we formalize the concept of a "Command" (e.g., `CreatePlayerCommand`) and a `CommandBus`? This would make the application's capabilities more explicit than the current service-method approach.
--   **Configuration Management:** As the game grows, how will we manage complex configurations like item stats, contract details, and node layouts? Should these be loaded from static data files (JSON, YAML) into dedicated configuration objects at startup?
-
-### Game Design Questions
-
--   **Core Gameplay Loop:** What is the central, repeatable loop for the player? Is it simply accepting contracts, executing them, and upgrading gear, or are there other major activities like exploration, story progression, or sandbox-style hacking?
--   **Player Progression:** How does a player "get stronger"? Is it purely through earning credits to buy better programs, or will there be a skill system, experience points, or a reputation mechanic that unlocks new opportunities?
--   **Economy Balancing:** What is the economic baseline for the game? We need to define the initial costs of programs, the rewards for different types of contracts, and the general flow of credits to ensure a balanced and engaging difficulty curve.
+**Tasks:**
+----
+-   **Transition to Full Event Sourcing:** Our current system is event-driven, which is the perfect foundation. A full transition would involve implementing an Event Store and replaying events to constitute aggregates.
+-   **Implement the Saga Pattern:** For complex, long-running processes that involve multiple events over time (e.g., a multi-step contract), the Saga pattern will be invaluable.
+-   **Formalize a Command Bus:** For even stricter separation, we could introduce a formal Command/Command Bus pattern instead of direct service method calls.

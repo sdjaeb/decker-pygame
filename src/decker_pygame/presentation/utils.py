@@ -75,3 +75,19 @@ def render_text_wrapped(
         surface.blit(
             rendered_text, (rect.x + padding, rect.y + padding + i * line_height)
         )
+
+
+def scale_icons(
+    icons: list[pygame.Surface], target_size: tuple[int, int]
+) -> list[pygame.Surface]:
+    """
+    Scales a list of pygame.Surface objects to a target size.
+
+    Args:
+        icons: A list of surfaces to scale.
+        target_size: The (width, height) to scale to.
+
+    Returns:
+        A new list of scaled surfaces.
+    """
+    return [pygame.transform.scale(icon, target_size) for icon in icons]

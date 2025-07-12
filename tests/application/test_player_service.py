@@ -2,9 +2,12 @@ import uuid
 from unittest.mock import Mock, patch
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
-from decker_pygame.application.player_service import PlayerService
+from decker_pygame.application.player_service import (
+    PlayerService,
+    PlayerStatusDTO,
+)
 from decker_pygame.domain.player import Player, PlayerId
-from decker_pygame.domain.player_repository_interface import PlayerRepositoryInterface
+from decker_pygame.ports.repository_interfaces import PlayerRepositoryInterface
 
 
 def test_create_new_player():
@@ -56,3 +59,34 @@ def test_create_new_player():
             # 4. Check that the dispatcher was called with the player's events
             mock_dispatcher.dispatch.assert_called_once_with(mock_created_player.events)
             mock_created_player.clear_events.assert_called_once()
+
+
+def test_get_player_status():
+    """Tests retrieving player status for the UI."""
+    # Arrange
+    mock_repo = Mock(spec=PlayerRepositoryInterface)
+    player_service = PlayerService(player_repo=mock_repo, event_dispatcher=Mock())
+    player_id = PlayerId(uuid.uuid4())
+
+    mock_player = Mock(spec=Player)
+    mock_player.health = 80
+    mock_repo.get.return_value = mock_player
+
+    # Act
+    status = player_service.get_player_status(player_id)
+
+    # Assert
+    mock_repo.get.assert_called_once_with(player_id)
+    assert isinstance(status, PlayerStatusDTO)
+    assert status.current_health == 80
+    assert status.max_health == 100  # Based on current implementation
+
+
+def test_get_player_status_not_found():
+    """Tests that getting status for a non-existent player returns None."""
+    mock_repo = Mock(spec=PlayerRepositoryInterface)
+    player_service = PlayerService(player_repo=mock_repo, event_dispatcher=Mock())
+    player_id = PlayerId(uuid.uuid4())
+    mock_repo.get.return_value = None
+
+    assert player_service.get_player_status(player_id) is None

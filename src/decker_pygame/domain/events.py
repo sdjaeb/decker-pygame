@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Protocol
 
-from decker_pygame.domain.ids import CharacterId, PlayerId
+from decker_pygame.domain.ids import CharacterId, PlayerId, ProgramId
 
 
 class Event(Protocol):
@@ -39,3 +39,31 @@ class CharacterCreated(BaseEvent):
 
     character_id: CharacterId
     name: str
+
+
+@dataclass(frozen=True)
+class ItemCrafted(BaseEvent):
+    """Fired when a character successfully crafts an item."""
+
+    character_id: CharacterId
+    schematic_name: str
+    item_id: ProgramId  # Could be a generic ItemId in the future
+    item_name: str
+
+
+@dataclass(frozen=True)
+class SkillIncreased(BaseEvent):
+    """Fired when a character's skill is increased."""
+
+    character_id: CharacterId
+    skill_name: str
+    new_level: int
+
+
+@dataclass(frozen=True)
+class SkillDecreased(BaseEvent):
+    """Fired when a character's skill is decreased."""
+
+    character_id: CharacterId
+    skill_name: str
+    new_level: int

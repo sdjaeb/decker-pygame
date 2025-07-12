@@ -96,10 +96,50 @@ For complex, long-running processes that involve multiple events over time (e.g.
 
 A Saga is a stateful component that listens for a sequence of events and can dispatch new commands in response. This is a more advanced pattern that we will implement when a clear use case arises.
 
-## 5. Event Sourcing (Future Goal)
+## 5. Discovering the Domain: Event Storming
+
+To effectively explore and model the game's complex rules, we will use **Event Storming**. It's important to note that this is not a software component, but a collaborative workshop process designed to create a shared understanding of the domain.
+
+### How It Helps This Project
+
+-   **Answers Design Questions:** It provides a structured way to answer the open questions in our [roadmap](./roadmap.md), such as defining the core gameplay loop and player progression.
+-   **Validates the Domain Model:** By mapping out game scenarios, we can validate that our Aggregates (`Player`, `Contract`, etc.) are correctly defined and that their boundaries make sense.
+-   **Creates a Blueprint for Code:** The output of an Event Storming session directly translates into our architecture:
+    -   **Domain Events** (orange notes) become our event classes.
+    -   **Commands** (blue notes) become methods on our Application Services.
+    -   **Aggregates** (yellow notes) become our Aggregate Root classes.
+    -   **Policies** (purple notes) become our event handlers or Sagas.
+
+By using this process, we ensure our code is a direct reflection of the game's domain logic.
+
+## 6. Event Sourcing (Future Goal)
 
 Our event-driven architecture provides the foundation for a powerful pattern called **Event Sourcing**. While not fully implemented yet, it is a guiding principle for our design.
 
 Instead of storing the *current state* of our aggregates, Event Sourcing involves persisting the full, chronological log of domain events that have occurred. The current state is then derived by replaying these events.
 
 For a detailed explanation of this concept and how our current features relate to it, see the Event Sourcing Guide.
+
+## 7. Development & Debugging Concerns
+
+To facilitate rapid prototyping and debugging without polluting the core domain or application layers, we use a configuration-driven "dev mode".
+
+-   **Strategy:** Development-specific logic (e.g., verbose input logging, granting extra starting resources) is placed within the `presentation` or `main` composition root.
+-   **Control:** This logic is wrapped in a conditional check against `DEV_SETTINGS.enabled`, which is controlled by an environment variable.
+-   **Benefit:** This approach keeps our core layers clean and testable, while allowing for flexible, temporary changes during development.
+
+## 8. Anatomy of a User Interaction
+
+To understand how the layers work together during runtime, consider the example of a user clicking a "+" button to increase a character's skill.
+
+The flow is as follows:
+
+1.  **UI Event (Presentation Layer):** The user clicks the `+` button in the `CharDataView`. The `Button` widget's `on_click` callback is triggered.
+
+2.  **Command (Presentation -> Application):** The `CharDataView` (which owns the button) has a method like `_on_increase_skill_click`. This method calls a method on the `CharacterService`, for example, `character_service.increase_skill(character_id, "hacking")`. This call is a **Command**—it's an instruction from the UI to the application to *do something*.
+
+3.  **Domain Logic (Application -> Domain):** The `CharacterService` loads the `Character` aggregate from the repository. It then calls a method on the domain object, like `character.increase_skill("hacking")`. This is where the core business rules are enforced (e.g., "do I have enough skill points?").
+
+4.  **Domain Event (Domain Layer):** If the skill increase is successful, the `character.increase_skill` method creates and records a new **Domain Event**, like `SkillIncreased(skill="hacking", new_level=3)`.
+
+5.  **Event Dispatch (Application Layer):** After calling `character_repo.save(character)`, the `CharacterService` dispatches the new `SkillIncreased` event to the rest of the system via the `EventDispatcher`. Other parts of the application can then react to this change.
