@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "decker-pygame"
-version = "0.5.0"
+version = "0.4.0"
 description = "A modern Python port of the classic 2001 Cyberspace RPG, Decker."
 authors = [{ name = "Gemini Code Assist" }]
 requires-python = ">=3.13"
@@ -46,7 +46,8 @@ exclude = [
 select = ["E", "W", "F", "I", "B", "C90", "UP"]
 # Disable UP045 to prevent rewriting Optional[T] to T | None, which can cause
 # issues with older libraries or mocking frameworks like unittest.mock.
-ignore = ["UP045"]
+# UP007 (Optional[T] -> T | None) is also disabled for similar reasons.
+ignore = ["UP045", "UP007"]
 
 [tool.ruff.format]
 quote-style = "double"
