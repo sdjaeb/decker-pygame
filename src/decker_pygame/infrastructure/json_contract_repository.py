@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any
+from typing import Any, Optional
 
 from decker_pygame.domain.contract import Contract
 from decker_pygame.domain.ids import ContractId
@@ -41,7 +41,7 @@ class JsonFileContractRepository(ContractRepositoryInterface):
     def _get_path(self, contract_id: ContractId) -> str:
         return os.path.join(self._base_path, f"{contract_id}.json")
 
-    def get(self, contract_id: ContractId) -> Contract | None:
+    def get(self, contract_id: ContractId) -> Optional[Contract]:
         """Retrieve a Contract aggregate from a JSON file, or None if not found."""
         filepath = self._get_path(contract_id)
         if not os.path.exists(filepath):

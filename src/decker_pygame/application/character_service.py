@@ -7,7 +7,7 @@ character data to the presentation layer.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
@@ -64,14 +64,16 @@ class CharacterService(CharacterServiceInterface):
         self.player_service = player_service
         self.event_dispatcher = event_dispatcher
 
-    def get_character_name(self, character_id: CharacterId) -> str | None:
+    def get_character_name(self, character_id: CharacterId) -> Optional[str]:
         """Retrieves the name of a character."""
         character = self.character_repo.get(character_id)
         if not character:
             return None
         return character.name
 
-    def get_character_data(self, character_id: CharacterId) -> CharacterDataDTO | None:
+    def get_character_data(
+        self, character_id: CharacterId
+    ) -> Optional[CharacterDataDTO]:
         """Retrieves a DTO with character data for UI display."""
         character = self.character_repo.get(character_id)
         if not character:
@@ -87,7 +89,7 @@ class CharacterService(CharacterServiceInterface):
 
     def get_character_view_data(
         self, character_id: CharacterId, player_id: PlayerId
-    ) -> CharacterViewData | None:
+    ) -> Optional[CharacterViewData]:
         """Retrieves and aggregates all data needed for the character view.
 
         This method acts as a query that assembles a dedicated View Model DTO,

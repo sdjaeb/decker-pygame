@@ -8,6 +8,7 @@ used to pass deck data to the presentation layer.
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Optional
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.deck import Deck
@@ -82,7 +83,7 @@ class DeckService(DeckServiceInterface):
         self.deck_repo.save(deck)
         return deck_id
 
-    def get_deck_view_data(self, deck_id: DeckId) -> DeckViewData | None:
+    def get_deck_view_data(self, deck_id: DeckId) -> Optional[DeckViewData]:
         """Retrieves and aggregates all data needed for the deck view."""
         deck = self.deck_repo.get(deck_id)
         if not deck:
@@ -95,7 +96,7 @@ class DeckService(DeckServiceInterface):
 
     def get_transfer_view_data(
         self, character_id: CharacterId
-    ) -> TransferViewData | None:
+    ) -> Optional[TransferViewData]:
         """Retrieves and aggregates all data needed for the transfer view."""
         character = self.character_repo.get(character_id)
         if not character:

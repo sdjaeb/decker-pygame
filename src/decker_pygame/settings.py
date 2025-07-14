@@ -5,6 +5,7 @@ making them easy to adjust.
 """
 
 from pathlib import Path
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pygame.color import Color
@@ -59,7 +60,7 @@ PATHS = Paths()
 class UiFontSettings:
     """A namespace for UI font settings."""
 
-    default_font_name: str | None = None  # Use pygame default
+    default_font_name: Optional[str] = None  # Use pygame default
     default_font_size: int = 18
     default_font_color: Color = Color(200, 200, 200)  # Light grey
     dark_font_color: Color = Color(20, 20, 20)  # Near-black for light backgrounds

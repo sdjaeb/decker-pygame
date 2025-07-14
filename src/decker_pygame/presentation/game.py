@@ -4,7 +4,7 @@ It handles the main game loop, event processing, and the display of all UI compo
 """
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Optional, TypeVar
 
 import pygame
 
@@ -27,7 +27,10 @@ from decker_pygame.presentation.components.contract_data_view import ContractDat
 from decker_pygame.presentation.components.contract_list_view import ContractListView
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
+from decker_pygame.presentation.components.home_view import HomeView
+from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
@@ -81,13 +84,18 @@ class Game:
         logging_service (LoggingServiceInterface): The service for logging.
         message_view (MessageView): The UI component for displaying messages.
         input_handler (PygameInputHandler): The handler for user input.
-        build_view (BuildView | None): The build view, if open.
-        char_data_view (CharDataView | None): The character data view, if open.
-        deck_view (DeckView | None): The deck view, if open.
-        order_view (OrderView | None): The deck ordering view, if open.
-        transfer_view (TransferView | None): The program transfer view, if open.
-        contract_list_view (ContractListView | None): The contract list view, if open.
-        contract_data_view (ContractDataView | None): The contract data view, if open.
+        intro_view (Optional[IntroView]): The introduction view, if open.
+        new_char_view (Optional[NewCharView]): The new character view, if open.
+        home_view (Optional[HomeView]): The main menu view, if open.
+        build_view (Optional[BuildView]): The build view, if open.
+        char_data_view (Optional[CharDataView]): The character data view, if open.
+        deck_view (Optional[DeckView]): The deck view, if open.
+        order_view (Optional[OrderView]): The deck ordering view, if open.
+        transfer_view (Optional[TransferView]): The program transfer view, if open.
+        contract_list_view (Optional[ContractListView]): The contract list view,
+            if open.
+        contract_data_view (Optional[ContractDataView]): The contract data view,
+            if open.
     """
 
     screen: pygame.Surface
@@ -107,13 +115,16 @@ class Game:
     logging_service: LoggingServiceInterface
     message_view: MessageView
     input_handler: PygameInputHandler
-    build_view: BuildView | None = None
-    char_data_view: CharDataView | None = None
-    deck_view: DeckView | None = None
-    order_view: OrderView | None = None
-    transfer_view: TransferView | None = None
-    contract_list_view: ContractListView | None = None
-    contract_data_view: ContractDataView | None = None
+    intro_view: Optional[IntroView] = None
+    new_char_view: Optional[NewCharView] = None
+    home_view: Optional[HomeView] = None
+    build_view: Optional[BuildView] = None
+    char_data_view: Optional[CharDataView] = None
+    deck_view: Optional[DeckView] = None
+    order_view: Optional[OrderView] = None
+    transfer_view: Optional[TransferView] = None
+    contract_list_view: Optional[ContractListView] = None
+    contract_data_view: Optional[ContractDataView] = None
 
     def __init__(
         self,
@@ -142,6 +153,7 @@ class Game:
         self.input_handler = PygameInputHandler(self, logging_service)
 
         self._load_assets()
+        self.toggle_intro_view()
 
     def _load_assets(self) -> None:
         """Load game assets (images, sounds, etc).
@@ -179,14 +191,14 @@ class Game:
     def _toggle_view(
         self,
         view_attr: str,
-        view_factory: Callable[[], V | None],
+        view_factory: Callable[[], Optional[V]],
     ) -> None:
         """Generic method to open or close a view.
 
         Args:
             view_attr (str): The name of the attribute on `self` that holds the
                 view instance.
-            view_factory (Callable[[], V | None]): A function that creates and
+            view_factory (Callable[[], Optional[V]]): A function that creates and
                 returns a view instance, or None on failure.
         """
         current_view = getattr(self, view_attr)
@@ -203,10 +215,55 @@ class Game:
         """Signals the game to exit the main loop."""
         self.is_running = False
 
+    def _continue_from_intro(self) -> None:
+        """Closes the intro view and opens the new character view."""
+        if self.intro_view:
+            self.toggle_intro_view()
+        self.toggle_new_char_view()
+
+    def _handle_character_creation(self, name: str) -> None:
+        """Handles the creation of a new character, then transitions to home."""
+        # This is where we would call the character_service to persist the new
+        # character and update the game's character_id.
+        self.logging_service.log("Character Creation", {"name": name})
+        if self.new_char_view:
+            self.toggle_new_char_view()
+        self.toggle_home_view()
+
+    def toggle_new_char_view(self) -> None:
+        """Opens or closes the new character view."""
+
+        def factory() -> NewCharView:
+            return NewCharView(on_create=self._handle_character_creation)
+
+        self._toggle_view("new_char_view", factory)
+
+    def toggle_intro_view(self) -> None:
+        """Opens or closes the intro view."""
+
+        def factory() -> IntroView:
+            return IntroView(on_continue=self._continue_from_intro)
+
+        self._toggle_view("intro_view", factory)
+
+    def toggle_home_view(self) -> None:
+        """Opens or closes the home view."""
+
+        def factory() -> HomeView:
+            return HomeView(
+                on_char=self.toggle_char_data_view,
+                on_deck=self.toggle_deck_view,
+                on_contracts=self.toggle_contract_list_view,
+                on_build=self.toggle_build_view,
+                on_transfer=self.toggle_transfer_view,
+            )
+
+        self._toggle_view("home_view", factory)
+
     def toggle_build_view(self) -> None:
         """Opens or closes the build view."""
 
-        def factory() -> BuildView | None:
+        def factory() -> Optional[BuildView]:
             schematics = self.crafting_service.get_character_schematics(
                 self.character_id
             )
@@ -261,7 +318,7 @@ class Game:
     def toggle_char_data_view(self) -> None:
         """Opens or closes the character data view."""
 
-        def factory() -> CharDataView | None:
+        def factory() -> Optional[CharDataView]:
             view_data = self.character_service.get_character_view_data(
                 self.character_id, self.player_id
             )
@@ -281,7 +338,7 @@ class Game:
     def toggle_deck_view(self) -> None:
         """Opens or closes the deck view."""
 
-        def factory() -> DeckView | None:
+        def factory() -> Optional[DeckView]:
             char_data = self.character_service.get_character_data(self.character_id)
             if not char_data:
                 self.show_message(
@@ -345,7 +402,7 @@ class Game:
     def toggle_transfer_view(self) -> None:
         """Opens or closes the program transfer view."""
 
-        def factory() -> TransferView | None:
+        def factory() -> Optional[TransferView]:
             view_data = self.deck_service.get_transfer_view_data(self.character_id)
             if not view_data:
                 self.show_message("Error: Could not retrieve transfer data.")
