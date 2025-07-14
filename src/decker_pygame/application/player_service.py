@@ -1,14 +1,13 @@
 """This module defines the application service for player-related operations.
 
 It includes the PlayerService, which orchestrates use cases like creating a new
-player, and the Data Transfer Objects (DTOs) used to pass player data to the
-presentation layer.
+player.
 """
 
 import uuid
-from dataclasses import dataclass
 from typing import Optional
 
+from decker_pygame.application.dtos import PlayerStatusDTO
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import PlayerId
 from decker_pygame.domain.player import Player
@@ -20,14 +19,6 @@ class PlayerCreationPreconditionError(Exception):
     """Custom exception raised when preconditions for creating a player are not met."""
 
     pass
-
-
-@dataclass(frozen=True)
-class PlayerStatusDTO:
-    """Data Transfer Object for player status to be displayed in the UI."""
-
-    current_health: int
-    max_health: int
 
 
 class PlayerService(PlayerServiceInterface):

@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pygame
 
-from decker_pygame.application.deck_service import DeckViewData
+from decker_pygame.application.dtos import DeckViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import SCREEN_HEIGHT, SCREEN_WIDTH, UI_FACE, UI_FONT
 
@@ -15,7 +15,7 @@ class DeckView(pygame.sprite.Sprite):
     """A UI component that displays the player's deck of programs.
 
     Args:
-        data (DeckViewData): The data required to render the view.
+        data (DeckViewDTO): The data required to render the view.
         on_close (Callable[[], None]): A callback function to execute when the view is
             closed.
         on_order (Callable[[], None]): A callback function to execute when the order
@@ -32,7 +32,7 @@ class DeckView(pygame.sprite.Sprite):
 
     def __init__(
         self,
-        data: DeckViewData,
+        data: DeckViewDTO,
         on_close: Callable[[], None],
         on_order: Callable[[], None],
     ) -> None:

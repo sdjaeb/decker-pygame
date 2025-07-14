@@ -126,6 +126,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         initial_skills={"crafting": 5},
         initial_credits=2000,
         initial_skill_points=5,
+        initial_reputation=0,
     )
     mock_char_repo_class.return_value.save.assert_called_once_with(mock_character)
 
@@ -189,6 +190,7 @@ def test_main_function_dev_mode(mocker: MockerFixture) -> None:
     mock_character = mocker.Mock(spec=Character)
     mock_character.credits = 2000
     mock_character.schematics = []
+    mock_character.reputation = 0
     mock_character_create.return_value = mock_character
 
     # Act

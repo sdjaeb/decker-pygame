@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.deck_service import DeckProgramDTO, DeckViewData
+from decker_pygame.application.dtos import DeckViewDTO, ProgramDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.presentation.components.deck_view import DeckView
 
@@ -20,10 +20,10 @@ def test_deck_view_initialization():
     """Tests that the DeckView initializes and renders its data."""
     mock_on_close = Mock()
     mock_on_order = Mock()
-    view_data = DeckViewData(
+    view_data = DeckViewDTO(
         programs=[
-            DeckProgramDTO(name="IcePick", size=10),
-            DeckProgramDTO(name="Hammer", size=20),
+            ProgramDTO(name="IcePick", size=10),
+            ProgramDTO(name="Hammer", size=20),
         ],
         used_deck_size=30,
         total_deck_size=100,
@@ -64,7 +64,7 @@ def test_deck_view_close_button_click():
     """Tests that the view correctly delegates events to its close button."""
     mock_on_close = Mock()
     mock_on_order = Mock()
-    view_data = DeckViewData(programs=[])
+    view_data = DeckViewDTO(programs=[], used_deck_size=0, total_deck_size=100)
 
     # Patch dependencies to isolate the test
     with (

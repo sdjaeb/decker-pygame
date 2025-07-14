@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.deck_service import DeckProgramDTO, TransferViewData
+from decker_pygame.application.dtos import ProgramDTO, TransferViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.presentation.components.transfer_view import TransferView
 
@@ -21,9 +21,9 @@ def test_transfer_view_initialization():
     mock_on_close = Mock()
     mock_on_move_to_deck = Mock()
     mock_on_move_to_storage = Mock()
-    view_data = TransferViewData(
-        stored_programs=[DeckProgramDTO(name="IcePick", size=10)],
-        deck_programs=[DeckProgramDTO(name="Hammer", size=20)],
+    view_data = TransferViewDTO(
+        stored_programs=[ProgramDTO(name="IcePick", size=10)],
+        deck_programs=[ProgramDTO(name="Hammer", size=20)],
     )
 
     with (
@@ -66,9 +66,9 @@ def test_transfer_view_delegates_events():
     mock_on_close = Mock()
     mock_on_move_to_deck = Mock()
     mock_on_move_to_storage = Mock()
-    view_data = TransferViewData(
-        stored_programs=[DeckProgramDTO(name="IcePick", size=10)],
-        deck_programs=[DeckProgramDTO(name="Hammer", size=20)],
+    view_data = TransferViewDTO(
+        stored_programs=[ProgramDTO(name="IcePick", size=10)],
+        deck_programs=[ProgramDTO(name="Hammer", size=20)],
     )
 
     # We use real buttons for this test to verify the whole interaction

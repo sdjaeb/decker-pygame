@@ -7,9 +7,9 @@ from decker_pygame.application.character_service import (
     CharacterDataDTO,
     CharacterService,
     CharacterServiceError,
-    CharacterViewData,
+    CharacterViewDTO,
 )
-from decker_pygame.application.player_service import PlayerStatusDTO
+from decker_pygame.application.dtos import PlayerStatusDTO
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
@@ -82,7 +82,6 @@ def test_get_character_data_success():
     assert dto.skills == {"hacking": 5}
     assert dto.unused_skill_points == 10
     assert dto.deck_id == mock_character.deck_id
-    assert dto.reputation == 0  # Using default for now
 
 
 def test_get_character_data_not_found():
@@ -137,30 +136,40 @@ def test_get_character_view_data_success(
     ],
 ):
     """Tests successfully aggregating data for the character view."""
-    service, _, _, _, mock_player_service, char_id = service_with_mock_char
+    (
+        service,
+        mock_character,
+        _,
+        mock_repo,
+        mock_player_service,
+        char_id,
+    ) = service_with_mock_char
     dummy_player_id = PlayerId(uuid.uuid4())
-    dummy_deck_id = DeckId(uuid.uuid4())
 
-    # Configure mocks to return valid DTOs
-    service.get_character_data = Mock(
-        return_value=CharacterDataDTO(
-            name="Testy",
-            credits=100,
-            skills={"a": 1},
-            unused_skill_points=2,
-            deck_id=dummy_deck_id,
-        )
-    )
+    # Configure the mock character with data
+    mock_character.name = "Testy"
+    mock_character.credits = 100
+    mock_character.reputation = 10
+    mock_character.skills = {"a": 1}
+    mock_character.unused_skill_points = 2
+
+    # Configure the player service to return a status DTO
     mock_player_service.get_player_status.return_value = PlayerStatusDTO(
         current_health=88, max_health=100
     )
 
     view_data = service.get_character_view_data(char_id, dummy_player_id)
 
-    assert isinstance(view_data, CharacterViewData)
+    mock_repo.get.assert_called_once_with(char_id)
+    mock_player_service.get_player_status.assert_called_once_with(dummy_player_id)
+
+    assert isinstance(view_data, CharacterViewDTO)
     assert view_data.name == "Testy"
-    assert view_data.health == 88
     assert view_data.credits == 100
+    assert view_data.reputation == 10
+    assert view_data.skills == {"a": 1}
+    assert view_data.unused_skill_points == 2
+    assert view_data.health == 88
 
 
 def test_get_character_view_data_failure(
@@ -168,18 +177,18 @@ def test_get_character_view_data_failure(
         CharacterService, Mock, Mock, Mock, Mock, CharacterId
     ],
 ):
-    """Tests that None is returned if any underlying service fails."""
-    service, _, _, _, mock_player_service, char_id = service_with_mock_char
+    """Tests that None is returned if any underlying data is not found."""
+    service, _, _, mock_repo, mock_player_service, char_id = service_with_mock_char
     dummy_player_id = PlayerId(uuid.uuid4())
 
-    # Case 1: Player service fails
-    service.get_character_data = Mock(return_value=Mock(spec=CharacterDataDTO))
-    mock_player_service.get_player_status.return_value = None
+    # Case 1: Character repo returns None
+    mock_repo.get.return_value = None
+    mock_player_service.get_player_status.return_value = Mock(spec=PlayerStatusDTO)
     assert service.get_character_view_data(char_id, dummy_player_id) is None
 
-    # Case 2: Character service fails
-    service.get_character_data = Mock(return_value=None)
-    mock_player_service.get_player_status.return_value = Mock(spec=PlayerStatusDTO)
+    # Case 2: Player service returns None
+    mock_repo.get.return_value = Mock(spec=Character)  # Restore mock character
+    mock_player_service.get_player_status.return_value = None
     assert service.get_character_view_data(char_id, dummy_player_id) is None
 
 

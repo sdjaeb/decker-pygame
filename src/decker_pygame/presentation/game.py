@@ -9,7 +9,10 @@ from typing import Optional, TypeVar
 import pygame
 
 from decker_pygame.application.crafting_service import CraftingError
-from decker_pygame.application.dtos import MissionResultsDTO, RestViewData
+from decker_pygame.application.dtos import (
+    MissionResultsDTO,
+    RestViewDTO,
+)
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -279,7 +282,7 @@ class Game:
         if self.rest_view:
             self.toggle_rest_view()
 
-    def toggle_rest_view(self, data: Optional[RestViewData] = None) -> None:
+    def toggle_rest_view(self, data: Optional[RestViewDTO] = None) -> None:
         """Opens or closes the rest view."""
 
         def factory() -> Optional[RestView]:
@@ -366,7 +369,7 @@ class Game:
     def toggle_char_data_view(self) -> None:
         """Opens or closes the character data view."""
 
-        def factory() -> Optional[CharDataView]:
+        def factory() -> Optional["CharDataView"]:
             view_data = self.character_service.get_character_view_data(
                 self.character_id, self.player_id
             )
@@ -386,7 +389,7 @@ class Game:
     def toggle_deck_view(self) -> None:
         """Opens or closes the deck view."""
 
-        def factory() -> Optional[DeckView]:
+        def factory() -> Optional["DeckView"]:
             char_data = self.character_service.get_character_data(self.character_id)
             if not char_data:
                 self.show_message(
@@ -450,7 +453,7 @@ class Game:
     def toggle_transfer_view(self) -> None:
         """Opens or closes the program transfer view."""
 
-        def factory() -> Optional[TransferView]:
+        def factory() -> Optional["TransferView"]:
             view_data = self.deck_service.get_transfer_view_data(self.character_id)
             if not view_data:
                 self.show_message("Error: Could not retrieve transfer data.")

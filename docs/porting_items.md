@@ -97,7 +97,7 @@ These views are essential for starting a new game and providing a central hub fo
 - **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`.
 - **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction.
 
-**Group B: Core Gameplay Loop**
+**Group B: Core Gameplay Loop (Status: Complete)**
 These views are part of the main contract/mission cycle.
 - **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`.
 - **`RestDlg.cpp/h`**: Port to `RestView`.

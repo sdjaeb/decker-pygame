@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.dtos import RestViewData
+from decker_pygame.application.dtos import RestViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.presentation.components.rest_view import RestView
 
@@ -18,7 +18,7 @@ def pygame_context():
 
 @pytest.fixture
 def rest_data():
-    return RestViewData(cost=100, health_recovered=50)
+    return RestViewDTO(cost=100, health_recovered=50)
 
 
 def test_rest_view_initialization(rest_data):

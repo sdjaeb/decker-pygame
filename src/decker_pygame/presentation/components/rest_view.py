@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pygame
 
-from decker_pygame.application.dtos import RestViewData
+from decker_pygame.application.dtos import RestViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import SCREEN_HEIGHT, SCREEN_WIDTH, UI_FACE, UI_FONT
 
@@ -17,7 +17,7 @@ class RestView(pygame.sprite.Sprite):
     Ported from RestDlg.cpp/h.
 
     Args:
-        data (RestViewData): The data to display.
+        data (RestViewDTO): The data to display.
         on_rest (Callable[[], None]): Callback for when the user rests.
         on_close (Callable[[], None]): Callback for when the user closes the view.
 
@@ -32,7 +32,7 @@ class RestView(pygame.sprite.Sprite):
 
     def __init__(
         self,
-        data: RestViewData,
+        data: RestViewDTO,
         on_rest: Callable[[], None],
         on_close: Callable[[], None],
     ):
