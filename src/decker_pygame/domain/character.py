@@ -28,6 +28,7 @@ class Character(AggregateRoot):
         schematics (list[Schematic]): List of known program schematics.
         credits (int): Amount of credits the character has.
         unused_skill_points (int): Points available to spend on skills.
+        reputation (int): The character's reputation score.
     """
 
     def __init__(
@@ -40,6 +41,7 @@ class Character(AggregateRoot):
         schematics: list[Schematic],
         credits: int,
         unused_skill_points: int,
+        reputation: int,
     ) -> None:
         super().__init__(id=AggregateId(id))
         self.name = name
@@ -49,6 +51,7 @@ class Character(AggregateRoot):
         self.credits = credits
         self.schematics = schematics
         self.unused_skill_points = unused_skill_points
+        self.reputation = reputation
 
     @staticmethod
     @emits(CharacterCreated)
@@ -59,6 +62,7 @@ class Character(AggregateRoot):
         initial_skills: dict[str, int],
         initial_credits: int,
         initial_skill_points: int,
+        initial_reputation: int,
     ) -> "Character":
         """Factory to create a new character, raising a CharacterCreated domain event.
 
@@ -69,6 +73,7 @@ class Character(AggregateRoot):
             initial_skills (dict[str, int]): Initial skills.
             initial_credits (int): Starting credits.
             initial_skill_points (int): Starting skill points.
+            initial_reputation (int): Starting reputation.
 
         Returns:
             "Character": The newly created character.
@@ -82,6 +87,7 @@ class Character(AggregateRoot):
             schematics=[],
             credits=initial_credits,
             unused_skill_points=initial_skill_points,
+            reputation=initial_reputation,
         )
         character._events.append(
             CharacterCreated(
@@ -204,6 +210,7 @@ class Character(AggregateRoot):
             "schematics": [s.to_dict() for s in self.schematics],
             "credits": self.credits,
             "unused_skill_points": self.unused_skill_points,
+            "reputation": self.reputation,
         }
 
     @classmethod
@@ -227,4 +234,5 @@ class Character(AggregateRoot):
             schematics=[Schematic.from_dict(s_data) for s_data in data["schematics"]],
             credits=data["credits"],
             unused_skill_points=data["unused_skill_points"],
+            reputation=data.get("reputation", 0),
         )

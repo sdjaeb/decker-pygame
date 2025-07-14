@@ -6,17 +6,17 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.character_service import (
-    CharacterDataDTO,
-    CharacterViewData,
-)
 from decker_pygame.application.crafting_service import CraftingError
-from decker_pygame.application.deck_service import (
-    DeckServiceError,
-    DeckViewData,
-    TransferViewData,
+from decker_pygame.application.deck_service import DeckServiceError
+from decker_pygame.application.dtos import (
+    CharacterDataDTO,
+    CharacterViewDTO,
+    DeckViewDTO,
+    MissionResultsDTO,
+    PlayerStatusDTO,
+    RestViewDTO,
+    TransferViewDTO,
 )
-from decker_pygame.application.player_service import PlayerStatusDTO
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -32,8 +32,12 @@ from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.mission_results_view import (
+    MissionResultsView,
+)
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
+from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
@@ -377,7 +381,7 @@ def test_game_toggles_char_data_view(game_with_mocks: Mocks):
     game = mocks.game
 
     # Mock the aggregated View Model DTO from the character service
-    view_data = CharacterViewData(
+    view_data = CharacterViewDTO(
         name="Testy",
         credits=500,
         reputation=10,
@@ -513,7 +517,7 @@ def test_game_toggles_deck_view(game_with_mocks: Mocks):
     )
     mocks.character_service.get_character_data.return_value = char_dto
 
-    deck_data = DeckViewData(programs=[])
+    deck_data = DeckViewDTO(programs=[], used_deck_size=0, total_deck_size=100)
     mocks.deck_service.get_deck_view_data.return_value = deck_data
 
     assert game.deck_view is None
@@ -610,7 +614,7 @@ def test_game_toggles_transfer_view(game_with_mocks: Mocks):
     game = mocks.game
 
     # Mock the DTO from the service
-    transfer_data = TransferViewData(deck_programs=[], stored_programs=[])
+    transfer_data = TransferViewDTO(deck_programs=[], stored_programs=[])
     mocks.deck_service.get_transfer_view_data.return_value = transfer_data
 
     with patch.object(
@@ -716,7 +720,7 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
     mocks.character_service.get_character_data.return_value = CharacterDataDTO(
         name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
     )
-    deck_data = DeckViewData(programs=[])
+    deck_data = DeckViewDTO(programs=[], used_deck_size=0, total_deck_size=100)
     mocks.deck_service.get_deck_view_data.return_value = deck_data
 
     with patch(
@@ -790,7 +794,7 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
     mocks.character_service.get_character_data.return_value = CharacterDataDTO(
         name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
     )
-    deck_data = DeckViewData(programs=[])
+    deck_data = DeckViewDTO(programs=[], used_deck_size=0, total_deck_size=100)
     mocks.deck_service.get_deck_view_data.return_value = deck_data
 
     with patch(
@@ -949,3 +953,104 @@ def test_handle_character_creation(game_with_mocks: Mocks):
         game._handle_character_creation("Decker")
         mock_toggle_new_char.assert_called_once()
         mock_toggle_home.assert_called_once()
+
+
+def test_game_toggles_mission_results_view(game_with_mocks: Mocks):
+    """Tests that the toggle_mission_results_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.mission_results_view is None
+
+    results_data = MissionResultsDTO(
+        contract_name="Test Heist",
+        was_successful=True,
+        credits_earned=1000,
+        reputation_change=1,
+    )
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.MissionResultsView", spec=MissionResultsView
+    ) as mock_view_class:
+        game.toggle_mission_results_view(results_data)
+        mock_view_class.assert_called_once_with(
+            data=results_data, on_close=game.toggle_mission_results_view
+        )
+        assert game.mission_results_view is not None
+
+    # Toggle to close
+    game.toggle_mission_results_view()
+    assert game.mission_results_view is None
+
+
+def test_game_toggles_rest_view(game_with_mocks: Mocks):
+    """Tests that the toggle_rest_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.rest_view is None
+
+    rest_data = RestViewDTO(cost=100, health_recovered=50)
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.RestView", spec=RestView
+    ) as mock_view_class:
+        game.toggle_rest_view(rest_data)
+        mock_view_class.assert_called_once_with(
+            data=rest_data,
+            on_rest=game._on_rest,
+            on_close=game.toggle_rest_view,
+        )
+        assert game.rest_view is not None
+
+    # Toggle to close
+    game.toggle_rest_view()
+    assert game.rest_view is None
+
+
+def test_on_rest_callback(game_with_mocks: Mocks):
+    """Tests the _on_rest callback."""
+    game = game_with_mocks.game
+    # Simulate that the view is open
+    game.rest_view = Mock(spec=RestView)
+
+    with (
+        patch.object(game, "show_message") as mock_show_message,
+        patch.object(game, "toggle_rest_view") as mock_toggle,
+    ):
+        game._on_rest()
+
+        # Check that a message is shown and the view is closed
+        mock_show_message.assert_called_once_with("You feel rested and recovered.")
+        mock_toggle.assert_called_once()
+
+
+def test_toggle_rest_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests that calling toggle_rest_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.rest_view is None
+
+    # Call without data
+    game.toggle_rest_view(data=None)
+
+    # View should not have been created
+    assert game.rest_view is None
+
+
+def test_toggle_deck_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests that calling toggle_deck_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.deck_view is None
+    # This test case is implicitly covered by test_toggle_deck_view_no_char_data
+    # and test_toggle_deck_view_no_deck_data, as the factory function for DeckView
+    # returns None if the necessary DTOs are not available.
+
+
+def test_toggle_mission_results_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests calling toggle_mission_results_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.mission_results_view is None
+
+    # Call without data
+    game.toggle_mission_results_view(data=None)
+
+    # View should not have been created
+    assert game.mission_results_view is None

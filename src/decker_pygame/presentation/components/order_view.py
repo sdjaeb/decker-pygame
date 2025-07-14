@@ -5,7 +5,7 @@ from functools import partial
 
 import pygame
 
-from decker_pygame.application.deck_service import DeckViewData
+from decker_pygame.application.dtos import DeckViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import SCREEN_HEIGHT, SCREEN_WIDTH, UI_FACE, UI_FONT
 
@@ -16,7 +16,7 @@ class OrderView(pygame.sprite.Sprite):
     """A UI component for re-ordering items.
 
     Args:
-        data (DeckViewData): The deck data to be displayed and ordered.
+        data (DeckViewDTO): The deck data to be displayed and ordered.
         on_close (Callable[[], None]): A callback function to execute when the view is
             closed.
         on_move_up (Callable[[str], None]): Callback to execute when the "Up" button is
@@ -37,7 +37,7 @@ class OrderView(pygame.sprite.Sprite):
 
     def __init__(
         self,
-        data: DeckViewData,
+        data: DeckViewDTO,
         on_close: Callable[[], None],
         on_move_up: Callable[[str], None],
         on_move_down: Callable[[str], None],

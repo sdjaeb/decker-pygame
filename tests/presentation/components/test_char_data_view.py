@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.character_service import CharacterViewData
+from decker_pygame.application.dtos import CharacterViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.presentation.components.char_data_view import CharDataView
 
@@ -43,7 +43,7 @@ def test_char_data_view_initialization():
             inst.rect = pygame.Rect(0, 0, 10, 10)
         mock_button_class.side_effect = mock_button_instances
 
-        view_data = CharacterViewData(
+        view_data = CharacterViewDTO(
             name="Testy",
             reputation=10,
             credits=1234,
@@ -100,7 +100,7 @@ def test_char_data_view_close_button_click():
             inst.rect = pygame.Rect(0, 0, 10, 10)
         mock_button_class.side_effect = mock_button_instances
 
-        view_data = CharacterViewData(
+        view_data = CharacterViewDTO(
             name="Testy",
             reputation=10,
             credits=1234,

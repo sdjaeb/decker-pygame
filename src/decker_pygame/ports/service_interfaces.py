@@ -9,16 +9,14 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:  # pragma: no cover
-    from decker_pygame.application.character_service import (
+    from decker_pygame.application.dtos import (
         CharacterDataDTO,
-        CharacterViewData,
+        CharacterViewDTO,
+        ContractSummaryDTO,
+        DeckViewDTO,
+        PlayerStatusDTO,
+        TransferViewDTO,
     )
-    from decker_pygame.application.contract_service import ContractSummaryDTO
-    from decker_pygame.application.deck_service import (
-        DeckViewData,
-        TransferViewData,
-    )
-    from decker_pygame.application.player_service import PlayerStatusDTO
     from decker_pygame.domain.crafting import Schematic
     from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 
@@ -46,7 +44,7 @@ class CharacterServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_character_view_data(
         self, character_id: "CharacterId", player_id: "PlayerId"
-    ) -> "Optional[CharacterViewData]":
+    ) -> "Optional[CharacterViewDTO]":
         """Retrieves a DTO with all data needed for the character view."""
         raise NotImplementedError  # pragma: no cover
 
@@ -85,7 +83,7 @@ class DeckServiceInterface(ABC):  # pragma: no cover
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def get_deck_view_data(self, deck_id: "DeckId") -> "Optional[DeckViewData]":
+    def get_deck_view_data(self, deck_id: "DeckId") -> "Optional[DeckViewDTO]":
         """Retrieves and aggregates all data needed for the deck view."""
         raise NotImplementedError  # pragma: no cover
 
@@ -102,7 +100,7 @@ class DeckServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_transfer_view_data(
         self, character_id: "CharacterId"
-    ) -> "Optional[TransferViewData]":
+    ) -> "Optional[TransferViewDTO]":
         """Retrieves and aggregates all data needed for the transfer view."""
         raise NotImplementedError  # pragma: no cover
 

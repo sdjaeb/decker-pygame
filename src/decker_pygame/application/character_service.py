@@ -1,50 +1,21 @@
 """This module defines the application service for character-related operations.
 
 It includes the CharacterService, which orchestrates use cases like increasing
-a character's skill, and the Data Transfer Objects (DTOs) used to pass
-character data to the presentation layer.
+a character's skill.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+from decker_pygame.application.dtos import CharacterDataDTO, CharacterViewDTO
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
+from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 from decker_pygame.ports.service_interfaces import CharacterServiceInterface
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.ports.service_interfaces import PlayerServiceInterface
-
-
-@dataclass(frozen=True)
-class CharacterDataDTO:
-    """Data Transfer Object for character data to be displayed in the UI."""
-
-    name: str
-    credits: int
-    skills: dict[str, int]
-    unused_skill_points: int
-    deck_id: DeckId
-    reputation: int = 0  # Placeholder for now
-
-
-@dataclass(frozen=True)
-class CharacterViewData:
-    """A dedicated View Model DTO for the character data view.
-
-    This class aggregates all data needed by the CharDataView component,
-    simplifying the data fetching logic for the presentation layer.
-    """
-
-    name: str
-    credits: int
-    reputation: int
-    skills: dict[str, int]
-    unused_skill_points: int
-    health: int
 
 
 class CharacterServiceError(Exception):
@@ -89,24 +60,24 @@ class CharacterService(CharacterServiceInterface):
 
     def get_character_view_data(
         self, character_id: CharacterId, player_id: PlayerId
-    ) -> Optional[CharacterViewData]:
+    ) -> Optional[CharacterViewDTO]:
         """Retrieves and aggregates all data needed for the character view.
 
         This method acts as a query that assembles a dedicated View Model DTO,
         simplifying the data fetching logic for the presentation layer.
         """
-        char_data = self.get_character_data(character_id)
+        character = self.character_repo.get(character_id)
         player_status = self.player_service.get_player_status(player_id)
 
-        if not char_data or not player_status:
+        if not character or not player_status:
             return None
 
-        return CharacterViewData(
-            name=char_data.name,
-            credits=char_data.credits,
-            reputation=char_data.reputation,
-            skills=char_data.skills,
-            unused_skill_points=char_data.unused_skill_points,
+        return CharacterViewDTO(
+            name=character.name,
+            credits=character.credits,
+            reputation=character.reputation,
+            skills=character.skills,
+            unused_skill_points=character.unused_skill_points,
             health=player_status.current_health,
         )
 

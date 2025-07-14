@@ -5,7 +5,7 @@ from functools import partial
 
 import pygame
 
-from decker_pygame.application.character_service import CharacterViewData
+from decker_pygame.application.dtos import CharacterViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import UI_FACE, UI_FONT
 
@@ -19,7 +19,7 @@ class CharDataView(pygame.sprite.Sprite):
 
     Args:
         position (tuple[int, int]): The top-left corner of the view.
-        data (CharacterViewData): The data to display.
+        data (CharacterViewDTO): The data to display.
         on_close (Callable[[], None]): Callback to close the view.
         on_increase_skill (Callable[[str], None]): Callback to increase a skill.
         on_decrease_skill (Callable[[str], None]): Callback to decrease a skill.
@@ -39,7 +39,7 @@ class CharDataView(pygame.sprite.Sprite):
     def __init__(
         self,
         position: tuple[int, int],
-        data: CharacterViewData,
+        data: CharacterViewDTO,
         on_close: Callable[[], None],
         on_increase_skill: Callable[[str], None],
         on_decrease_skill: Callable[[str], None],

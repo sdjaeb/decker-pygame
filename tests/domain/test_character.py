@@ -19,6 +19,7 @@ def character() -> Character:
         initial_skills={"hacking": 2},
         initial_credits=100,
         initial_skill_points=5,
+        initial_reputation=0,
     )
 
 

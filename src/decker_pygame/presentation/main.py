@@ -106,6 +106,7 @@ def main() -> None:
         initial_skills={"crafting": 5},
         initial_credits=2000,
         initial_skill_points=5,
+        initial_reputation=0,
     )
     schematic = Schematic(
         name="IcePick v1",
