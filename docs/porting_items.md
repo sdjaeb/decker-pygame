@@ -69,12 +69,12 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **DeckDataDialog.cpp/h** (`Ported as DeckView`)
 - **EntryDlg.cpp/h**
 - **FileAccessDlg.cpp/h**
-- **HomeView.cpp/h**
+- **HomeView.cpp/h** (`Ported as HomeView`)
 - **IceDataDlg.cpp/h**
-- **IntroDlg.cpp/h**
+- **IntroDlg.cpp/h** (`Ported as IntroView`)
 - **MissionResultsDlg.cpp/h**
-- **NameDlg.cpp/h**
-- **NewCharDlg.cpp/h**
+- **NameDlg.cpp/h** (`Ported as TextInput component`)
+- **NewCharDlg.cpp/h** (`Ported as NewCharView`)
 - **NewProjectDlg.cpp/h**
 - **OptionsDlg.cpp/h**
 - **OrderDlg.cpp/h** (`Ported as OrderView`)
@@ -88,9 +88,9 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 
 #### Proposed Porting Groups for Remaining Dialogs
 
-Based on an analysis of the remaining dialogs, we can group them by functionality to guide the next phase of porting.
+Based on an analysis of the remaining dialogs, we can group them by functionality to guide the next phase of porting. The status of each group will be updated as work progresses.
 
-**Group A: Core Player Lifecycle (Highest Priority)**
+**Group A: Core Player Lifecycle (Status: Complete)**
 These views are essential for starting a new game and providing a central hub for the player.
 - **`HomeView.cpp/h`**: Port to `HomeView`. This will be the main player dashboard, with buttons to access Character data, Deck, Contracts, etc.
 - **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process.

@@ -82,3 +82,25 @@ Perform a codebase-wide audit and refactor all type hints for collections (`list
 ### Affected Components
 
 -   Potentially all `.py` files in `src/`.
+
+---
+
+# Issue: Unorganized UI Component Directory
+
+## Problem
+
+The `src/decker_pygame/presentation/components` directory currently contains a mix of different types of UI elements without a clear structure. It includes:
+-   High-level views/dialogs (e.g., `HomeView`, `DeckView`).
+-   HUD elements (e.g., `HealthBar`, `AlarmBar`).
+-   Low-level, reusable widgets (e.g., `Button`, `TextInput`).
+
+This makes it difficult to navigate the codebase and understand the role of each component.
+
+## Proposed Solution
+
+Reorganize the `components` directory into subdirectories based on the type of UI element (e.g., `views/`, `widgets/`, `hud/`). This will improve discoverability and clarify the architecture of the presentation layer. All import statements will need to be updated accordingly.
+
+### Affected Components
+
+-   `src/decker_pygame/presentation/components/` and all files within it.
+-   All files that import from the `components` directory.
