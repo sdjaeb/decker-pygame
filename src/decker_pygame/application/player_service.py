@@ -7,6 +7,7 @@ presentation layer.
 
 import uuid
 from dataclasses import dataclass
+from typing import Optional
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import PlayerId
@@ -70,14 +71,14 @@ class PlayerService(PlayerServiceInterface):
 
         return PlayerId(player.id)
 
-    def get_player_status(self, player_id: PlayerId) -> PlayerStatusDTO | None:
+    def get_player_status(self, player_id: PlayerId) -> Optional[PlayerStatusDTO]:
         """Retrieves the current status of a player for UI display.
 
         Args:
             player_id (PlayerId): The ID of the player to query.
 
         Returns:
-            PlayerStatusDTO | None: A DTO with player status, or None if the
+            Optional[PlayerStatusDTO]: A DTO with player status, or None if the
             player is not found.
         """
         player = self.player_repo.get(player_id)

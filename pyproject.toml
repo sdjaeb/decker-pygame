@@ -45,7 +45,11 @@ exclude = ["typings/"]
 [tool.ruff.lint]
 # Enable Pyflakes, pycodestyle, isort, bugbear, McCabe, and pydocstyle.
 select = ["E", "W", "F", "I", "B", "C90", "UP", "D"]
-ignore = ["D107"]  # Ignore missing docstrings in __init__
+# Disable UP045 to prevent rewriting Optional[T] to T | None, which can cause
+# issues with older libraries or mocking frameworks like unittest.mock.
+# UP007 (Optional[T] -> T | None) is also disabled for similar reasons.
+# D107 Ignore missing docstrings in __init__
+ignore = ["D107", "UP045", "UP007"]
 
 [tool.ruff.lint.pydocstyle]
 # Enforce Google-style docstrings for formatting and style.

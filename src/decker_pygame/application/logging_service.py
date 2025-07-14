@@ -6,7 +6,7 @@ console, a file, or an external service).
 """
 
 import json
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
 from decker_pygame.ports.service_interfaces import LoggingServiceInterface
 
@@ -31,7 +31,7 @@ class ConsoleLogWriter:
 class LoggingService(LoggingServiceInterface):
     """A service for dispatching log messages to various writers."""
 
-    def __init__(self, writers: list[LogWriter] | None = None) -> None:
+    def __init__(self, writers: Optional[list[LogWriter]] = None) -> None:
         self._writers = writers or []
 
     def register(self, writer: LogWriter) -> None:

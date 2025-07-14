@@ -21,6 +21,7 @@ class PygameInputHandler:
         self._game = game
         self._logging_service = logging_service
         self._key_map = {
+            pygame.K_h: self._game.toggle_home_view,
             pygame.K_b: self._game.toggle_build_view,
             pygame.K_c: self._game.toggle_char_data_view,
             pygame.K_t: self._game.toggle_transfer_view,
@@ -48,6 +49,9 @@ class PygameInputHandler:
 
             # Delegate events to active views that need to handle mouse clicks, etc.
             for view in [
+                self._game.intro_view,
+                self._game.new_char_view,
+                self._game.home_view,
                 self._game.build_view,
                 self._game.char_data_view,
                 self._game.deck_view,

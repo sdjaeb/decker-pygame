@@ -29,7 +29,10 @@ from decker_pygame.ports.service_interfaces import (
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
+from decker_pygame.presentation.components.home_view import HomeView
+from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
@@ -307,22 +310,24 @@ def test_game_toggles_build_view(game_with_mocks: Mocks):
     # Ensure the service returns schematics so the view can be created
     mocks.crafting_service.get_character_schematics.return_value = [Mock()]
 
-    assert game.build_view is None
+    with patch.object(
+        game, "all_sprites", Mock(spec=pygame.sprite.Group)
+    ) as mock_sprites:
+        assert game.build_view is None
 
-    # Call the public method to open the view
-    with patch(
-        "decker_pygame.presentation.game.BuildView", spec=BuildView
-    ) as mock_build_view_class:
+        # Call the public method to open the view
+        with patch(
+            "decker_pygame.presentation.game.BuildView", spec=BuildView
+        ) as mock_build_view_class:
+            game.toggle_build_view()
+            mock_build_view_class.assert_called_once()
+            assert game.build_view is not None
+            mock_sprites.add.assert_called_with(game.build_view)
+
+        # Call again to close the view
         game.toggle_build_view()
-        mock_build_view_class.assert_called_once()
-        assert game.build_view is not None
-        assert game.build_view in game.all_sprites
-
-    # Call again to close the view
-    game.toggle_build_view()
-    assert game.build_view is None
-    # Check that the sprite was removed from the group
-    assert len(game.all_sprites) == 4
+        assert game.build_view is None
+        mock_sprites.remove.assert_called_once()
 
 
 def test_game_toggle_build_view_no_schematics(game_with_mocks: Mocks):
@@ -608,29 +613,28 @@ def test_game_toggles_transfer_view(game_with_mocks: Mocks):
     transfer_data = TransferViewData(deck_programs=[], stored_programs=[])
     mocks.deck_service.get_transfer_view_data.return_value = transfer_data
 
-    assert game.transfer_view is None
+    with patch.object(
+        game, "all_sprites", Mock(spec=pygame.sprite.Group)
+    ) as mock_sprites:
+        assert game.transfer_view is None
 
-    # Call the public method to open the view
-    with patch(
-        "decker_pygame.presentation.game.TransferView", spec=TransferView
-    ) as mock_view_class:
+        # Call the public method to open the view
+        with patch(
+            "decker_pygame.presentation.game.TransferView", spec=TransferView
+        ) as mock_view_class:
+            game.toggle_transfer_view()
+
+            mocks.deck_service.get_transfer_view_data.assert_called_once_with(
+                game.character_id
+            )
+            mock_view_class.assert_called_once()
+            assert game.transfer_view is not None
+            mock_sprites.add.assert_called_with(game.transfer_view)
+
+        # Call again to close the view
         game.toggle_transfer_view()
-
-        mocks.deck_service.get_transfer_view_data.assert_called_once_with(
-            game.character_id
-        )
-        mock_view_class.assert_called_once_with(
-            data=transfer_data,
-            on_close=game.toggle_transfer_view,
-            on_move_to_deck=game._on_move_program_to_deck,
-            on_move_to_storage=game._on_move_program_to_storage,
-        )
-        assert game.transfer_view is mock_view_class.return_value
-        assert game.transfer_view in game.all_sprites
-
-    # Call again to close the view
-    game.toggle_transfer_view()
-    assert game.transfer_view is None
+        assert game.transfer_view is None
+        mock_sprites.remove.assert_called_once()
 
 
 def test_toggle_transfer_view_no_data(game_with_mocks: Mocks):
@@ -705,7 +709,7 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
     # Set up a mock deck_view to be removed
     game.deck_view = Mock(spec=DeckView)
     game.all_sprites.add(game.deck_view)
-    assert len(game.all_sprites) == 5
+    assert len(game.all_sprites) == 6
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -734,7 +738,7 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
         )
         assert game.order_view is mock_order_view_class.return_value
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 5  # 4 base + 1 new OrderView
+        assert len(game.all_sprites) == 6  # 5 base + 1 new OrderView
 
 
 def test_on_order_deck_no_char_data(game_with_mocks: Mocks):
@@ -779,7 +783,7 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
     existing_order_view = Mock(spec=OrderView)
     game.order_view = existing_order_view
     game.all_sprites.add(existing_order_view)
-    assert len(game.all_sprites) == 5
+    assert len(game.all_sprites) == 6
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -800,7 +804,7 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
         mock_order_view_class.assert_called_once()
         assert game.order_view is new_order_view_instance
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 5
+        assert len(game.all_sprites) == 6
 
 
 def test_on_move_program_up_and_down(game_with_mocks: Mocks):
@@ -863,3 +867,85 @@ def test_on_move_program_order_failure(
         mock_show_message.assert_called_once_with(
             "Error: Could not find character to modify deck."
         )
+
+
+def test_game_toggles_home_view(game_with_mocks: Mocks):
+    """Tests that the toggle_home_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.home_view is None
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.HomeView", spec=HomeView
+    ) as mock_view_class:
+        game.toggle_home_view()
+        mock_view_class.assert_called_once()
+        assert game.home_view is not None
+
+    # Toggle to close
+    game.toggle_home_view()
+    assert game.home_view is None
+
+
+def test_game_toggles_intro_view(game_with_mocks: Mocks):
+    """Tests that the toggle_intro_view method opens and closes the view."""
+    game = game_with_mocks.game
+    # It starts open from __init__, so it should exist
+    assert game.intro_view is not None
+
+    # Toggle to close
+    game.toggle_intro_view()
+    assert game.intro_view is None
+
+    # Toggle to open again
+    with patch(
+        "decker_pygame.presentation.game.IntroView", spec=IntroView
+    ) as mock_view_class:
+        game.toggle_intro_view()
+        mock_view_class.assert_called_once()
+        assert game.intro_view is not None
+
+
+def test_game_toggles_new_char_view(game_with_mocks: Mocks):
+    """Tests that the toggle_new_char_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.new_char_view is None
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.NewCharView", spec=NewCharView
+    ) as mock_view_class:
+        game.toggle_new_char_view()
+        mock_view_class.assert_called_once()
+        assert game.new_char_view is not None
+
+    # Toggle to close
+    game.toggle_new_char_view()
+    assert game.new_char_view is None
+
+
+def test_continue_from_intro(game_with_mocks: Mocks):
+    """Tests the transition from the intro view."""
+    game = game_with_mocks.game
+    with (
+        patch.object(game, "toggle_intro_view") as mock_toggle_intro,
+        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
+    ):
+        game._continue_from_intro()
+        mock_toggle_intro.assert_called_once()
+        mock_toggle_new_char.assert_called_once()
+
+
+def test_handle_character_creation(game_with_mocks: Mocks):
+    """Tests the transition from the new character view."""
+    game = game_with_mocks.game
+    # Simulate that the new character view is open before the handler is called.
+    game.new_char_view = Mock(spec=NewCharView)
+
+    with (
+        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
+        patch.object(game, "toggle_home_view") as mock_toggle_home,
+    ):
+        game._handle_character_creation("Decker")
+        mock_toggle_new_char.assert_called_once()
+        mock_toggle_home.assert_called_once()

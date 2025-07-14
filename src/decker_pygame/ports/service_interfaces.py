@@ -6,7 +6,7 @@ or any other external client can trigger.
 """
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.application.character_service import (
@@ -29,7 +29,7 @@ class CharacterServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_character_data(
         self, character_id: "CharacterId"
-    ) -> "CharacterDataDTO | None":
+    ) -> "Optional[CharacterDataDTO]":
         """Retrieves raw data for a character."""
         raise NotImplementedError  # pragma: no cover
 
@@ -46,7 +46,7 @@ class CharacterServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_character_view_data(
         self, character_id: "CharacterId", player_id: "PlayerId"
-    ) -> "CharacterViewData | None":
+    ) -> "Optional[CharacterViewData]":
         """Retrieves a DTO with all data needed for the character view."""
         raise NotImplementedError  # pragma: no cover
 
@@ -85,7 +85,7 @@ class DeckServiceInterface(ABC):  # pragma: no cover
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
-    def get_deck_view_data(self, deck_id: "DeckId") -> "DeckViewData | None":
+    def get_deck_view_data(self, deck_id: "DeckId") -> "Optional[DeckViewData]":
         """Retrieves and aggregates all data needed for the deck view."""
         raise NotImplementedError  # pragma: no cover
 
@@ -102,7 +102,7 @@ class DeckServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_transfer_view_data(
         self, character_id: "CharacterId"
-    ) -> "TransferViewData | None":
+    ) -> "Optional[TransferViewData]":
         """Retrieves and aggregates all data needed for the transfer view."""
         raise NotImplementedError  # pragma: no cover
 
@@ -125,7 +125,7 @@ class PlayerServiceInterface(ABC):  # pragma: no cover
     """Defines the input port for player-related use cases."""
 
     @abstractmethod
-    def get_player_status(self, player_id: "PlayerId") -> "PlayerStatusDTO | None":
+    def get_player_status(self, player_id: "PlayerId") -> "Optional[PlayerStatusDTO]":
         """Retrieves the current status of a player for UI display."""
         raise NotImplementedError  # pragma: no cover
 

@@ -69,12 +69,12 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **DeckDataDialog.cpp/h** (`Ported as DeckView`)
 - **EntryDlg.cpp/h**
 - **FileAccessDlg.cpp/h**
-- **HomeView.cpp/h**
+- **HomeView.cpp/h** (`Ported as HomeView`)
 - **IceDataDlg.cpp/h**
-- **IntroDlg.cpp/h**
+- **IntroDlg.cpp/h** (`Ported as IntroView`)
 - **MissionResultsDlg.cpp/h**
-- **NameDlg.cpp/h**
-- **NewCharDlg.cpp/h**
+- **NameDlg.cpp/h** (`Ported as TextInput component`)
+- **NewCharDlg.cpp/h** (`Ported as NewCharView`)
 - **NewProjectDlg.cpp/h**
 - **OptionsDlg.cpp/h**
 - **OrderDlg.cpp/h** (`Ported as OrderView`)
@@ -85,6 +85,45 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **TransferDlg.cpp/h** (`Ported as TransferView`)
 
 **Porting Priority:** 3
+
+#### Proposed Porting Groups for Remaining Dialogs
+
+Based on an analysis of the remaining dialogs, we can group them by functionality to guide the next phase of porting. The status of each group will be updated as work progresses.
+
+**Group A: Core Player Lifecycle (Status: Complete)**
+These views are essential for starting a new game and providing a central hub for the player.
+- **`HomeView.cpp/h`**: Port to `HomeView`. This will be the main player dashboard, with buttons to access Character data, Deck, Contracts, etc.
+- **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process.
+- **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`.
+- **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction.
+
+**Group B: Core Gameplay Loop**
+These views are part of the main contract/mission cycle.
+- **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`.
+- **`RestDlg.cpp/h`**: Port to `RestView`.
+
+**Group C: Data Display & Shop**
+These views are for displaying information and handling commerce.
+- **`ShopItem.cpp/h`**: Port to `ShopView` and `ShopItemView`. This will be a significant feature involving multiple components.
+- **`IceDataDlg.cpp/h`**: Port to `IceDataView`.
+
+**Group D: In-Mission Interaction**
+These views are likely used during the hacking/matrix part of the game.
+- **`FileAccessDlg.cpp/h`**: Port to `FileAccessView`.
+- **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts).
+
+**Group E: System & Configuration**
+These are lower-priority views for game settings.
+- **`OptionsDlg.cpp/h`**: Port to `OptionsView`.
+- **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`.
+
+**Group F: "Project" Feature**
+This feature needs further analysis.
+- **`NewProjectDlg.cpp/h`**
+- **`ProjectDataDlg.cpp/h`**
+
+**Recommendation:**
+The next step should be to implement **Group A**. This will establish a complete game startup flow: Intro -> New Character -> Home Dashboard.
 
 ---
 
