@@ -102,7 +102,7 @@ These views are part of the main contract/mission cycle.
 - **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`.
 - **`RestDlg.cpp/h`**: Port to `RestView`.
 
-**Group C: Data Display & Shop**
+**Group C: Data Display & Shop (Status: In Progress)**
 These views are for displaying information and handling commerce.
 - **`ShopItem.cpp/h`**: Port to `ShopView` and `ShopItemView`. This will be a significant feature involving multiple components.
 - **`IceDataDlg.cpp/h`**: Port to `IceDataView`.

@@ -76,6 +76,23 @@ class DeckViewDTO:
 
 
 @dataclass
+class ShopItemDTO:
+    """Data for a single item available in a shop."""
+
+    name: str
+    cost: int
+    description: str
+
+
+@dataclass
+class ShopViewDTO:
+    """Data for displaying a shop's inventory."""
+
+    shop_name: str
+    items: list[ShopItemDTO]
+
+
+@dataclass
 class TransferViewDTO:
     """Data for displaying the transfer view."""
 
