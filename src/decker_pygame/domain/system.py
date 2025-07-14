@@ -1,3 +1,5 @@
+"""This module defines the System aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -6,27 +8,24 @@ from decker_pygame.domain.ids import AggregateId, NodeId, SystemId
 
 
 class System(AggregateRoot):
-    """Represents a computer system that contains various nodes."""
+    """Represents a computer system that contains various nodes.
+
+    Args:
+        id (SystemId): Unique identifier for the system.
+        name (str): Name of the system.
+        node_ids (list[NodeId]): List of node IDs in the system.
+    """
 
     def __init__(self, id: SystemId, name: str, node_ids: list[NodeId]) -> None:
-        """
-        Initialize a System.
-
-        Args:
-            id (SystemId): Unique identifier for the system.
-            name (str): Name of the system.
-            node_ids (list[NodeId]): List of node IDs in the system.
-        """
         super().__init__(id=AggregateId(id))
         self.name = name
         self.node_ids = node_ids
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
-            A dictionary representation of the System.
+            dict[str, Any]: A dictionary representation of the System.
         """
         return {
             "id": str(self.id),
@@ -36,14 +35,13 @@ class System(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "System":
-        """
-        Reconstitute a System from a dictionary.
+        """Reconstitute a System from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            A System instance.
+            "System": A System instance.
         """
         return cls(
             id=SystemId(uuid.UUID(data["id"])),

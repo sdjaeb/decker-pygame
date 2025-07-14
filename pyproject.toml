@@ -4,11 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "decker-pygame"
-version = "0.5.0"
+version = "0.4.0"
 description = "A modern Python port of the classic 2001 Cyberspace RPG, Decker."
-authors = [{ name = "Gemini Code Assist" }]
-requires-python = ">=3.13"
-license = "MIT"
+authors = [
+    { name = "Stephen Jaeb", email = "sdjaeb@gmail.com" },
+    { name = "Gemini Code Assist" },
+]
+requires-python = ">=3.13" # Corresponds to LGPL v2.1
+license = "LGPL-2.1-only"
 license-files = ["LICENSE"]
 dependencies = [
     "pydantic>=2.0",
@@ -28,29 +31,34 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "ruff",
+    "pydoclint==0.6.6", # For docstring content validation
+    "ruff==0.12.3",      # For code style and formatting
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/sdjaeb/decker-pygame"
 
 [tool.ruff]
 line-length = 88
-exclude = [
-    "typings/",
-]
+exclude = ["typings/"]
 
 [tool.ruff.lint]
-# E = pycodestyle errors, W = pycodestyle warnings, F = Pyflakes
-# I = isort (import sorting)
-# B = flake8-bugbear (finds likely bugs)
-# C90 = mccabe (complexity checks)
-# UP = pyupgrade (finds outdated syntax)
-select = ["E", "W", "F", "I", "B", "C90", "UP"]
-# Disable UP045 to prevent rewriting Optional[T] to T | None, which can cause
-# issues with older libraries or mocking frameworks like unittest.mock.
-# UP007 (Optional[T] -> T | None) is also disabled for similar reasons.
-ignore = ["UP045", "UP007"]
+# Enable Pyflakes, pycodestyle, isort, bugbear, McCabe, and pydocstyle.
+select = ["E", "W", "F", "I", "B", "C90", "UP", "D"]
+ignore = ["D107"]  # Ignore missing docstrings in __init__
 
-[tool.ruff.format]
-quote-style = "double"
+[tool.ruff.lint.pydocstyle]
+# Enforce Google-style docstrings for formatting and style.
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# It's common to not require docstrings for test files.
+"tests/**/*.py" = ["D"]
+
+[tool.pydoclint]
+# Enforce Google-style docstring content validation.
+style = "google"
+exclude = "tests/.*"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -64,18 +72,13 @@ name = "cz_conventional_commits"
 tag_format = "v$version"
 version_provider = "pep621"
 
-[project.urls]
-"Homepage" = "https://github.com/sdjaeb/decker-pygame"
-
 [tool.mypy]
 python_version = "3.13"
-# Tell mypy where to find source code and custom type stubs
 mypy_path = ["src", "typings"]
 strict = true
 explicit_package_bases = true
 plugins = ["pydantic.mypy"]
 
-# Pygame is a C-extension module, so we need to tell mypy to not worry about its internals
 [[tool.mypy.overrides]]
 module = "pygame.*"
 ignore_missing_imports = true

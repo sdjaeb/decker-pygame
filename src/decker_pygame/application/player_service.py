@@ -1,4 +1,9 @@
-# player_service.py
+"""This module defines the application service for player-related operations.
+
+It includes the PlayerService, which orchestrates use cases like creating a new
+player, and the Data Transfer Objects (DTOs) used to pass player data to the
+presentation layer.
+"""
 
 import uuid
 from dataclasses import dataclass
@@ -25,24 +30,21 @@ class PlayerStatusDTO:
 
 
 class PlayerService(PlayerServiceInterface):
-    """Application service for player-related operations."""
+    """Application service for player-related operations.
+
+    Args:
+        player_repo (PlayerRepositoryInterface): Repository for player aggregates.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
+    """
 
     def __init__(
         self, player_repo: PlayerRepositoryInterface, event_dispatcher: EventDispatcher
     ) -> None:
-        """
-        Initialize the PlayerService.
-
-        Args:
-            player_repo (PlayerRepositoryInterface): Repository for player aggregates.
-            event_dispatcher (EventDispatcher): The dispatcher for domain events.
-        """
         self.player_repo = player_repo
         self.event_dispatcher = event_dispatcher
 
     def create_new_player(self, name: str) -> PlayerId:
-        """
-        Create a new player, save it, and return the new player's ID.
+        """Create a new player, save it, and return the new player's ID.
 
         Args:
             name (str): Name of the new player.
@@ -69,14 +71,14 @@ class PlayerService(PlayerServiceInterface):
         return PlayerId(player.id)
 
     def get_player_status(self, player_id: PlayerId) -> PlayerStatusDTO | None:
-        """
-        Retrieves the current status of a player for UI display.
+        """Retrieves the current status of a player for UI display.
 
         Args:
-            player_id: The ID of the player to query.
+            player_id (PlayerId): The ID of the player to query.
 
         Returns:
-            A DTO with player status, or None if the player is not found.
+            PlayerStatusDTO | None: A DTO with player status, or None if the
+            player is not found.
         """
         player = self.player_repo.get(player_id)
         if not player:

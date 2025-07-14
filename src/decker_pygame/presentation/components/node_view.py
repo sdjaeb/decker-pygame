@@ -1,11 +1,25 @@
+"""This module defines the NodeView component for map displays."""
+
 import pygame
 
 
 class NodeView(pygame.sprite.Sprite):
-    """
-    A sprite that represents a single node on a map, capable of displaying
-    different visual states (e.g., normal, targeted, accessed).
-    Ported from NodeView.cpp/h.
+    """A sprite that represents a single node on a map.
+
+    It is capable of displaying different visual states (e.g., normal,
+    targeted, accessed). Ported from NodeView.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner.
+        images (list[pygame.Surface]): A list of pygame.Surface objects to use for
+            different states.
+
+    Attributes:
+        image (pygame.Surface): The current image of the node.
+        rect (pygame.Rect): The rectangular area of the node.
+
+    Raises:
+        ValueError: If the images list is empty.
     """
 
     image: pygame.Surface
@@ -14,16 +28,6 @@ class NodeView(pygame.sprite.Sprite):
     _current_index: int
 
     def __init__(self, position: tuple[int, int], images: list[pygame.Surface]):
-        """
-        Initialize the NodeView.
-
-        Args:
-            position: The (x, y) position of the top-left corner.
-            images: A list of pygame.Surface objects to use for different states.
-
-        Raises:
-            ValueError: If the images list is empty.
-        """
         super().__init__()
         if not images:
             raise ValueError("NodeView must be initialized with at least one image.")
@@ -34,11 +38,10 @@ class NodeView(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=position)
 
     def set_state(self, state_index: int) -> None:
-        """
-        Set the node's visual state by its index in the image list.
+        """Set the node's visual state by its index in the image list.
 
         Args:
-            state_index: The index of the image to display.
+            state_index (int): The index of the image to display.
         """
         if not (0 <= state_index < len(self._images)):
             print(f"Warning: Invalid state_index {state_index} for NodeView.")

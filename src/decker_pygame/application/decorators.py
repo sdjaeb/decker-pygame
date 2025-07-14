@@ -1,3 +1,10 @@
+"""This module provides decorators for marking domain event producers and consumers.
+
+These decorators, `@emits` and `@handles`, are used for semantic clarity and
+discoverability within the event-driven architecture. They attach metadata to
+functions, making it explicit which events a function can create or react to.
+"""
+
 # ruff: noqa: UP047
 from collections.abc import Callable
 from functools import wraps
@@ -12,14 +19,17 @@ F = TypeVar("F", bound=Callable[[Any], None])
 
 
 def emits(*event_types: type[Event]) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """
-    A decorator to mark a function as an emitter of one or more domain events.
+    """A decorator to mark a function as an emitter of one or more domain events.
 
     This is primarily for semantic clarity and discoverability. It attaches a
     `_emits` attribute to the function for potential introspection.
 
     Args:
-        *event_types: The Event class or classes that this function can emit.
+        *event_types (type[Event]): The Event class or classes that this function
+            can emit.
+
+    Returns:
+        Callable[[Callable[P, R]], Callable[P, R]]: The decorated function.
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
@@ -34,13 +44,16 @@ def emits(*event_types: type[Event]) -> Callable[[Callable[P, R]], Callable[P, R
 
 
 def handles(*event_types: type[Event]) -> Callable[[F], F]:
-    """
-    A decorator to mark a function as a handler for one or more domain events.
+    """A decorator to mark a function as a handler for one or more domain events.
 
     This is for semantic clarity and discoverability.
 
     Args:
-        *event_types: The Event class or classes that this function handles.
+        *event_types (type[Event]): The Event class or classes that this function
+            handles.
+
+    Returns:
+        Callable[[F], F]: The decorated function.
     """
 
     def decorator(func: F) -> F:

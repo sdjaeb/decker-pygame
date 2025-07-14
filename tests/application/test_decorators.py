@@ -17,8 +17,7 @@ def test_emits_decorator_attaches_metadata():
 
 
 def test_handles_decorator_attaches_metadata():
-    """Tests that the @handles decorator marks a function correctly for single
-    and multiple events."""
+    """Tests that the @handles decorator attaches metadata correctly."""
 
     # Test with a single event
     @handles(PlayerCreated)

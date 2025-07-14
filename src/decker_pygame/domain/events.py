@@ -1,3 +1,5 @@
+"""This module defines the domain events for the application."""
+
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -10,10 +12,14 @@ class Event(Protocol):
     """A protocol that all domain events must adhere to."""
 
     @property
-    def event_id(self) -> uuid.UUID: ...
+    def event_id(self) -> uuid.UUID:
+        """The unique identifier of the event."""
+        ...  # pragma: no cover
 
     @property
-    def timestamp(self) -> datetime: ...
+    def timestamp(self) -> datetime:
+        """The UTC timestamp when the event was created."""
+        ...  # pragma: no cover
 
 
 @dataclass(frozen=True, kw_only=True)

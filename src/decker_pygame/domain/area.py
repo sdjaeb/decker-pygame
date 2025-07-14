@@ -1,3 +1,5 @@
+"""This module defines the Area aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -6,7 +8,15 @@ from decker_pygame.domain.ids import AggregateId, AreaId, ContractId
 
 
 class Area(AggregateRoot):
-    """Represents a location or region in the game world."""
+    """Represents a location or region in the game world.
+
+    Args:
+        id (AreaId): Unique identifier for the area.
+        name (str): Name of the area.
+        description (str): Description of the area.
+        security_level (int): Security level of the area.
+        contract_ids (list[ContractId]): Contracts available in the area.
+    """
 
     def __init__(
         self,
@@ -16,16 +26,6 @@ class Area(AggregateRoot):
         security_level: int,
         contract_ids: list[ContractId],
     ) -> None:
-        """
-        Initialize an Area.
-
-        Args:
-            id (AreaId): Unique identifier for the area.
-            name (str): Name of the area.
-            description (str): Description of the area.
-            security_level (int): Security level of the area.
-            contract_ids (List[ContractId]): Contracts available in the area.
-        """
         super().__init__(id=AggregateId(id))
         self.name = name
         self.description = description
@@ -33,23 +33,18 @@ class Area(AggregateRoot):
         self.contract_ids = contract_ids
 
     def add_contract(self, contract_id: ContractId) -> None:
-        """
-        Add a contract to the area.
+        """Add a contract to the area.
 
         Args:
             contract_id (ContractId): The contract to add.
-
-        Returns:
-            None
         """
         self.contract_ids.append(contract_id)
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
-            A dictionary representation of the Area.
+            dict[str, Any]: A dictionary representation of the Area.
         """
         return {
             "id": str(self.id),
@@ -61,14 +56,13 @@ class Area(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Area":
-        """
-        Reconstitute an Area from a dictionary.
+        """Reconstitute an Area from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            An Area instance.
+            "Area": An Area instance.
         """
         return cls(
             id=AreaId(uuid.UUID(data["id"])),

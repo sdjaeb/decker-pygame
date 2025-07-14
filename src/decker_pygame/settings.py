@@ -1,5 +1,4 @@
-"""
-Global settings and constants for the game.
+"""Global settings and constants for the game.
 
 This file centralizes configuration values that were likely in Global.h/cpp,
 making them easy to adjust.
@@ -72,6 +71,8 @@ UI_FONT = UiFontSettings()
 # --- UI Component Settings ---
 # Using a class as a namespace for alarm settings
 class AlarmSettings:
+    """Settings for the AlarmBar component."""
+
     width: int = 200
     height: int = 20
     colors: list[Color] = [

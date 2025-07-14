@@ -11,9 +11,7 @@ from decker_pygame.ports.repository_interfaces import PlayerRepositoryInterface
 
 
 def test_create_new_player():
-    """
-    Verify the PlayerService correctly orchestrates player creation.
-    """
+    """Verify the PlayerService correctly orchestrates player creation."""
     # Arrange
     mock_repo = Mock(spec=PlayerRepositoryInterface)
     mock_dispatcher = Mock(spec=EventDispatcher)

@@ -1,3 +1,10 @@
+"""This module defines the application service for contract-related operations.
+
+It includes the ContractService, which orchestrates use cases like retrieving
+available contracts, and the Data Transfer Objects (DTOs) used to pass contract
+data to the presentation layer.
+"""
+
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 

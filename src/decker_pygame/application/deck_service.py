@@ -1,3 +1,10 @@
+"""This module defines the application service for deck-related operations.
+
+It includes the DeckService, which orchestrates use cases like moving programs
+between a character's deck and storage, and the Data Transfer Objects (DTOs)
+used to pass deck data to the presentation layer.
+"""
+
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -22,9 +29,9 @@ class DeckProgramDTO:
 
 @dataclass(frozen=True)
 class DeckViewData:
-    """
-    A dedicated View Model DTO that aggregates all data needed for the
-    deck view.
+    """A dedicated View Model DTO for the deck view.
+
+    This class aggregates all data needed by the DeckView and OrderView components.
     """
 
     programs: list[DeckProgramDTO]
@@ -35,9 +42,9 @@ class DeckViewData:
 
 @dataclass(frozen=True)
 class TransferViewData:
-    """
-    A dedicated View Model DTO that aggregates all data needed for the
-    transfer view.
+    """A dedicated View Model DTO for the transfer view.
+
+    This class aggregates all data needed by the TransferView component.
     """
 
     deck_programs: list[DeckProgramDTO]
@@ -49,7 +56,14 @@ class DeckServiceError(Exception):
 
 
 class DeckService(DeckServiceInterface):
-    """Application service for deck-related operations."""
+    """Application service for deck-related operations.
+
+    Args:
+        deck_repo (DeckRepositoryInterface): The repository for deck aggregates.
+        character_repo (CharacterRepositoryInterface): The repository for character
+            aggregates.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
+    """
 
     def __init__(
         self,

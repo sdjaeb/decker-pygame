@@ -60,9 +60,7 @@ class Mocks:
 
 @pytest.fixture
 def game_with_mocks() -> Generator[Mocks]:
-    """
-    Provides a fully mocked Game instance and its mocked dependencies.
-    """
+    """Provides a fully mocked Game instance and its mocked dependencies."""
     mock_player_service = Mock(spec=PlayerServiceInterface)
     mock_character_service = Mock(spec=CharacterServiceInterface)
     mock_contract_service = Mock(spec=ContractServiceInterface)

@@ -1,5 +1,10 @@
+"""This module defines the main Game class, which orchestrates the presentation layer.
+
+It handles the main game loop, event processing, and the display of all UI components.
+"""
+
 from collections.abc import Callable
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 import pygame
 
@@ -42,7 +47,48 @@ V = TypeVar("V", bound=pygame.sprite.Sprite)
 
 
 class Game:
-    """Main game loop and presentation logic."""
+    """Main game loop and presentation logic.
+
+    Args:
+        player_service (PlayerServiceInterface): Service for player ops.
+        player_id (PlayerId): The current player's ID.
+        character_service (CharacterServiceInterface): Service for character ops.
+        contract_service (ContractServiceInterface): Service for contract ops.
+        crafting_service (CraftingServiceInterface): Service for crafting ops.
+        deck_service (DeckServiceInterface): Service for deck operations.
+        character_id (CharacterId): The current character's ID.
+        logging_service (LoggingServiceInterface): Service for logging.
+
+    Attributes:
+        screen (pygame.Surface): The main display surface.
+        clock (pygame.time.Clock): The game clock for managing FPS.
+        is_running (bool): Flag to control the main game loop.
+        all_sprites (pygame.sprite.Group[pygame.sprite.Sprite]): Group containing all
+            active sprites.
+        active_bar (ActiveBar): The UI component for active programs.
+        alarm_bar (AlarmBar): The UI component for the system alarm level.
+        health_bar (HealthBar): The UI component for player health.
+        player_service (PlayerServiceInterface): The service for player operations.
+        character_service (CharacterServiceInterface): The service for character
+            operations.
+        contract_service (ContractServiceInterface): The service for contract
+            operations.
+        crafting_service (CraftingServiceInterface): The service for crafting
+            operations.
+        deck_service (DeckServiceInterface): The service for deck operations.
+        player_id (PlayerId): The ID of the current player.
+        character_id (CharacterId): The ID of the current character.
+        logging_service (LoggingServiceInterface): The service for logging.
+        message_view (MessageView): The UI component for displaying messages.
+        input_handler (PygameInputHandler): The handler for user input.
+        build_view (BuildView | None): The build view, if open.
+        char_data_view (CharDataView | None): The character data view, if open.
+        deck_view (DeckView | None): The deck view, if open.
+        order_view (OrderView | None): The deck ordering view, if open.
+        transfer_view (TransferView | None): The program transfer view, if open.
+        contract_list_view (ContractListView | None): The contract list view, if open.
+        contract_data_view (ContractDataView | None): The contract data view, if open.
+    """
 
     screen: pygame.Surface
     clock: pygame.time.Clock
@@ -61,13 +107,13 @@ class Game:
     logging_service: LoggingServiceInterface
     message_view: MessageView
     input_handler: PygameInputHandler
-    build_view: Optional[BuildView] = None
-    char_data_view: Optional[CharDataView] = None
-    deck_view: Optional[DeckView] = None
-    order_view: Optional[OrderView] = None
-    transfer_view: Optional[TransferView] = None
-    contract_list_view: Optional[ContractListView] = None
-    contract_data_view: Optional[ContractDataView] = None
+    build_view: BuildView | None = None
+    char_data_view: CharDataView | None = None
+    deck_view: DeckView | None = None
+    order_view: OrderView | None = None
+    transfer_view: TransferView | None = None
+    contract_list_view: ContractListView | None = None
+    contract_data_view: ContractDataView | None = None
 
     def __init__(
         self,
@@ -80,19 +126,6 @@ class Game:
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
-        """
-        Initialize the Game.
-
-        Args:
-            player_service (PlayerServiceInterface): Service for player ops.
-            player_id (PlayerId): The current player's ID.
-            character_service (CharacterServiceInterface): Service for character ops.
-            contract_service (ContractServiceInterface): Service for contract ops.
-            crafting_service (CraftingServiceInterface): Service for crafting ops.
-            deck_service (DeckServiceInterface): Service for deck operations.
-            character_id (CharacterId): The current character's ID.
-            logging_service (LoggingServiceInterface): Service for logging.
-        """
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
@@ -111,11 +144,10 @@ class Game:
         self._load_assets()
 
     def _load_assets(self) -> None:
-        """
-        Load game assets (images, sounds, etc).
+        """Load game assets (images, sounds, etc).
 
         Returns:
-            None
+            None:
         """
         # Load icons at their native source size
         native_icons, _ = load_spritesheet(
@@ -147,15 +179,15 @@ class Game:
     def _toggle_view(
         self,
         view_attr: str,
-        view_factory: Callable[[], Optional[V]],
+        view_factory: Callable[[], V | None],
     ) -> None:
-        """
-        Generic method to open or close a view.
+        """Generic method to open or close a view.
 
         Args:
-            view_attr: The name of the attribute on `self` that holds the view instance.
-            view_factory: A function that creates and returns a view instance, or None
-                          on failure.
+            view_attr (str): The name of the attribute on `self` that holds the
+                view instance.
+            view_factory (Callable[[], V | None]): A function that creates and
+                returns a view instance, or None on failure.
         """
         current_view = getattr(self, view_attr)
         if current_view:
@@ -174,7 +206,7 @@ class Game:
     def toggle_build_view(self) -> None:
         """Opens or closes the build view."""
 
-        def factory() -> Optional[BuildView]:
+        def factory() -> BuildView | None:
             schematics = self.crafting_service.get_character_schematics(
                 self.character_id
             )
@@ -229,7 +261,7 @@ class Game:
     def toggle_char_data_view(self) -> None:
         """Opens or closes the character data view."""
 
-        def factory() -> Optional[CharDataView]:
+        def factory() -> CharDataView | None:
             view_data = self.character_service.get_character_view_data(
                 self.character_id, self.player_id
             )
@@ -249,7 +281,7 @@ class Game:
     def toggle_deck_view(self) -> None:
         """Opens or closes the deck view."""
 
-        def factory() -> Optional[DeckView]:
+        def factory() -> DeckView | None:
             char_data = self.character_service.get_character_data(self.character_id)
             if not char_data:
                 self.show_message(
@@ -313,7 +345,7 @@ class Game:
     def toggle_transfer_view(self) -> None:
         """Opens or closes the program transfer view."""
 
-        def factory() -> Optional[TransferView]:
+        def factory() -> TransferView | None:
             view_data = self.deck_service.get_transfer_view_data(self.character_id)
             if not view_data:
                 self.show_message("Error: Could not retrieve transfer data.")
@@ -350,11 +382,10 @@ class Game:
         self.message_view.set_text(text)
 
     def _update(self) -> None:
-        """
-        Update game state.
+        """Update game state.
 
         Returns:
-            None
+            None:
         """
         player_status = self.player_service.get_player_status(self.player_id)
         if player_status:
@@ -366,11 +397,10 @@ class Game:
         self.all_sprites.update()
 
     def run(self) -> None:
-        """
-        Run the main game loop.
+        """Run the main game loop.
 
         Returns:
-            None
+            None:
         """
         while self.is_running:
             self.input_handler.handle_events()
@@ -385,8 +415,8 @@ class Game:
         pygame.quit()
 
     def _on_order_deck(self) -> None:
-        """
-        Callback for when the 'Order' button is clicked in the DeckView.
+        """Callback for when the 'Order' button is clicked in the DeckView.
+
         Opens the OrderView.
         """
         char_data = self.character_service.get_character_data(self.character_id)

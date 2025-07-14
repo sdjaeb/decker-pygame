@@ -1,3 +1,5 @@
+"""This module defines the BuildView component for the crafting UI."""
+
 from collections.abc import Callable
 
 import pygame
@@ -7,9 +9,20 @@ from decker_pygame.settings import UI_FACE, UI_FONT
 
 
 class BuildView(pygame.sprite.Sprite):
-    """
-    A UI component that displays a list of craftable schematics and handles
+    """A UI component that displays a list of craftable schematics.
+
     user interaction for crafting items. Ported from BuildDialog.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The top-left corner of the view.
+        size (tuple[int, int]): The (width, height) of the view.
+        schematics (list[Schematic]): The list of schematics to display.
+        on_build_click (Callable[[str], None]): Callback when a build item is
+            clicked.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
     """
 
     image: pygame.Surface
@@ -22,7 +35,6 @@ class BuildView(pygame.sprite.Sprite):
         schematics: list[Schematic],
         on_build_click: Callable[[str], None],
     ):
-        """Initialize the BuildView."""
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)

@@ -1,3 +1,10 @@
+"""This module defines the application service for crafting-related operations.
+
+It includes the CraftingService, which orchestrates use cases like a character
+crafting an item from a known schematic, and the exceptions that can be raised
+during these operations.
+"""
+
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.crafting import Schematic
 from decker_pygame.domain.ids import CharacterId
@@ -24,28 +31,32 @@ class InsufficientResourcesError(CraftingError):
 
 
 class CraftingService(CraftingServiceInterface):
-    """Application service for crafting-related operations."""
+    """Application service for crafting-related operations.
+
+    Args:
+        character_repo (CharacterRepositoryInterface): The repository for character
+            aggregates.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
+    """
 
     def __init__(
         self,
         character_repo: CharacterRepositoryInterface,
         event_dispatcher: EventDispatcher,
     ) -> None:
-        """Initialize the CraftingService."""
         self.character_repo = character_repo
         self.event_dispatcher = event_dispatcher
 
     def get_character_schematics(self, character_id: CharacterId) -> list[Schematic]:
-        """
-        Retrieves the list of known schematics for a given character.
+        """Retrieves the list of known schematics for a given character.
 
         This is a query method to provide data to the presentation layer.
 
         Args:
-            character_id: The ID of the character.
+            character_id (CharacterId): The ID of the character.
 
         Returns:
-            A list of schematics the character knows.
+            list[Schematic]: A list of schematics the character knows.
         """
         character = self.character_repo.get(character_id)
         if not character:
@@ -53,15 +64,16 @@ class CraftingService(CraftingServiceInterface):
         return character.schematics
 
     def craft_item(self, character_id: CharacterId, schematic_name: str) -> None:
-        """
-        Orchestrates the use case of a character crafting an item.
+        """Orchestrates the use case of a character crafting an item.
 
         Args:
-            character_id: The ID of the character who is crafting.
-            schematic_name: The name of the schematic to use.
+            character_id (CharacterId): The ID of the character who is crafting.
+            schematic_name (str): The name of the schematic to use.
 
         Raises:
-            CraftingError: If crafting fails due to business rule violations.
+            CraftingError: If the character is not found.
+            SchematicNotFoundError: If the character does not know the schematic.
+            InsufficientResourcesError: If the character cannot afford to craft.
         """
         character = self.character_repo.get(character_id)
         if not character:

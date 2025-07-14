@@ -1,3 +1,5 @@
+"""This module defines a generic Button component."""
+
 from collections.abc import Callable
 
 import pygame
@@ -8,7 +10,14 @@ from .base_widgets import Clickable
 
 
 class Button(Clickable):
-    """A clickable button widget that handles visual pressed/unpressed states."""
+    """A clickable button widget that handles visual pressed/unpressed states.
+
+    Args:
+        position (tuple[int, int]): The top-left corner of the button.
+        size (tuple[int, int]): The (width, height) of the button.
+        text (str): The text to display on the button.
+        on_click (Callable[[], None]): The function to call when clicked.
+    """
 
     def __init__(
         self,
@@ -17,7 +26,6 @@ class Button(Clickable):
         text: str,
         on_click: Callable[[], None],
     ):
-        """Initialize the Button."""
         super().__init__(on_click=on_click)
         self.rect = pygame.Rect(position, size)
         self.text = text

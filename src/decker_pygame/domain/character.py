@@ -1,3 +1,5 @@
+"""This module defines the Character aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -15,7 +17,18 @@ from decker_pygame.domain.program import Program
 
 
 class Character(AggregateRoot):
-    """Represents a character aggregate root."""
+    """Represents a character aggregate root.
+
+    Args:
+        id (CharacterId): Unique identifier for the character.
+        name (str): Character's name.
+        skills (dict[str, int]): Mapping of skill names to values.
+        deck_id (DeckId): The ID of the character's deck.
+        stored_programs (list[Program]): List of programs not in the active deck.
+        schematics (list[Schematic]): List of known program schematics.
+        credits (int): Amount of credits the character has.
+        unused_skill_points (int): Points available to spend on skills.
+    """
 
     def __init__(
         self,
@@ -28,19 +41,6 @@ class Character(AggregateRoot):
         credits: int,
         unused_skill_points: int,
     ) -> None:
-        """
-        Initialize a Character.
-
-        Args:
-            id (CharacterId): Unique identifier for the character.
-            name (str): Character's name.
-            skills (Dict[str, int]): Mapping of skill names to values.
-            deck_id (DeckId): The ID of the character's deck.
-            stored_programs (list[Program]): List of programs not in the active deck.
-            schematics (list[Schematic]): List of known program schematics.
-            credits (int): Amount of credits the character has.
-            unused_skill_points (int): Points available to spend on skills.
-        """
         super().__init__(id=AggregateId(id))
         self.name = name
         self.skills = skills
@@ -60,19 +60,18 @@ class Character(AggregateRoot):
         initial_credits: int,
         initial_skill_points: int,
     ) -> "Character":
-        """
-        Factory to create a new character, raising a CharacterCreated domain event.
+        """Factory to create a new character, raising a CharacterCreated domain event.
 
         Args:
             character_id (CharacterId): Unique identifier for the character.
             name (str): Character's name.
             deck_id (DeckId): The ID of the character's associated deck.
-            initial_skills (Dict[str, int]): Initial skills.
+            initial_skills (dict[str, int]): Initial skills.
             initial_credits (int): Starting credits.
             initial_skill_points (int): Starting skill points.
 
         Returns:
-            Character: The newly created character.
+            "Character": The newly created character.
         """
         character = Character(
             id=character_id,
@@ -93,15 +92,17 @@ class Character(AggregateRoot):
 
     @emits(ItemCrafted)
     def craft(self, schematic: Schematic) -> None:
-        """
-        Crafts an item from a schematic, consuming resources and creating an event.
+        """Crafts an item from a schematic, consuming resources and creating an event.
 
         Note: Pre-condition checks (e.g., if the character has enough credits)
         are the responsibility of the calling Application Service. This method
         enforces the outcome of the crafting action.
 
         Args:
-            schematic: The schematic to use for crafting.
+            schematic (Schematic): The schematic to use for crafting.
+
+        Raises:
+            ValueError: If the character has insufficient credits.
         """
         # Deduct resources
         for resource in schematic.cost:
@@ -189,11 +190,10 @@ class Character(AggregateRoot):
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
+        """Serialize the aggregate to a dictionary.
 
         Returns:
-            A dictionary representation of the Character.
+            dict[str, Any]: A dictionary representation of the Character.
         """
         return {
             "id": str(self.id),
@@ -208,14 +208,13 @@ class Character(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Character":
-        """
-        Reconstitute a Character from a dictionary.
+        """Reconstitute a Character from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            A Character instance.
+            "Character": A Character instance.
         """
         return cls(
             id=CharacterId(uuid.UUID(data["id"])),

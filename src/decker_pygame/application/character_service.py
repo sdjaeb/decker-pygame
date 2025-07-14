@@ -1,3 +1,10 @@
+"""This module defines the application service for character-related operations.
+
+It includes the CharacterService, which orchestrates use cases like increasing
+a character's skill, and the Data Transfer Objects (DTOs) used to pass
+character data to the presentation layer.
+"""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -26,9 +33,10 @@ class CharacterDataDTO:
 
 @dataclass(frozen=True)
 class CharacterViewData:
-    """
-    A dedicated View Model DTO that aggregates all data needed for the
-    character data view.
+    """A dedicated View Model DTO for the character data view.
+
+    This class aggregates all data needed by the CharDataView component,
+    simplifying the data fetching logic for the presentation layer.
     """
 
     name: str
@@ -52,31 +60,19 @@ class CharacterService(CharacterServiceInterface):
         player_service: "PlayerServiceInterface",
         event_dispatcher: EventDispatcher,
     ) -> None:
-        """
-        Initialize the CharacterService.
-
-        Args:
-            character_repo: Repository for character aggregates.
-            player_service: Service for player-related queries.
-            event_dispatcher: The dispatcher for domain events.
-        """
         self.character_repo = character_repo
         self.player_service = player_service
         self.event_dispatcher = event_dispatcher
 
     def get_character_name(self, character_id: CharacterId) -> str | None:
-        """
-        Retrieves the name of a character.
-        """
+        """Retrieves the name of a character."""
         character = self.character_repo.get(character_id)
         if not character:
             return None
         return character.name
 
     def get_character_data(self, character_id: CharacterId) -> CharacterDataDTO | None:
-        """
-        Retrieves a DTO with character data for UI display.
-        """
+        """Retrieves a DTO with character data for UI display."""
         character = self.character_repo.get(character_id)
         if not character:
             return None
@@ -92,8 +88,7 @@ class CharacterService(CharacterServiceInterface):
     def get_character_view_data(
         self, character_id: CharacterId, player_id: PlayerId
     ) -> CharacterViewData | None:
-        """
-        Retrieves and aggregates all data needed for the character view.
+        """Retrieves and aggregates all data needed for the character view.
 
         This method acts as a query that assembles a dedicated View Model DTO,
         simplifying the data fetching logic for the presentation layer.

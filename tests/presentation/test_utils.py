@@ -9,10 +9,7 @@ from decker_pygame.presentation.utils import get_and_ensure_rect, scale_icons
 
 
 def test_scale_icons():
-    """
-    Tests that the scale_icons utility correctly calls pygame.transform.scale
-    for each icon in the list.
-    """
+    """Tests that the scale_icons utility is correctly called for each icon."""
     # Arrange
     icons = [pygame.Surface((16, 16)), pygame.Surface((16, 16))]
     target_size = (32, 32)
@@ -30,13 +27,11 @@ def test_scale_icons():
 
 
 def test_scale_icons_with_empty_list():
-    """
-    Tests that scale_icons handles an empty list gracefully without calling
-    the scaling function. This covers the previously missed branch.
-    """
+    """Tests that scale_icons handles an empty list gracefully."""
     with patch("decker_pygame.presentation.utils.pygame.transform.scale") as mock_scale:
         result = scale_icons([], (32, 32))
 
+        # Assert that scale was not called and result is an empty list
         assert result == []
         mock_scale.assert_not_called()
 

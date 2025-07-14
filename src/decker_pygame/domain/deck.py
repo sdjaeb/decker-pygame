@@ -1,3 +1,5 @@
+"""This module defines the Deck aggregate root."""
+
 import uuid
 from typing import Any
 
@@ -7,10 +9,14 @@ from decker_pygame.domain.program import Program
 
 
 class Deck(AggregateRoot):
-    """Represents a character's deck, which holds their programs."""
+    """Represents a character's deck, which holds their programs.
+
+    Args:
+        id (DeckId): The unique identifier for the deck.
+        programs (list[Program]): The list of programs in the deck.
+    """
 
     def __init__(self, id: DeckId, programs: list[Program]) -> None:
-        """Initialize a Deck."""
         super().__init__(id=AggregateId(id))
         self.programs = programs
 
@@ -62,9 +68,7 @@ class Deck(AggregateRoot):
             )
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the aggregate to a dictionary.
-        """
+        """Serialize the aggregate to a dictionary."""
         return {
             "id": str(self.id),
             "programs": [prog.to_dict() for prog in self.programs],
@@ -72,9 +76,7 @@ class Deck(AggregateRoot):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Deck":
-        """
-        Reconstitute a Deck from a dictionary.
-        """
+        """Reconstitute a Deck from a dictionary."""
         return cls(
             id=DeckId(uuid.UUID(data["id"])),
             programs=[Program.from_dict(p_data) for p_data in data["programs"]],

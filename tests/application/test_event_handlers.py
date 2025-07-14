@@ -8,9 +8,7 @@ from decker_pygame.domain.ids import PlayerId
 
 
 def test_create_event_logging_handler():
-    """
-    Tests that the created handler correctly formats and logs an event.
-    """
+    """Tests that the created handler correctly formats and logs an event."""
     # Arrange
     mock_logging_service = Mock(spec=LoggingService)
     handler = create_event_logging_handler(mock_logging_service)

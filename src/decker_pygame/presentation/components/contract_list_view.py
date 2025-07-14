@@ -1,12 +1,22 @@
+"""This module defines the ContractListView component."""
+
 import pygame
 
 from decker_pygame.settings import UI_FACE, UI_FONT
 
 
 class ContractListView(pygame.sprite.Sprite):
-    """
-    A UI component that displays a list of contracts.
+    """A UI component that displays a list of contracts.
+
     Ported from ContractListDialog.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The top-left corner of the view.
+        size (tuple[int, int]): The (width, height) of the view.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
     """
 
     image: pygame.Surface
@@ -17,7 +27,6 @@ class ContractListView(pygame.sprite.Sprite):
         position: tuple[int, int],
         size: tuple[int, int],
     ):
-        """Initialize the ContractListView."""
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)

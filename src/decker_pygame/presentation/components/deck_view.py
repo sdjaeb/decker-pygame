@@ -1,3 +1,5 @@
+"""This module defines the DeckView component."""
+
 from collections.abc import Callable
 
 import pygame
@@ -10,7 +12,19 @@ from .base_widgets import Clickable
 
 
 class DeckView(pygame.sprite.Sprite):
-    """A UI component that displays the player's deck of programs."""
+    """A UI component that displays the player's deck of programs.
+
+    Args:
+        data (DeckViewData): The data required to render the view.
+        on_close (Callable[[], None]): A callback function to execute when the view is
+            closed.
+        on_order (Callable[[], None]): A callback function to execute when the order
+            button is clicked.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
+    """
 
     image: pygame.Surface
     rect: pygame.Rect

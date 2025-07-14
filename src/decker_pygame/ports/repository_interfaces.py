@@ -1,3 +1,11 @@
+"""This module defines the interfaces for all data repositories.
+
+In a Hexagonal Architecture, these interfaces act as the "driven ports" for the
+application core. They define the contracts that persistence-layer adapters
+must adhere to, allowing the application to remain ignorant of the specific
+database or storage technology being used.
+"""
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
 

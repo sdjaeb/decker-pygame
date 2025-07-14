@@ -1,3 +1,5 @@
+"""A JSON file-based implementation of the Contract repository interface."""
+
 import json
 import os
 from typing import Any
@@ -8,13 +10,18 @@ from decker_pygame.ports.repository_interfaces import ContractRepositoryInterfac
 
 
 class JsonFileContractRepository(ContractRepositoryInterface):
-    """A repository that stores contract data in JSON files."""
+    """A repository that stores contract data in JSON files.
 
-    def __init__(self, base_path: str):
+    Args:
+        base_path (str): Directory where contract files are stored.
+    """
+
+    def __init__(self, base_path: str) -> None:
         self._base_path = base_path
         os.makedirs(self._base_path, exist_ok=True)
 
     def get_all(self) -> list[Contract]:
+        """Retrieves all contracts from the repository."""
         contracts: list[Contract] = []
         if not os.path.exists(self._base_path):
             return contracts
@@ -35,6 +42,7 @@ class JsonFileContractRepository(ContractRepositoryInterface):
         return os.path.join(self._base_path, f"{contract_id}.json")
 
     def get(self, contract_id: ContractId) -> Contract | None:
+        """Retrieve a Contract aggregate from a JSON file, or None if not found."""
         filepath = self._get_path(contract_id)
         if not os.path.exists(filepath):
             return None
@@ -43,6 +51,7 @@ class JsonFileContractRepository(ContractRepositoryInterface):
         return Contract.from_dict(data)
 
     def save(self, contract: Contract) -> None:
+        """Save a Contract aggregate to a JSON file."""
         filepath = self._get_path(ContractId(contract.id))
         with open(filepath, "w") as f:
             json.dump(contract.to_dict(), f, indent=4)

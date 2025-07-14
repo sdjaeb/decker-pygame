@@ -1,10 +1,22 @@
+"""This module provides a base class for percentage-based UI bars."""
+
 import pygame
 
 
 class PercentageBar(pygame.sprite.Sprite):
-    """
-    A base class for UI components that display a value as a
+    """A base class for UI components that display a value as a.
+
     horizontal percentage bar.
+
+    Args:
+        position (tuple[int, int]): The top-left corner of the bar.
+        width (int): The maximum width of the bar.
+        height (int): The height of the bar.
+        initial_color (pygame.Color): The initial color of the bar.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the bar.
+        rect (pygame.Rect): The rectangular area of the bar.
     """
 
     image: pygame.Surface
@@ -17,9 +29,6 @@ class PercentageBar(pygame.sprite.Sprite):
         height: int,
         initial_color: pygame.Color,
     ) -> None:
-        """
-        Initialize the PercentageBar.
-        """
         super().__init__()
         self.width = width
         self.height = height

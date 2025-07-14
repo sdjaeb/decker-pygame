@@ -1,3 +1,11 @@
+"""This module contains handlers for domain events.
+
+Event handlers are functions that are subscribed to specific domain events and
+are executed by the EventDispatcher when those events are dispatched. They are
+used to implement side effects like logging, sending notifications, or updating
+read models.
+"""
+
 from collections.abc import Callable
 
 from decker_pygame.application.decorators import handles
@@ -8,8 +16,7 @@ from decker_pygame.domain.events import Event, PlayerCreated
 def create_event_logging_handler(
     logging_service: LoggingService,
 ) -> Callable[[Event], None]:
-    """
-    A factory that creates a generic event handler for logging.
+    """A factory that creates a generic event handler for logging.
 
     This handler extracts data from any domain event and passes it to the
     logging service for structured logging.
@@ -29,8 +36,8 @@ def create_event_logging_handler(
 
 
 def log_special_player_created(event: PlayerCreated) -> None:
-    """
-    A handler that only logs when a specific condition is met.
+    """A handler that only logs when a specific condition is met.
+
     Note: This handler is not decorated with @handles because its subscription
     logic (the condition) is handled by the EventDispatcher at runtime.
     """

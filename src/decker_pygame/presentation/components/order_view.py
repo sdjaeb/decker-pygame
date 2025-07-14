@@ -1,3 +1,5 @@
+"""This module defines the OrderView component for re-ordering items."""
+
 from collections.abc import Callable
 from functools import partial
 
@@ -11,7 +13,21 @@ from .base_widgets import Clickable
 
 
 class OrderView(pygame.sprite.Sprite):
-    """A UI component for re-ordering items."""
+    """A UI component for re-ordering items.
+
+    Args:
+        data (DeckViewData): The deck data to be displayed and ordered.
+        on_close (Callable[[], None]): A callback function to execute when the view is
+            closed.
+        on_move_up (Callable[[str], None]): Callback to execute when the "Up" button is
+            clicked.
+        on_move_down (Callable[[str], None]): Callback to execute when the "Down" button
+            is clicked.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
+    """
 
     image: pygame.Surface
     rect: pygame.Rect

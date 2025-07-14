@@ -1,6 +1,4 @@
-"""
-Tests for the global settings and constants.
-"""
+"""Tests for the global settings and constants."""
 
 from decker_pygame.settings import ALARM, GFX, AlarmSettings, GfxSettings
 
@@ -12,8 +10,8 @@ def test_settings_objects_are_correct_type():
 
 
 def test_asset_paths_exist():
-    """
-    Verifies that the file paths defined in GfxSettings point to real files.
+    """Verifies that the file paths defined in GfxSettings point to real files.
+
     This test prevents runtime FileNotFoundError exceptions after refactoring.
     """
     # Construct the full path to the asset

@@ -1,3 +1,5 @@
+"""This module defines the PygameInputHandler for the presentation layer."""
+
 from typing import TYPE_CHECKING
 
 import pygame
@@ -10,8 +12,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class PygameInputHandler:
-    """
-    A dedicated Presentation Adapter for handling user input.
+    """A dedicated Presentation Adapter for handling user input.
+
     Translates raw Pygame events into calls to the Game object.
     """
 
@@ -29,9 +31,7 @@ class PygameInputHandler:
         }
 
     def handle_events(self) -> None:
-        """
-        Process the event queue and delegate to appropriate handlers.
-        """
+        """Process the event queue and delegate to appropriate handlers."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self._game.quit()
