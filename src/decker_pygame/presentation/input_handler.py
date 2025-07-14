@@ -51,6 +51,8 @@ class PygameInputHandler:
             for view in [
                 self._game.intro_view,
                 self._game.new_char_view,
+                self._game.rest_view,
+                self._game.mission_results_view,
                 self._game.home_view,
                 self._game.build_view,
                 self._game.char_data_view,

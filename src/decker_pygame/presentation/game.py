@@ -9,6 +9,7 @@ from typing import Optional, TypeVar
 import pygame
 
 from decker_pygame.application.crafting_service import CraftingError
+from decker_pygame.application.dtos import MissionResultsDTO, RestViewData
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -30,8 +31,12 @@ from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.mission_results_view import (
+    MissionResultsView,
+)
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
+from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
@@ -86,6 +91,9 @@ class Game:
         input_handler (PygameInputHandler): The handler for user input.
         intro_view (Optional[IntroView]): The introduction view, if open.
         new_char_view (Optional[NewCharView]): The new character view, if open.
+        rest_view (Optional[RestView]): The rest and recovery view, if open.
+        mission_results_view (Optional[MissionResultsView]): The mission results
+            view, if open.
         home_view (Optional[HomeView]): The main menu view, if open.
         build_view (Optional[BuildView]): The build view, if open.
         char_data_view (Optional[CharDataView]): The character data view, if open.
@@ -117,6 +125,8 @@ class Game:
     input_handler: PygameInputHandler
     intro_view: Optional[IntroView] = None
     new_char_view: Optional[NewCharView] = None
+    rest_view: Optional[RestView] = None
+    mission_results_view: Optional[MissionResultsView] = None
     home_view: Optional[HomeView] = None
     build_view: Optional[BuildView] = None
     char_data_view: Optional[CharDataView] = None
@@ -259,6 +269,44 @@ class Game:
             )
 
         self._toggle_view("home_view", factory)
+
+    def _on_rest(self) -> None:
+        """Callback for when the player chooses to rest."""
+        # Here we would call a service to perform the rest action
+        self.logging_service.log("Player Action", {"action": "rest"})
+        self.show_message("You feel rested and recovered.")
+        # After resting, close the view.
+        if self.rest_view:
+            self.toggle_rest_view()
+
+    def toggle_rest_view(self, data: Optional[RestViewData] = None) -> None:
+        """Opens or closes the rest view."""
+
+        def factory() -> Optional[RestView]:
+            if data:
+                return RestView(
+                    data=data,
+                    on_rest=self._on_rest,
+                    on_close=self.toggle_rest_view,
+                )
+            return None
+
+        self._toggle_view("rest_view", factory)
+
+    def toggle_mission_results_view(
+        self, data: Optional[MissionResultsDTO] = None
+    ) -> None:
+        """Opens or closes the mission results view."""
+
+        def factory() -> Optional[MissionResultsView]:
+            if data:
+                return MissionResultsView(
+                    data=data, on_close=self.toggle_mission_results_view
+                )
+            # This view should not be opened without data.
+            return None
+
+        self._toggle_view("mission_results_view", factory)
 
     def toggle_build_view(self) -> None:
         """Opens or closes the build view."""

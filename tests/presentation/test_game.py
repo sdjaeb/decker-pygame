@@ -16,6 +16,7 @@ from decker_pygame.application.deck_service import (
     DeckViewData,
     TransferViewData,
 )
+from decker_pygame.application.dtos import MissionResultsDTO, RestViewData
 from decker_pygame.application.player_service import PlayerStatusDTO
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.service_interfaces import (
@@ -32,8 +33,12 @@ from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
+from decker_pygame.presentation.components.mission_results_view import (
+    MissionResultsView,
+)
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
+from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
@@ -949,3 +954,95 @@ def test_handle_character_creation(game_with_mocks: Mocks):
         game._handle_character_creation("Decker")
         mock_toggle_new_char.assert_called_once()
         mock_toggle_home.assert_called_once()
+
+
+def test_game_toggles_mission_results_view(game_with_mocks: Mocks):
+    """Tests that the toggle_mission_results_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.mission_results_view is None
+
+    results_data = MissionResultsDTO(
+        contract_name="Test Heist",
+        was_successful=True,
+        credits_earned=1000,
+        reputation_change=1,
+    )
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.MissionResultsView", spec=MissionResultsView
+    ) as mock_view_class:
+        game.toggle_mission_results_view(results_data)
+        mock_view_class.assert_called_once_with(
+            data=results_data, on_close=game.toggle_mission_results_view
+        )
+        assert game.mission_results_view is not None
+
+    # Toggle to close
+    game.toggle_mission_results_view()
+    assert game.mission_results_view is None
+
+
+def test_game_toggles_rest_view(game_with_mocks: Mocks):
+    """Tests that the toggle_rest_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.rest_view is None
+
+    rest_data = RestViewData(cost=100, health_recovered=50)
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.RestView", spec=RestView
+    ) as mock_view_class:
+        game.toggle_rest_view(rest_data)
+        mock_view_class.assert_called_once_with(
+            data=rest_data,
+            on_rest=game._on_rest,
+            on_close=game.toggle_rest_view,
+        )
+        assert game.rest_view is not None
+
+    # Toggle to close
+    game.toggle_rest_view()
+    assert game.rest_view is None
+
+
+def test_on_rest_callback(game_with_mocks: Mocks):
+    """Tests the _on_rest callback."""
+    game = game_with_mocks.game
+    # Simulate that the view is open
+    game.rest_view = Mock(spec=RestView)
+
+    with (
+        patch.object(game, "show_message") as mock_show_message,
+        patch.object(game, "toggle_rest_view") as mock_toggle,
+    ):
+        game._on_rest()
+
+        # Check that a message is shown and the view is closed
+        mock_show_message.assert_called_once_with("You feel rested and recovered.")
+        mock_toggle.assert_called_once()
+
+
+def test_toggle_rest_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests that calling toggle_rest_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.rest_view is None
+
+    # Call without data
+    game.toggle_rest_view(data=None)
+
+    # View should not have been created
+    assert game.rest_view is None
+
+
+def test_toggle_mission_results_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests calling toggle_mission_results_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.mission_results_view is None
+
+    # Call without data
+    game.toggle_mission_results_view(data=None)
+
+    # View should not have been created
+    assert game.mission_results_view is None
