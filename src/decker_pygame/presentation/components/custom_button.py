@@ -8,7 +8,16 @@ from .base_widgets import Clickable
 
 
 class CustomButton(Clickable):
-    """A reusable button sprite that handles visual states and click events."""
+    """A reusable button sprite that handles visual states and click events.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner.
+        image_up (pygame.Surface): The surface to display when the button is not
+            pressed.
+        image_down (pygame.Surface): The surface to display when the button is pressed.
+        on_click (Callable[[], None]): A zero-argument function to call when the button
+            is clicked.
+    """
 
     def __init__(
         self,
@@ -17,14 +26,6 @@ class CustomButton(Clickable):
         image_down: pygame.Surface,
         on_click: Callable[[], None],
     ):
-        """Initialize the CustomButton.
-
-        Args:
-            position: The (x, y) position of the top-left corner.
-            image_up: The surface to display when the button is not pressed.
-            image_down: The surface to display when the button is pressed.
-            on_click: A zero-argument function to call when the button is clicked.
-        """
         super().__init__(on_click=on_click)
         self._image_up = image_up
         self._image_down = image_down
@@ -40,7 +41,7 @@ class CustomButton(Clickable):
         and update its visual state.
 
         Args:
-            event: The pygame event to process.
+            event (pygame.event.Event): The pygame event to process.
         """
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):

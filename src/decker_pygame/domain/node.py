@@ -8,15 +8,14 @@ from decker_pygame.domain.ids import NodeId
 
 
 class Node(Entity):
-    """Represents a single node within a System."""
+    """Represents a single node within a System.
+
+    Args:
+        id (NodeId): Unique identifier for the node.
+        name (str): Name of the node.
+    """
 
     def __init__(self, id: NodeId, name: str) -> None:
-        """Initialize a Node.
-
-        Args:
-            id (NodeId): Unique identifier for the node.
-            name (str): Name of the node.
-        """
         super().__init__(id=id)
         self.name = name
 
@@ -24,7 +23,7 @@ class Node(Entity):
         """Serialize the entity to a dictionary.
 
         Returns:
-            A dictionary representation of the Node.
+            dict[str, Any]: A dictionary representation of the Node.
         """
         return {"id": str(self.id), "name": self.name}
 
@@ -33,9 +32,9 @@ class Node(Entity):
         """Reconstitute a Node from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            A Node instance.
+            "Node": A Node instance.
         """
         return cls(id=NodeId(uuid.UUID(data["id"])), name=data["name"])

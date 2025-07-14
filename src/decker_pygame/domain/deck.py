@@ -9,10 +9,14 @@ from decker_pygame.domain.program import Program
 
 
 class Deck(AggregateRoot):
-    """Represents a character's deck, which holds their programs."""
+    """Represents a character's deck, which holds their programs.
+
+    Args:
+        id (DeckId): The unique identifier for the deck.
+        programs (list[Program]): The list of programs in the deck.
+    """
 
     def __init__(self, id: DeckId, programs: list[Program]) -> None:
-        """Initialize a Deck."""
         super().__init__(id=AggregateId(id))
         self.programs = programs
 

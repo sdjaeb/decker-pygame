@@ -56,7 +56,14 @@ class DeckServiceError(Exception):
 
 
 class DeckService(DeckServiceInterface):
-    """Application service for deck-related operations."""
+    """Application service for deck-related operations.
+
+    Args:
+        deck_repo (DeckRepositoryInterface): The repository for deck aggregates.
+        character_repo (CharacterRepositoryInterface): The repository for character
+            aggregates.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
+    """
 
     def __init__(
         self,
@@ -64,13 +71,6 @@ class DeckService(DeckServiceInterface):
         character_repo: CharacterRepositoryInterface,
         event_dispatcher: EventDispatcher,
     ) -> None:
-        """Initialize the DeckService.
-
-        Args:
-            deck_repo: The repository for deck aggregates.
-            character_repo: The repository for character aggregates.
-            event_dispatcher: The dispatcher for domain events.
-        """
         self.deck_repo = deck_repo
         self.character_repo = character_repo
         self.event_dispatcher = event_dispatcher

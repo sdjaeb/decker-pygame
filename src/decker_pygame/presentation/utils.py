@@ -14,10 +14,10 @@ def get_and_ensure_rect(sprite: pygame.sprite.Sprite) -> pygame.Rect:
     a sprite has a valid `rect` attribute and returns it.
 
     Args:
-        sprite: The sprite to validate.
+        sprite (pygame.sprite.Sprite): The sprite to validate.
 
     Returns:
-        The sprite's valid pygame.Rect (or FRect).
+        pygame.Rect: The sprite's valid pygame.Rect (or FRect).
 
     Raises:
         AttributeError: If the sprite is missing a `rect` and also lacks a
@@ -48,12 +48,12 @@ def render_text_wrapped(
     This function modifies the provided surface in-place.
 
     Args:
-        surface: The pygame.Surface to draw on.
-        text: The string to render.
-        font: The pygame.font.Font to use.
-        color: The color of the text.
-        rect: The pygame.Rect defining the bounds for wrapping.
-        padding: The padding inside the rect.
+        surface (pygame.Surface): The pygame.Surface to draw on.
+        text (str): The string to render.
+        font (pygame.font.Font): The pygame.font.Font to use.
+        color (pygame.Color): The color of the text.
+        rect (pygame.Rect): The pygame.Rect defining the bounds for wrapping.
+        padding (int): The padding inside the rect.
     """
     words = text.split()
     lines = []
@@ -83,10 +83,10 @@ def scale_icons(
     """Scales a list of pygame.Surface objects to a target size.
 
     Args:
-        icons: A list of surfaces to scale.
-        target_size: The (width, height) to scale to.
+        icons (list[pygame.Surface]): A list of surfaces to scale.
+        target_size (tuple[int, int]): The (width, height) to scale to.
 
     Returns:
-        A new list of scaled surfaces.
+        list[pygame.Surface]: A new list of scaled surfaces.
     """
     return [pygame.transform.scale(icon, target_size) for icon in icons]

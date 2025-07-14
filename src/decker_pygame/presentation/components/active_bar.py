@@ -10,6 +10,16 @@ class ActiveBar(pygame.sprite.Sprite):
     """Represents the active programs bar, showing icons for active software.
 
     Ported from ActiveBar.cpp and ActiveBar.h.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner of the
+            bar.
+        image_list (list[pygame.Surface]): A list of all possible program icon surfaces.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the active bar.
+        rect (pygame.Rect): The rectangular area of the active bar.
+        active_programs (dict[int, int]): A mapping of slot index to program ID.
     """
 
     image: pygame.Surface
@@ -20,12 +30,6 @@ class ActiveBar(pygame.sprite.Sprite):
     def __init__(
         self, position: tuple[int, int], image_list: list[pygame.Surface]
     ) -> None:
-        """Initializes the ActiveBar.
-
-        Args:
-            position: The (x, y) position of the top-left corner of the bar.
-            image_list: A list of all possible program icon surfaces.
-        """
         super().__init__()
 
         self.width = GFX.active_bar_image_size * GFX.active_bar_max_slots
@@ -88,8 +92,11 @@ class ActiveBar(pygame.sprite.Sprite):
     def get_active_program(self, slot: int) -> int | None:
         """Gets the program ID from a specific slot.
 
+        Args:
+            slot (int): The slot index to query.
+
         Returns:
-            The program_id if the slot is active, otherwise None.
+            int | None: The program_id if the slot is active, otherwise None.
         """
         if not (0 <= slot < GFX.active_bar_max_slots):
             print(f"Warning: Invalid slot index {slot} for ActiveBar.")

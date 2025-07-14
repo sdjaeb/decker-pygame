@@ -12,16 +12,14 @@ class Program(Entity):
 
     This may become a Value Object later if programs are defined only by their
     attributes and have no unique identity.
+
+    Args:
+        id (ProgramId): Unique identifier for the program.
+        name (str): Name of the program.
+        size (int): The memory size of the program.
     """
 
     def __init__(self, id: ProgramId, name: str, size: int) -> None:
-        """Initialize a Program.
-
-        Args:
-            id (ProgramId): Unique identifier for the program.
-            name (str): Name of the program.
-            size (int): The memory size of the program.
-        """
         super().__init__(id=id)
         self.name = name
         self.size = size
@@ -30,7 +28,7 @@ class Program(Entity):
         """Serialize the entity to a dictionary.
 
         Returns:
-            A dictionary representation of the Program.
+            dict[str, Any]: A dictionary representation of the Program.
         """
         return {"id": str(self.id), "name": self.name, "size": self.size}
 
@@ -39,10 +37,10 @@ class Program(Entity):
         """Reconstitute a Program from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            A Program instance.
+            "Program": A Program instance.
         """
         return cls(
             id=ProgramId(uuid.UUID(data["id"])), name=data["name"], size=data["size"]

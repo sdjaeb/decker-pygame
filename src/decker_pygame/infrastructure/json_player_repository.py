@@ -13,14 +13,12 @@ class JsonFilePlayerRepository(PlayerRepositoryInterface):
     """A concrete repository that persists Player aggregates to JSON files.
 
     Each player is stored in a separate file named after its ID.
+
+    Args:
+        base_path (str): Directory where player files are stored.
     """
 
     def __init__(self, base_path: str) -> None:
-        """Initialize the repository with a base directory for storage.
-
-        Args:
-            base_path: Directory where player files are stored.
-        """
         self._base_path = base_path
         os.makedirs(self._base_path, exist_ok=True)
 

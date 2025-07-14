@@ -30,17 +30,16 @@ class PlayerStatusDTO:
 
 
 class PlayerService(PlayerServiceInterface):
-    """Application service for player-related operations."""
+    """Application service for player-related operations.
+
+    Args:
+        player_repo (PlayerRepositoryInterface): Repository for player aggregates.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
+    """
 
     def __init__(
         self, player_repo: PlayerRepositoryInterface, event_dispatcher: EventDispatcher
     ) -> None:
-        """Initialize the PlayerService.
-
-        Args:
-            player_repo (PlayerRepositoryInterface): Repository for player aggregates.
-            event_dispatcher (EventDispatcher): The dispatcher for domain events.
-        """
         self.player_repo = player_repo
         self.event_dispatcher = event_dispatcher
 
@@ -75,10 +74,11 @@ class PlayerService(PlayerServiceInterface):
         """Retrieves the current status of a player for UI display.
 
         Args:
-            player_id: The ID of the player to query.
+            player_id (PlayerId): The ID of the player to query.
 
         Returns:
-            A DTO with player status, or None if the player is not found.
+            PlayerStatusDTO | None: A DTO with player status, or None if the
+            player is not found.
         """
         player = self.player_repo.get(player_id)
         if not player:

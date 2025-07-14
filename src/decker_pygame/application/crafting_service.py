@@ -31,19 +31,19 @@ class InsufficientResourcesError(CraftingError):
 
 
 class CraftingService(CraftingServiceInterface):
-    """Application service for crafting-related operations."""
+    """Application service for crafting-related operations.
+
+    Args:
+        character_repo (CharacterRepositoryInterface): The repository for character
+            aggregates.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
+    """
 
     def __init__(
         self,
         character_repo: CharacterRepositoryInterface,
         event_dispatcher: EventDispatcher,
     ) -> None:
-        """Initialize the CraftingService.
-
-        Args:
-            character_repo: The repository for character aggregates.
-            event_dispatcher: The dispatcher for domain events.
-        """
         self.character_repo = character_repo
         self.event_dispatcher = event_dispatcher
 
@@ -53,10 +53,10 @@ class CraftingService(CraftingServiceInterface):
         This is a query method to provide data to the presentation layer.
 
         Args:
-            character_id: The ID of the character.
+            character_id (CharacterId): The ID of the character.
 
         Returns:
-            A list of schematics the character knows.
+            list[Schematic]: A list of schematics the character knows.
         """
         character = self.character_repo.get(character_id)
         if not character:
@@ -67,11 +67,13 @@ class CraftingService(CraftingServiceInterface):
         """Orchestrates the use case of a character crafting an item.
 
         Args:
-            character_id: The ID of the character who is crafting.
-            schematic_name: The name of the schematic to use.
+            character_id (CharacterId): The ID of the character who is crafting.
+            schematic_name (str): The name of the schematic to use.
 
         Raises:
-            CraftingError: If crafting fails due to business rule violations.
+            CraftingError: If the character is not found.
+            SchematicNotFoundError: If the character does not know the schematic.
+            InsufficientResourcesError: If the character cannot afford to craft.
         """
         character = self.character_repo.get(character_id)
         if not character:

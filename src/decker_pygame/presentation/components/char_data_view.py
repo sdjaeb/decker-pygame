@@ -16,6 +16,17 @@ class CharDataView(pygame.sprite.Sprite):
     """A UI component that displays character data.
 
     Ported from CharDataDialog.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The top-left corner of the view.
+        data (CharacterViewData): The data to display.
+        on_close (Callable[[], None]): Callback to close the view.
+        on_increase_skill (Callable[[str], None]): Callback to increase a skill.
+        on_decrease_skill (Callable[[str], None]): Callback to decrease a skill.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
     """
 
     image: pygame.Surface
@@ -33,7 +44,6 @@ class CharDataView(pygame.sprite.Sprite):
         on_increase_skill: Callable[[str], None],
         on_decrease_skill: Callable[[str], None],
     ):
-        """Initialize the CharDataView."""
         super().__init__()
         self.image = pygame.Surface((400, 450))  # Standard size
         self.rect = self.image.get_rect(topleft=position)

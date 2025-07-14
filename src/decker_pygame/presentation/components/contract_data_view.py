@@ -9,6 +9,15 @@ class ContractDataView(pygame.sprite.Sprite):
     """A UI component that displays contract data.
 
     Ported from ContractDataDialog.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The top-left corner of the view.
+        size (tuple[int, int]): The (width, height) of the view.
+        contract_name (str): The name of the contract to display.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
     """
 
     image: pygame.Surface
@@ -20,7 +29,6 @@ class ContractDataView(pygame.sprite.Sprite):
         size: tuple[int, int],
         contract_name: str,
     ):
-        """Initialize the ContractDataView."""
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)

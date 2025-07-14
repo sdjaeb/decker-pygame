@@ -10,10 +10,13 @@ from decker_pygame.ports.repository_interfaces import DeckRepositoryInterface
 
 
 class JsonFileDeckRepository(DeckRepositoryInterface):
-    """A concrete repository that persists Deck aggregates to JSON files."""
+    """A concrete repository that persists Deck aggregates to JSON files.
+
+    Args:
+        base_path (str): Directory where deck files are stored.
+    """
 
     def __init__(self, base_path: str) -> None:
-        """Initialize the repository with a base directory for storage."""
         self._base_path = base_path
         os.makedirs(self._base_path, exist_ok=True)
 

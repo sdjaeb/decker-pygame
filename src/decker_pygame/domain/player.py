@@ -10,16 +10,15 @@ from decker_pygame.domain.ids import AggregateId, PlayerId
 
 
 class Player(AggregateRoot):
-    """The Player aggregate root."""
+    """The Player aggregate root.
+
+    Args:
+        id (PlayerId): Unique identifier for the player.
+        name (str): The player's name.
+        health (int): The player's starting health.
+    """
 
     def __init__(self, id: PlayerId, name: str, health: int) -> None:
-        """Initialize a Player aggregate.
-
-        Args:
-            id (PlayerId): Unique identifier for the player.
-            name (str): The player's name.
-            health (int): The player's starting health.
-        """
         super().__init__(id=AggregateId(id))
         self.name = name
         self.health = health
@@ -35,7 +34,7 @@ class Player(AggregateRoot):
             initial_health (int): The player's starting health.
 
         Returns:
-            Player: The newly created Player aggregate.
+            "Player": The newly created Player aggregate.
         """
         player = Player(id=player_id, name=name, health=initial_health)
         player._events.append(
@@ -51,7 +50,7 @@ class Player(AggregateRoot):
         """Serialize the aggregate to a dictionary.
 
         Returns:
-            A dictionary representation of the Player.
+            dict[str, Any]: A dictionary representation of the Player.
         """
         return {
             "id": str(self.id),
@@ -64,10 +63,10 @@ class Player(AggregateRoot):
         """Reconstitute a Player from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            A Player instance.
+            "Player": A Player instance.
         """
         return cls(
             id=PlayerId(uuid.UUID(data["id"])), name=data["name"], health=data["health"]

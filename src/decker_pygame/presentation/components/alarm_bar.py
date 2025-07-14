@@ -8,16 +8,14 @@ class AlarmBar(PercentageBar):
     """A sprite component that displays the system alert level as a percentage bar.
 
     The bar's color changes as the alert level increases.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner.
+        width (int): The maximum width of the bar.
+        height (int): The height of the bar.
     """
 
     def __init__(self, position: tuple[int, int], width: int, height: int) -> None:
-        """Initialize the AlarmBar.
-
-        Args:
-            position: The (x, y) position of the top-left corner.
-            width: The maximum width of the bar.
-            height: The height of the bar.
-        """
         super().__init__(
             position=position,
             width=width,
@@ -31,8 +29,8 @@ class AlarmBar(PercentageBar):
         """Update the alarm bar's state and color based on the alert level.
 
         Args:
-            alert_level: The new alarm level (0-100).
-            is_crashing: Whether the system is crashing.
+            alert_level (int): The new alarm level (0-100).
+            is_crashing (bool): Whether the system is crashing.
         """
         self._percentage = float(max(0, min(alert_level, 100)))
 

@@ -11,14 +11,12 @@ class AggregateRoot(Entity):
     An Aggregate Root is the entry point to an aggregate, enforcing invariants
     and managing domain events. All references from outside the aggregate
     should point to the root, not to internal entities.
+
+    Args:
+        id (AggregateId): The unique identifier for the aggregate root.
     """
 
     def __init__(self, id: AggregateId) -> None:
-        """Initialize the aggregate root with an ID and empty event list.
-
-        Args:
-            id (AggregateId): The unique identifier for the aggregate root.
-        """
         super().__init__(id=id)
         self._events: list[Event] = []
 
@@ -32,9 +30,5 @@ class AggregateRoot(Entity):
         return list(self._events)
 
     def clear_events(self) -> None:
-        """Clear all stored domain events.
-
-        Returns:
-            None
-        """
+        """Clear all stored domain events."""
         self._events.clear()

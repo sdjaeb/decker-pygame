@@ -6,18 +6,21 @@ from decker_pygame.settings import UI_FONT
 
 
 class ClockView(pygame.sprite.Sprite):
-    """A sprite component that displays text, intended for the game clock."""
+    """A sprite component that displays text, intended for the game clock.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner.
+        initial_text (str): The text to display initially.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the text.
+        rect (pygame.Rect): The rectangular area of the text.
+    """
 
     image: pygame.Surface
     rect: pygame.Rect
 
     def __init__(self, position: tuple[int, int], initial_text: str = "00:00:00"):
-        """Initialize the ClockView.
-
-        Args:
-            position: The (x, y) position of the top-left corner.
-            initial_text: The text to display initially.
-        """
         super().__init__()
         self.font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
@@ -30,7 +33,7 @@ class ClockView(pygame.sprite.Sprite):
         """Update the displayed text. This redraws the sprite's image.
 
         Args:
-            text: The new text to display.
+            text (str): The new text to display.
         """
         self.image = self.font.render(text, True, self.color)
         self.rect = self.image.get_rect(topleft=self.pos)

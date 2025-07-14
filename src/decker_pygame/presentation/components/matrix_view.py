@@ -10,6 +10,18 @@ class MatrixView(pygame.sprite.Sprite):
 
     representing the main matrix interface view.
     Ported from MatrixView.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner of the
+            view.
+        size (tuple[int, int]): The (width, height) of the view's surface.
+        background_color (pygame.Color): The background color of the view.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
+        components (pygame.sprite.Group[pygame.sprite.Sprite]): The group of sprites
+            contained in this view.
     """
 
     image: pygame.Surface
@@ -22,13 +34,6 @@ class MatrixView(pygame.sprite.Sprite):
         size: tuple[int, int],
         background_color: pygame.Color,
     ):
-        """Initialize the MatrixView.
-
-        Args:
-            position: The (x, y) position of the top-left corner of the view.
-            size: The (width, height) of the view's surface.
-            background_color: The background color of the view.
-        """
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)
@@ -43,8 +48,9 @@ class MatrixView(pygame.sprite.Sprite):
         """Adds a component to the view at a position relative to the view's top-left.
 
         Args:
-            sprite: The sprite component to add.
-            relative_pos: The (x, y) position for the sprite, relative to this view.
+            sprite (pygame.sprite.Sprite): The sprite component to add.
+            relative_pos (tuple[int, int]): The (x, y) position for the sprite,
+                relative to this view.
         """
         rect = get_and_ensure_rect(sprite)
         rect.topleft = relative_pos

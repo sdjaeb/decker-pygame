@@ -10,14 +10,13 @@ from decker_pygame.ports.repository_interfaces import ContractRepositoryInterfac
 
 
 class JsonFileContractRepository(ContractRepositoryInterface):
-    """A repository that stores contract data in JSON files."""
+    """A repository that stores contract data in JSON files.
+
+    Args:
+        base_path (str): Directory where contract files are stored.
+    """
 
     def __init__(self, base_path: str) -> None:
-        """Initialize the repository with a base directory for storage.
-
-        Args:
-            base_path: Directory where contract files are stored.
-        """
         self._base_path = base_path
         os.makedirs(self._base_path, exist_ok=True)
 

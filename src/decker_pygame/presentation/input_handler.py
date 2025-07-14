@@ -18,12 +18,6 @@ class PygameInputHandler:
     """
 
     def __init__(self, game: "Game", logging_service: "LoggingServiceInterface"):
-        """Initialize the input handler.
-
-        Args:
-            game: The main Game instance to which events will be delegated.
-            logging_service: The service for logging input events in dev mode.
-        """
         self._game = game
         self._logging_service = logging_service
         self._key_map = {

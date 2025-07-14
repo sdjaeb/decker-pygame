@@ -10,6 +10,15 @@ class MessageView(pygame.sprite.Sprite):
     """A sprite that displays multi-line text with word wrapping.
 
     Ported from MessageView.cpp/h.
+
+    Args:
+        position (tuple[int, int]): The (x, y) position of the top-left corner.
+        size (tuple[int, int]): The (width, height) of the view's surface.
+        background_color (pygame.Color): The background color for the text area.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
     """
 
     image: pygame.Surface
@@ -21,13 +30,6 @@ class MessageView(pygame.sprite.Sprite):
         size: tuple[int, int],
         background_color: pygame.Color,
     ):
-        """Initialize the MessageView.
-
-        Args:
-            position: The (x, y) position of the top-left corner.
-            size: The (width, height) of the view's surface.
-            background_color: The background color for the text area.
-        """
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)

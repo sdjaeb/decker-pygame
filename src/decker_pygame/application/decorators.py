@@ -25,7 +25,11 @@ def emits(*event_types: type[Event]) -> Callable[[Callable[P, R]], Callable[P, R
     `_emits` attribute to the function for potential introspection.
 
     Args:
-        *event_types: The Event class or classes that this function can emit.
+        *event_types (type[Event]): The Event class or classes that this function
+            can emit.
+
+    Returns:
+        Callable[[Callable[P, R]], Callable[P, R]]: The decorated function.
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
@@ -45,7 +49,11 @@ def handles(*event_types: type[Event]) -> Callable[[F], F]:
     This is for semantic clarity and discoverability.
 
     Args:
-        *event_types: The Event class or classes that this function handles.
+        *event_types (type[Event]): The Event class or classes that this function
+            handles.
+
+    Returns:
+        Callable[[F], F]: The decorated function.
     """
 
     def decorator(func: F) -> F:

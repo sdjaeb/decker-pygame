@@ -32,11 +32,6 @@ class LoggingService(LoggingServiceInterface):
     """A service for dispatching log messages to various writers."""
 
     def __init__(self, writers: list[LogWriter] | None = None) -> None:
-        """Initialize the LoggingService.
-
-        Args:
-            writers: An optional list of initial log writers.
-        """
         self._writers = writers or []
 
     def register(self, writer: LogWriter) -> None:

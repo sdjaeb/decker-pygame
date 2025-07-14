@@ -8,7 +8,16 @@ from decker_pygame.domain.ids import AggregateId, AreaId, ContractId
 
 
 class Contract(AggregateRoot):
-    """Represents a job or mission a character can undertake."""
+    """Represents a job or mission a character can undertake.
+
+    Args:
+        id (ContractId): Unique identifier for the contract.
+        title (str): Title of the contract.
+        client (str): Client offering the contract.
+        target_area_id (AreaId): Target area for the contract.
+        description (str): Description of the contract.
+        reward_credits (int): Reward for completing the contract.
+    """
 
     def __init__(
         self,
@@ -19,16 +28,6 @@ class Contract(AggregateRoot):
         description: str,
         reward_credits: int,
     ) -> None:
-        """Initialize a Contract.
-
-        Args:
-            id (ContractId): Unique identifier for the contract.
-            title (str): Title of the contract.
-            client (str): Client offering the contract.
-            target_area_id (AreaId): Target area for the contract.
-            description (str): Description of the contract.
-            reward_credits (int): Reward for completing the contract.
-        """
         super().__init__(id=AggregateId(id))
         self.title = title
         self.client = client
@@ -40,7 +39,7 @@ class Contract(AggregateRoot):
         """Serialize the entity to a dictionary.
 
         Returns:
-            A dictionary representation of the Contract.
+            dict[str, Any]: A dictionary representation of the Contract.
         """
         return {
             "id": str(self.id),
@@ -56,10 +55,10 @@ class Contract(AggregateRoot):
         """Reconstitute a Contract from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            A Contract instance.
+            "Contract": A Contract instance.
         """
         return cls(
             id=ContractId(uuid.UUID(data["id"])),

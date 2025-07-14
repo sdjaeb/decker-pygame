@@ -8,7 +8,15 @@ from decker_pygame.domain.ids import AggregateId, AreaId, ContractId
 
 
 class Area(AggregateRoot):
-    """Represents a location or region in the game world."""
+    """Represents a location or region in the game world.
+
+    Args:
+        id (AreaId): Unique identifier for the area.
+        name (str): Name of the area.
+        description (str): Description of the area.
+        security_level (int): Security level of the area.
+        contract_ids (list[ContractId]): Contracts available in the area.
+    """
 
     def __init__(
         self,
@@ -18,15 +26,6 @@ class Area(AggregateRoot):
         security_level: int,
         contract_ids: list[ContractId],
     ) -> None:
-        """Initialize an Area.
-
-        Args:
-            id (AreaId): Unique identifier for the area.
-            name (str): Name of the area.
-            description (str): Description of the area.
-            security_level (int): Security level of the area.
-            contract_ids (List[ContractId]): Contracts available in the area.
-        """
         super().__init__(id=AggregateId(id))
         self.name = name
         self.description = description
@@ -38,9 +37,6 @@ class Area(AggregateRoot):
 
         Args:
             contract_id (ContractId): The contract to add.
-
-        Returns:
-            None
         """
         self.contract_ids.append(contract_id)
 
@@ -48,7 +44,7 @@ class Area(AggregateRoot):
         """Serialize the aggregate to a dictionary.
 
         Returns:
-            A dictionary representation of the Area.
+            dict[str, Any]: A dictionary representation of the Area.
         """
         return {
             "id": str(self.id),
@@ -63,10 +59,10 @@ class Area(AggregateRoot):
         """Reconstitute an Area from a dictionary.
 
         Args:
-            data: The dictionary data.
+            data (dict[str, Any]): The dictionary data.
 
         Returns:
-            An Area instance.
+            "Area": An Area instance.
         """
         return cls(
             id=AreaId(uuid.UUID(data["id"])),

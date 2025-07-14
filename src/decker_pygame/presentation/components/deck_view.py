@@ -12,7 +12,19 @@ from .base_widgets import Clickable
 
 
 class DeckView(pygame.sprite.Sprite):
-    """A UI component that displays the player's deck of programs."""
+    """A UI component that displays the player's deck of programs.
+
+    Args:
+        data (DeckViewData): The data required to render the view.
+        on_close (Callable[[], None]): A callback function to execute when the view is
+            closed.
+        on_order (Callable[[], None]): A callback function to execute when the order
+            button is clicked.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
+    """
 
     image: pygame.Surface
     rect: pygame.Rect
@@ -24,13 +36,6 @@ class DeckView(pygame.sprite.Sprite):
         on_close: Callable[[], None],
         on_order: Callable[[], None],
     ) -> None:
-        """Initialize the DeckView.
-
-        Args:
-            data: The data required to render the view.
-            on_close: A callback function to execute when the view is closed.
-            on_order: A callback function to execute when the order button is clicked.
-        """
         super().__init__()
         self._data = data
         self._on_close = on_close

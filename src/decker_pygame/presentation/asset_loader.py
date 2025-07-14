@@ -19,13 +19,14 @@ def load_images(
     """Loads all images from a subdirectory within the main asset folder.
 
     Args:
-        subdirectory: The name of the folder within the assets directory.
-        size: An optional (width, height) tuple to scale the images to.
-        base_path: The base path to the assets folder, for testing purposes.
+        subdirectory (str): The name of the folder within the assets directory.
+        size (tuple[int, int] | None): An optional (width, height) tuple to scale
+            the images to.
+        base_path (Path | None): The base path to the assets folder, for testing.
 
     Returns:
-        A list of loaded and optionally resized pygame.Surface objects,
-        sorted by filename.
+        list[pygame.Surface]: A list of loaded and optionally resized pygame.Surface
+            objects, sorted by filename.
     """
     asset_path = (base_path or GFX.asset_folder) / subdirectory
     image_extensions = {".png", ".jpg", ".jpeg", ".bmp"}
@@ -50,14 +51,15 @@ def load_spritesheet(
     """Loads images from a spritesheet by introspecting its dimensions.
 
     Args:
-        filename: The filename of the spritesheet in the assets folder.
-        sprite_width: The width of a single sprite.
-        sprite_height: The height of a single sprite.
-        base_path: The base path to the assets folder, for testing purposes.
-        colorkey: The color to treat as transparent.
+        filename (str): The filename of the spritesheet in the assets folder.
+        sprite_width (int): The width of a single sprite.
+        sprite_height (int): The height of a single sprite.
+        base_path (Path | None): The base path to the assets folder, for testing.
+        colorkey (ColorLike | None): The color to treat as transparent.
 
     Returns:
-        A tuple containing the list of sprites and the (width, height) of the sheet.
+        tuple[list[pygame.Surface], tuple[int, int]]: A tuple containing the list of
+        sprites and the (width, height) of the sheet.
     """
     asset_path = (base_path or GFX.asset_folder) / filename
     sheet = pygame.image.load(str(asset_path)).convert()

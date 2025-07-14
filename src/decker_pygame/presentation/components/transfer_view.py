@@ -13,7 +13,21 @@ from .base_widgets import Clickable
 
 
 class TransferView(pygame.sprite.Sprite):
-    """A UI component for transferring items."""
+    """A UI component for transferring items.
+
+    Args:
+        data (TransferViewData): The data required to render the view.
+        on_close (Callable[[], None]): A callback function to execute when the view is
+            closed.
+        on_move_to_deck (Callable[[str], None]): Callback for moving an item to the
+            deck.
+        on_move_to_storage (Callable[[str], None]): Callback for moving an item to
+            storage.
+
+    Attributes:
+        image (pygame.Surface): The surface that represents the view.
+        rect (pygame.Rect): The rectangular area of the view.
+    """
 
     image: pygame.Surface
     rect: pygame.Rect
@@ -26,14 +40,6 @@ class TransferView(pygame.sprite.Sprite):
         on_move_to_deck: Callable[[str], None],
         on_move_to_storage: Callable[[str], None],
     ) -> None:
-        """Initialize the TransferView.
-
-        Args:
-            data: The data required to render the view.
-            on_close: A callback function to execute when the view is closed.
-            on_move_to_deck: Callback for moving an item to the deck.
-            on_move_to_storage: Callback for moving an item to storage.
-        """
         super().__init__()
         self._data = data
         self._on_close = on_close

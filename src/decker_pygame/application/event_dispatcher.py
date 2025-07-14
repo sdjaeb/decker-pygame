@@ -17,10 +17,12 @@ Condition = Callable[[E], bool]
 
 
 class EventDispatcher:
-    """A simple event dispatcher using the publish-subscribe pattern."""
+    """A simple event dispatcher using the publish-subscribe pattern.
+
+    The dispatcher is initialized with a mapping of event types to subscribers.
+    """
 
     def __init__(self) -> None:
-        """Initialize the dispatcher with a mapping of event types to subscribers."""
         # The internal storage uses `Any` for the event type in the callable.
         # This is a concession to mypy's type system, as dicts cannot easily
         # express the relationship between a key's type and its value's type.
@@ -40,10 +42,11 @@ class EventDispatcher:
         """Register a subscriber for a specific event type.
 
         Args:
-            event_type: The class of the event to subscribe to.
-            subscriber: A callable that will be invoked with the event.
-            condition: An optional callable that must return True for the
-                       subscriber to be invoked.
+            event_type (type[E]): The class of the event to subscribe to.
+            subscriber (Subscriber[E]): A callable that will be invoked with the
+                event.
+            condition (Condition[E] | None): An optional callable that must return
+                True for the subscriber to be invoked.
         """
         # We cast here to satisfy the internal storage type. The public signature
         # with the TypeVar E ensures the caller provides a valid pair.

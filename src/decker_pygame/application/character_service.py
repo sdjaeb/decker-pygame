@@ -60,13 +60,6 @@ class CharacterService(CharacterServiceInterface):
         player_service: "PlayerServiceInterface",
         event_dispatcher: EventDispatcher,
     ) -> None:
-        """Initialize the CharacterService.
-
-        Args:
-            character_repo: Repository for character aggregates.
-            player_service: Service for player-related queries.
-            event_dispatcher: The dispatcher for domain events.
-        """
         self.character_repo = character_repo
         self.player_service = player_service
         self.event_dispatcher = event_dispatcher
