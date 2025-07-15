@@ -93,6 +93,17 @@ class ShopViewDTO:
 
 
 @dataclass
+class IceDataViewDTO:
+    """Data for displaying detailed information about an ICE program."""
+
+    name: str
+    ice_type: str
+    strength: int
+    description: str
+    cost: int
+
+
+@dataclass
 class TransferViewDTO:
     """Data for displaying the transfer view."""
 
