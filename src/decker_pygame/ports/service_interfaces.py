@@ -14,6 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CharacterViewDTO,
         ContractSummaryDTO,
         DeckViewDTO,
+        IceDataViewDTO,
         PlayerStatusDTO,
         ShopViewDTO,
         TransferViewDTO,
@@ -86,6 +87,11 @@ class DeckServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_deck_view_data(self, deck_id: "DeckId") -> "Optional[DeckViewDTO]":
         """Retrieves and aggregates all data needed for the deck view."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_ice_data(self, program_name: str) -> "Optional[IceDataViewDTO]":
+        """Retrieves the data needed to display the IceDataView for a program."""
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod

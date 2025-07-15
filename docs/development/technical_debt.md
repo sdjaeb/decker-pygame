@@ -104,3 +104,26 @@ Reorganize the `components` directory into subdirectories based on the type of U
 
 -   `src/decker_pygame/presentation/components/` and all files within it.
 -   All files that import from the `components` directory.
+
+---
+
+# Issue: Program-related Logic is in DeckService
+
+## Problem
+
+Currently, logic for retrieving detailed program data (like for the `IceDataView`) resides in the `DeckService`. While this is functional for now, it violates the Single Responsibility Principle. The `DeckService` should be concerned with managing the contents of a deck, not with being a general-purpose query service for all programs.
+
+If other parts of the application (like a `ShopView` or a future `ProgramUpgradeView`) need to query program details, they would be forced to depend on the `DeckService`, creating unnecessary coupling.
+
+## Proposed Solution
+
+Create a new `ProgramService` dedicated to all use cases related to programs themselves.
+-   Move the `get_ice_data` method from `DeckService` to the new `ProgramService`.
+-   In the future, any new program-specific logic (e.g., `upgrade_program`, `get_program_stats`) should be added to this service.
+-   This will make the `DeckService`'s responsibility clearer and reduce coupling between different application services.
+
+### Affected Components
+
+-   `application/deck_service.py`
+-   `ports/service_interfaces.py` (for `DeckServiceInterface`)
+-   A new `application/program_service.py` and its interface.

@@ -8,7 +8,12 @@ import uuid
 from collections.abc import Callable
 from typing import Optional
 
-from decker_pygame.application.dtos import DeckViewDTO, ProgramDTO, TransferViewDTO
+from decker_pygame.application.dtos import (
+    DeckViewDTO,
+    IceDataViewDTO,
+    ProgramDTO,
+    TransferViewDTO,
+)
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.deck import Deck
 from decker_pygame.domain.ids import CharacterId, DeckId
@@ -17,6 +22,18 @@ from decker_pygame.ports.repository_interfaces import (
     DeckRepositoryInterface,
 )
 from decker_pygame.ports.service_interfaces import DeckServiceInterface
+
+# For now, we'll use a hardcoded map of program names to their detailed data.
+# In the future, this would come from a ProgramRepository or similar.
+ICE_DATA_MAP = {
+    "IcePick v1": IceDataViewDTO(
+        name="IcePick v1",
+        ice_type="Intrusion",
+        strength=4,
+        description="A basic intrusion program used to bypass simple ICE.",
+        cost=500,
+    )
+}
 
 
 class DeckServiceError(Exception):
@@ -157,3 +174,9 @@ class DeckService(DeckServiceInterface):
         self._execute_deck_change(
             deck_id, lambda deck: deck.move_program_down(program_name)
         )
+
+    def get_ice_data(self, program_name: str) -> Optional[IceDataViewDTO]:
+        """Retrieves the data needed to display the IceDataView for a program."""
+        # This is a simplification. A real implementation would fetch this from a
+        # dedicated repository or have more complete Program domain objects.
+        return ICE_DATA_MAP.get(program_name)
