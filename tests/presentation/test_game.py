@@ -12,6 +12,7 @@ from decker_pygame.application.dtos import (
     CharacterDataDTO,
     CharacterViewDTO,
     DeckViewDTO,
+    IceDataViewDTO,
     MissionResultsDTO,
     PlayerStatusDTO,
     RestViewDTO,
@@ -33,6 +34,7 @@ from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
+from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
@@ -548,6 +550,7 @@ def test_game_toggles_deck_view(game_with_mocks: Mocks):
             data=deck_data,
             on_close=game.toggle_deck_view,
             on_order=game._on_order_deck,
+            on_program_click=game._on_program_click,
         )
         assert game.deck_view is mock_view_class.return_value
 
@@ -894,7 +897,14 @@ def test_game_toggles_home_view(game_with_mocks: Mocks):
         "decker_pygame.presentation.game.HomeView", spec=HomeView
     ) as mock_view_class:
         game.toggle_home_view()
-        mock_view_class.assert_called_once()
+        mock_view_class.assert_called_once_with(
+            on_char=game.toggle_char_data_view,
+            on_deck=game.toggle_deck_view,
+            on_contracts=game.toggle_contract_list_view,
+            on_build=game.toggle_build_view,
+            on_shop=game.toggle_shop_view,
+            on_transfer=game.toggle_transfer_view,
+        )
         assert game.home_view is not None
 
     # Toggle to close
@@ -964,6 +974,53 @@ def test_handle_character_creation(game_with_mocks: Mocks):
         game._handle_character_creation("Decker")
         mock_toggle_new_char.assert_called_once()
         mock_toggle_home.assert_called_once()
+
+
+def test_handle_character_creation_without_view(game_with_mocks: Mocks):
+    """Tests the transition when new character view is already closed."""
+    game = game_with_mocks.game
+    # Ensure the new character view is None to test the `if` condition.
+    game.new_char_view = None
+
+    with (
+        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
+        patch.object(game, "toggle_home_view") as mock_toggle_home,
+    ):
+        game._handle_character_creation("Decker")
+        # Since the view is already None, it should not be toggled again.
+        mock_toggle_new_char.assert_not_called()
+        mock_toggle_home.assert_called_once()
+
+
+def test_continue_from_intro_already_closed(game_with_mocks: Mocks):
+    """Tests the intro transition when the intro view is already closed."""
+    game = game_with_mocks.game
+    game.intro_view = None  # Manually close the view before calling the handler
+
+    with (
+        patch.object(game, "toggle_intro_view") as mock_toggle_intro,
+        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
+    ):
+        game._continue_from_intro()
+
+        # The intro view should NOT be toggled again since it's already None.
+        mock_toggle_intro.assert_not_called()
+        mock_toggle_new_char.assert_called_once()
+
+
+def test_on_rest_callback_no_view(game_with_mocks: Mocks):
+    """Tests the _on_rest callback when the rest view is already closed."""
+    game = game_with_mocks.game
+    # Ensure the view is None to test the `if` condition
+    game.rest_view = None
+
+    with (
+        patch.object(game, "show_message") as mock_show_message,
+        patch.object(game, "toggle_rest_view") as mock_toggle,
+    ):
+        game._on_rest()
+        mock_show_message.assert_called_once_with("You feel rested and recovered.")
+        mock_toggle.assert_not_called()
 
 
 def test_game_toggles_mission_results_view(game_with_mocks: Mocks):
@@ -1136,3 +1193,72 @@ def test_on_purchase_failure(game_with_mocks: Mocks):
     with patch.object(game, "show_message") as mock_show_message:
         game._on_purchase("any_item")
         mock_show_message.assert_called_once_with("Error: Service Error")
+
+
+def test_game_toggles_ice_data_view(game_with_mocks: Mocks):
+    """Tests that the toggle_ice_data_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.ice_data_view is None
+
+    ice_data = IceDataViewDTO(
+        name="Test ICE", ice_type="Test", strength=1, description="...", cost=100
+    )
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.IceDataView", spec=IceDataView
+    ) as mock_view_class:
+        game.toggle_ice_data_view(ice_data)
+        mock_view_class.assert_called_once_with(
+            data=ice_data, on_close=game.toggle_ice_data_view
+        )
+        assert game.ice_data_view is not None
+
+    # Toggle to close
+    game.toggle_ice_data_view()
+    assert game.ice_data_view is None
+
+
+def test_on_program_click_success(game_with_mocks: Mocks):
+    """Tests the callback for clicking a program successfully opens the detail view."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    ice_data = IceDataViewDTO(
+        name="IcePick v1", ice_type="Test", strength=1, description="...", cost=100
+    )
+    mocks.deck_service.get_ice_data.return_value = ice_data
+
+    with patch.object(game, "toggle_ice_data_view") as mock_toggle:
+        game._on_program_click("IcePick v1")
+        mocks.deck_service.get_ice_data.assert_called_once_with("IcePick v1")
+        mock_toggle.assert_called_once_with(ice_data)
+
+
+def test_on_program_click_no_data(game_with_mocks: Mocks):
+    """Tests the program click callback when no detailed data is available."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.deck_service.get_ice_data.return_value = None
+
+    with (
+        patch.object(game, "show_message") as mock_show_message,
+        patch.object(game, "toggle_ice_data_view") as mock_toggle,
+    ):
+        game._on_program_click("Unknown Program")
+        mock_show_message.assert_called_once_with(
+            "No detailed data available for Unknown Program."
+        )
+        mock_toggle.assert_not_called()
+
+
+def test_toggle_ice_data_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests calling toggle_ice_data_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.ice_data_view is None
+
+    # Call without data
+    game.toggle_ice_data_view(data=None)
+
+    # View should not have been created
+    assert game.ice_data_view is None

@@ -58,6 +58,11 @@ class PygameInputHandler:
                 self._game.char_data_view,
                 self._game.deck_view,
                 self._game.transfer_view,
+                self._game.shop_view,
+                self._game.order_view,
+                self._game.contract_list_view,
+                self._game.contract_data_view,
+                self._game.ice_data_view,
             ]:
                 if view:
                     view.handle_event(event)

@@ -16,6 +16,11 @@ def mock_game() -> Mock:
     game.char_data_view = Mock()
     game.deck_view = Mock()
     game.transfer_view = Mock()
+    game.shop_view = Mock()
+    game.order_view = Mock()
+    game.contract_list_view = Mock()
+    game.contract_data_view = Mock()
+    game.ice_data_view = Mock()
     return game
 
 
@@ -88,6 +93,11 @@ def test_delegates_events_to_views(mock_game: Mock, mock_logging_service: Mock):
     mock_game.char_data_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.deck_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.transfer_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.shop_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.order_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.contract_list_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.contract_data_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.ice_data_view.handle_event.assert_called_once_with(mouse_event)
 
 
 def test_logs_keypress_in_dev_mode(mock_game: Mock, mock_logging_service: Mock):

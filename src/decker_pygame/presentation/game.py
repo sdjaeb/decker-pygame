@@ -10,6 +10,7 @@ import pygame
 
 from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.application.dtos import (
+    IceDataViewDTO,
     MissionResultsDTO,
     RestViewDTO,
 )
@@ -33,6 +34,7 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
+from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
@@ -112,6 +114,7 @@ class Game:
             if open.
         contract_data_view (Optional[ContractDataView]): The contract data view,
             if open.
+        ice_data_view (Optional[IceDataView]): The ICE data view, if open.
     """
 
     screen: pygame.Surface
@@ -145,6 +148,7 @@ class Game:
     shop_view: Optional[ShopView] = None
     contract_list_view: Optional[ContractListView] = None
     contract_data_view: Optional[ContractDataView] = None
+    ice_data_view: Optional[IceDataView] = None
 
     def __init__(
         self,
@@ -283,6 +287,32 @@ class Game:
 
         self._toggle_view("home_view", factory)
 
+    def _on_purchase(self, item_name: str) -> None:
+        """Callback to handle purchasing an item from the shop."""
+
+        def action() -> None:
+            # For now, we assume a single, default shop.
+            self.shop_service.purchase_item(self.character_id, item_name, "DefaultShop")
+            self.show_message(f"Purchased {item_name}.")
+
+        self._execute_and_refresh_view(action, self.toggle_shop_view)
+
+    def toggle_shop_view(self) -> None:
+        """Opens or closes the shop view."""
+
+        def factory() -> Optional[ShopView]:
+            shop_data = self.shop_service.get_shop_view_data("DefaultShop")
+            if not shop_data:
+                self.show_message("Error: Could not load shop data.")
+                return None
+            return ShopView(
+                data=shop_data,
+                on_close=self.toggle_shop_view,
+                on_purchase=self._on_purchase,
+            )
+
+        self._toggle_view("shop_view", factory)
+
     def _on_rest(self) -> None:
         """Callback for when the player chooses to rest."""
         # Here we would call a service to perform the rest action
@@ -416,6 +446,7 @@ class Game:
                 data=deck_data,
                 on_close=self.toggle_deck_view,
                 on_order=self._on_order_deck,
+                on_program_click=self._on_program_click,
             )
 
         self._toggle_view("deck_view", factory)
@@ -477,32 +508,23 @@ class Game:
 
         self._toggle_view("transfer_view", factory)
 
-    def _on_purchase(self, item_name: str) -> None:
-        """Callback to handle purchasing an item from the shop."""
+    def _on_program_click(self, program_name: str) -> None:
+        """Callback for when a program is clicked, to show its details."""
+        ice_data = self.deck_service.get_ice_data(program_name)
+        if not ice_data:
+            self.show_message(f"No detailed data available for {program_name}.")
+            return
+        self.toggle_ice_data_view(ice_data)
 
-        def action() -> None:
-            # For now, we assume a single, default shop.
-            self.shop_service.purchase_item(self.character_id, item_name, "DefaultShop")
-            self.show_message(f"Purchased {item_name}.")
+    def toggle_ice_data_view(self, data: Optional[IceDataViewDTO] = None) -> None:
+        """Opens or closes the ICE data view."""
 
-        self._execute_and_refresh_view(action, self.toggle_shop_view)
+        def factory() -> Optional[IceDataView]:
+            if data:
+                return IceDataView(data=data, on_close=self.toggle_ice_data_view)
+            return None
 
-    def toggle_shop_view(self) -> None:
-        """Opens or closes the shop view."""
-
-        def factory() -> Optional[ShopView]:
-            # For now, we assume a single, default shop.
-            shop_data = self.shop_service.get_shop_view_data("DefaultShop")
-            if not shop_data:
-                self.show_message("Error: Could not load shop data.")
-                return None
-            return ShopView(
-                data=shop_data,
-                on_close=self.toggle_shop_view,
-                on_purchase=self._on_purchase,
-            )
-
-        self._toggle_view("shop_view", factory)
+        self._toggle_view("ice_data_view", factory)
 
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
