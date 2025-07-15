@@ -15,8 +15,10 @@ from decker_pygame.application.dtos import (
     MissionResultsDTO,
     PlayerStatusDTO,
     RestViewDTO,
+    ShopViewDTO,
     TransferViewDTO,
 )
+from decker_pygame.application.shop_service import ShopServiceError
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -25,6 +27,7 @@ from decker_pygame.ports.service_interfaces import (
     DeckServiceInterface,
     LoggingServiceInterface,
     PlayerServiceInterface,
+    ShopServiceInterface,
 )
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
@@ -38,6 +41,7 @@ from decker_pygame.presentation.components.mission_results_view import (
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.rest_view import RestView
+from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
@@ -62,6 +66,7 @@ class Mocks:
     contract_service: Mock
     crafting_service: Mock
     deck_service: Mock
+    shop_service: Mock
     logging_service: Mock
 
 
@@ -73,6 +78,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_contract_service = Mock(spec=ContractServiceInterface)
     mock_crafting_service = Mock(spec=CraftingServiceInterface)
     mock_deck_service = Mock(spec=DeckServiceInterface)
+    mock_shop_service = Mock(spec=ShopServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
@@ -101,6 +107,7 @@ def game_with_mocks() -> Generator[Mocks]:
             contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
             deck_service=mock_deck_service,
+            shop_service=mock_shop_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -111,6 +118,7 @@ def game_with_mocks() -> Generator[Mocks]:
             contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
             deck_service=mock_deck_service,
+            shop_service=mock_shop_service,
             logging_service=mock_logging_service,
         )
 
@@ -126,6 +134,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.contract_service is mocks.contract_service
     assert game.crafting_service is mocks.crafting_service
     assert game.deck_service is mocks.deck_service
+    assert game.shop_service is mocks.shop_service
     assert game.logging_service is mocks.logging_service
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.character_id, uuid.UUID)
@@ -160,6 +169,7 @@ def test_game_load_assets_with_icons():
             contract_service=Mock(spec=ContractServiceInterface),
             crafting_service=Mock(spec=CraftingServiceInterface),
             deck_service=Mock(spec=DeckServiceInterface),
+            shop_service=Mock(spec=ShopServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -197,6 +207,7 @@ def test_game_load_assets_no_icons():
             contract_service=Mock(spec=ContractServiceInterface),
             crafting_service=Mock(spec=CraftingServiceInterface),
             deck_service=Mock(spec=DeckServiceInterface),
+            shop_service=Mock(spec=ShopServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -1054,3 +1065,74 @@ def test_toggle_mission_results_view_without_data_does_nothing(game_with_mocks: 
 
     # View should not have been created
     assert game.mission_results_view is None
+
+
+def test_game_toggles_shop_view(game_with_mocks: Mocks):
+    """Tests that the toggle_shop_view method opens and closes the view."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Mock the DTO from the service
+    shop_data = ShopViewDTO(shop_name="Test Shop", items=[])
+    mocks.shop_service.get_shop_view_data.return_value = shop_data
+
+    assert game.shop_view is None
+
+    # Call the public method to open the view
+    with patch(
+        "decker_pygame.presentation.game.ShopView", spec=ShopView
+    ) as mock_view_class:
+        game.toggle_shop_view()
+
+        mocks.shop_service.get_shop_view_data.assert_called_once_with("DefaultShop")
+        mock_view_class.assert_called_once_with(
+            data=shop_data,
+            on_close=game.toggle_shop_view,
+            on_purchase=game._on_purchase,
+        )
+        assert game.shop_view is not None
+
+    # Call again to close the view
+    game.toggle_shop_view()
+    assert game.shop_view is None
+
+
+def test_toggle_shop_view_no_data(game_with_mocks: Mocks):
+    """Tests that the shop view is not opened if data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.shop_service.get_shop_view_data.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_shop_view()
+        assert game.shop_view is None
+        mock_show_message.assert_called_once_with("Error: Could not load shop data.")
+
+
+def test_on_purchase_success(game_with_mocks: Mocks):
+    """Tests the callback for successfully purchasing an item."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with (
+        patch.object(game, "toggle_shop_view") as mock_toggle,
+        patch.object(game, "show_message") as mock_show_message,
+    ):
+        game._on_purchase("IcePick v1")
+
+        mocks.shop_service.purchase_item.assert_called_once_with(
+            game.character_id, "IcePick v1", "DefaultShop"
+        )
+        mock_show_message.assert_called_once_with("Purchased IcePick v1.")
+        assert mock_toggle.call_count == 2  # Close and re-open
+
+
+def test_on_purchase_failure(game_with_mocks: Mocks):
+    """Tests the purchase callback when the service raises an error."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.shop_service.purchase_item.side_effect = ShopServiceError("Service Error")
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_purchase("any_item")
+        mock_show_message.assert_called_once_with("Error: Service Error")

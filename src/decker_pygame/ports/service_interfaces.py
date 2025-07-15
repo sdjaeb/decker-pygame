@@ -15,6 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
         ContractSummaryDTO,
         DeckViewDTO,
         PlayerStatusDTO,
+        ShopViewDTO,
         TransferViewDTO,
     )
     from decker_pygame.domain.crafting import Schematic
@@ -117,6 +118,22 @@ class DeckServiceInterface(ABC):  # pragma: no cover
     ) -> None:
         """Moves a program from a character's deck to their storage."""
         raise NotImplementedError  # pragma: no cover
+
+
+class ShopServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for shop-related use cases."""
+
+    @abstractmethod
+    def get_shop_view_data(self, shop_id: str) -> "Optional[ShopViewDTO]":
+        """Retrieves the data needed to display a shop's inventory."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def purchase_item(
+        self, character_id: "CharacterId", item_name: str, shop_id: str
+    ) -> None:
+        """Orchestrates the use case of a character purchasing an item."""
+        raise NotImplementedError
 
 
 class PlayerServiceInterface(ABC):  # pragma: no cover

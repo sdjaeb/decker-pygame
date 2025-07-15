@@ -21,6 +21,7 @@ def test_home_view_initialization():
     mock_on_deck = Mock()
     mock_on_contracts = Mock()
     mock_on_build = Mock()
+    mock_on_shop = Mock()
     mock_on_transfer = Mock()
 
     with (
@@ -44,6 +45,7 @@ def test_home_view_initialization():
             on_deck=mock_on_deck,
             on_contracts=mock_on_contracts,
             on_build=mock_on_build,
+            on_shop=mock_on_shop,
             on_transfer=mock_on_transfer,
         )
 
@@ -52,7 +54,7 @@ def test_home_view_initialization():
         assert mock_font_instance.render.call_args[0][0] == "Main Menu"
 
         # 5 buttons should be created
-        assert mock_button_class.call_count == 5
+        assert mock_button_class.call_count == 6
         button_calls = mock_button_class.call_args_list
         button_texts = [call.args[2] for call in button_calls]
         button_callbacks = [call.args[3] for call in button_calls]
@@ -61,12 +63,14 @@ def test_home_view_initialization():
         assert "Deck" in button_texts
         assert "Contracts" in button_texts
         assert "Build" in button_texts
+        assert "Shop" in button_texts
         assert "Transfer" in button_texts
 
         assert mock_on_char in button_callbacks
         assert mock_on_deck in button_callbacks
         assert mock_on_contracts in button_callbacks
         assert mock_on_build in button_callbacks
+        assert mock_on_shop in button_callbacks
         assert mock_on_transfer in button_callbacks
 
 
@@ -76,6 +80,7 @@ def test_home_view_event_handling():
     mock_on_deck = Mock()
     mock_on_contracts = Mock()
     mock_on_build = Mock()
+    mock_on_shop = Mock()
     mock_on_transfer = Mock()
 
     with (
@@ -99,6 +104,7 @@ def test_home_view_event_handling():
             on_deck=mock_on_deck,
             on_contracts=mock_on_contracts,
             on_build=mock_on_build,
+            on_shop=mock_on_shop,
             on_transfer=mock_on_transfer,
         )
 

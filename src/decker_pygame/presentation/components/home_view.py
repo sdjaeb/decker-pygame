@@ -20,6 +20,7 @@ class HomeView(pygame.sprite.Sprite):
         on_deck (Callable[[], None]): Callback for viewing the deck.
         on_contracts (Callable[[], None]): Callback for viewing contracts.
         on_build (Callable[[], None]): Callback for opening the build view.
+        on_shop (Callable[[], None]): Callback for opening the shop view.
         on_transfer (Callable[[], None]): Callback for opening the transfer view.
 
     Attributes:
@@ -37,6 +38,7 @@ class HomeView(pygame.sprite.Sprite):
         on_deck: Callable[[], None],
         on_contracts: Callable[[], None],
         on_build: Callable[[], None],
+        on_shop: Callable[[], None],
         on_transfer: Callable[[], None],
     ):
         super().__init__()
@@ -44,6 +46,7 @@ class HomeView(pygame.sprite.Sprite):
         self._on_deck = on_deck
         self._on_contracts = on_contracts
         self._on_build = on_build
+        self._on_shop = on_shop
         self._on_transfer = on_transfer
 
         self.image = pygame.Surface((200, 300))
@@ -62,25 +65,27 @@ class HomeView(pygame.sprite.Sprite):
 
     def _create_buttons(self) -> None:
         """Creates the UI buttons for the view."""
-        button_size = (180, 40)
+        button_width = 180
+        button_height = 40
         y_offset = self._padding * 2 + self._font.get_linesize()
         button_actions = [
             ("Character", self._on_char),
             ("Deck", self._on_deck),
             ("Contracts", self._on_contracts),
             ("Build", self._on_build),
+            ("Shop", self._on_shop),
             ("Transfer", self._on_transfer),
         ]
 
         for text, action in button_actions:
             button = Button(
-                (self._padding, y_offset),
-                button_size,
+                ((self.image.get_width() - button_width) // 2, y_offset),
+                (button_width, button_height),
                 text,
                 action,
             )
             self._components.add(button)
-            y_offset += button_size[1] + self._padding
+            y_offset += button_height + self._padding
 
     def _render(self) -> None:
         """Renders the view's static elements and buttons."""

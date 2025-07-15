@@ -21,6 +21,7 @@ from decker_pygame.ports.service_interfaces import (
     DeckServiceInterface,
     LoggingServiceInterface,
     PlayerServiceInterface,
+    ShopServiceInterface,
 )
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
@@ -40,6 +41,7 @@ from decker_pygame.presentation.components.mission_results_view import (
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.rest_view import RestView
+from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
@@ -67,6 +69,7 @@ class Game:
         contract_service (ContractServiceInterface): Service for contract ops.
         crafting_service (CraftingServiceInterface): Service for crafting ops.
         deck_service (DeckServiceInterface): Service for deck operations.
+        shop_service (ShopServiceInterface): Service for shop operations.
         character_id (CharacterId): The current character's ID.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -87,6 +90,7 @@ class Game:
         crafting_service (CraftingServiceInterface): The service for crafting
             operations.
         deck_service (DeckServiceInterface): The service for deck operations.
+        shop_service (ShopServiceInterface): The service for shop operations.
         player_id (PlayerId): The ID of the current player.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): The service for logging.
@@ -103,6 +107,7 @@ class Game:
         deck_view (Optional[DeckView]): The deck view, if open.
         order_view (Optional[OrderView]): The deck ordering view, if open.
         transfer_view (Optional[TransferView]): The program transfer view, if open.
+        shop_view (Optional[ShopView]): The shop view, if open.
         contract_list_view (Optional[ContractListView]): The contract list view,
             if open.
         contract_data_view (Optional[ContractDataView]): The contract data view,
@@ -121,6 +126,7 @@ class Game:
     contract_service: ContractServiceInterface
     crafting_service: CraftingServiceInterface
     deck_service: DeckServiceInterface
+    shop_service: ShopServiceInterface
     player_id: PlayerId
     character_id: CharacterId
     logging_service: LoggingServiceInterface
@@ -136,6 +142,7 @@ class Game:
     deck_view: Optional[DeckView] = None
     order_view: Optional[OrderView] = None
     transfer_view: Optional[TransferView] = None
+    shop_view: Optional[ShopView] = None
     contract_list_view: Optional[ContractListView] = None
     contract_data_view: Optional[ContractDataView] = None
 
@@ -147,6 +154,7 @@ class Game:
         contract_service: ContractServiceInterface,
         crafting_service: CraftingServiceInterface,
         deck_service: DeckServiceInterface,
+        shop_service: ShopServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -161,6 +169,7 @@ class Game:
         self.player_id = player_id
         self.crafting_service = crafting_service
         self.deck_service = deck_service
+        self.shop_service = shop_service
         self.character_id = character_id
         self.logging_service = logging_service
         self.input_handler = PygameInputHandler(self, logging_service)
@@ -268,6 +277,7 @@ class Game:
                 on_deck=self.toggle_deck_view,
                 on_contracts=self.toggle_contract_list_view,
                 on_build=self.toggle_build_view,
+                on_shop=self.toggle_shop_view,
                 on_transfer=self.toggle_transfer_view,
             )
 
@@ -466,6 +476,33 @@ class Game:
             )
 
         self._toggle_view("transfer_view", factory)
+
+    def _on_purchase(self, item_name: str) -> None:
+        """Callback to handle purchasing an item from the shop."""
+
+        def action() -> None:
+            # For now, we assume a single, default shop.
+            self.shop_service.purchase_item(self.character_id, item_name, "DefaultShop")
+            self.show_message(f"Purchased {item_name}.")
+
+        self._execute_and_refresh_view(action, self.toggle_shop_view)
+
+    def toggle_shop_view(self) -> None:
+        """Opens or closes the shop view."""
+
+        def factory() -> Optional[ShopView]:
+            # For now, we assume a single, default shop.
+            shop_data = self.shop_service.get_shop_view_data("DefaultShop")
+            if not shop_data:
+                self.show_message("Error: Could not load shop data.")
+                return None
+            return ShopView(
+                data=shop_data,
+                on_close=self.toggle_shop_view,
+                on_purchase=self._on_purchase,
+            )
+
+        self._toggle_view("shop_view", factory)
 
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
