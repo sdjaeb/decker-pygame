@@ -104,7 +104,7 @@ These views are part of the main contract/mission cycle.
 
 **Group C: Data Display & Shop (Status: In Progress)**
 These views are for displaying information and handling commerce.
-- **`ShopItem.cpp/h`**: Port to `ShopView` and `ShopItemView`. (`ShopView` is complete; `ShopItemView` for detailed item inspection is pending).
+- **`ShopItem.cpp/h`**: Port to `ShopView` and `ShopItemView`. (`ShopView` is complete; `ShopItemView` implementation is in progress).
 - **`IceDataDlg.cpp/h`**: Port to `IceDataView`. (Complete).
 
 **Group D: In-Mission Interaction**

@@ -309,6 +309,7 @@ class Game:
                 data=shop_data,
                 on_close=self.toggle_shop_view,
                 on_purchase=self._on_purchase,
+                on_view_details=self._on_show_item_details,
             )
 
         self._toggle_view("shop_view", factory)
@@ -612,3 +613,7 @@ class Game:
             on_move_down=self._on_move_program_down,
         )
         self.all_sprites.add(self.order_view)
+
+    def _on_show_item_details(self, item_name: str) -> None:
+        """Callback to handle displaying details for a specific shop item."""
+        print(f"Show details for {item_name}")  # Placeholder

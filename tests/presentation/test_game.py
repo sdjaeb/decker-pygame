@@ -1146,6 +1146,7 @@ def test_game_toggles_shop_view(game_with_mocks: Mocks):
             data=shop_data,
             on_close=game.toggle_shop_view,
             on_purchase=game._on_purchase,
+            on_view_details=game._on_show_item_details,  # Added this
         )
         assert game.shop_view is not None
 
@@ -1250,6 +1251,15 @@ def test_on_program_click_no_data(game_with_mocks: Mocks):
             "No detailed data available for Unknown Program."
         )
         mock_toggle.assert_not_called()
+
+
+def test_on_show_item_details(game_with_mocks: Mocks):
+    """Tests the callback for displaying shop item details."""
+    game = game_with_mocks.game
+
+    with patch("builtins.print") as mock_print:  # Mock the print function
+        game._on_show_item_details("Energy Cell")
+        mock_print.assert_called_once_with("Show details for Energy Cell")
 
 
 def test_toggle_ice_data_view_without_data_does_nothing(game_with_mocks: Mocks):
