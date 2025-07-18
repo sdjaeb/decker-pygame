@@ -1,3 +1,24 @@
+# Issue: Monolithic `Game` Class and Test File
+
+## Problem
+
+The `Game` class in `presentation/game.py` and its corresponding test file, `tests/presentation/test_game.py`, are becoming very large. The `Game` class is acting as a "god object" that manages every single view, and its test file is a correspondingly large monolith.
+
+This has several negative effects:
+-   **High Cognitive Load:** It's difficult for developers to navigate and understand the flow of control.
+-   **Maintenance Burden:** Adding new views or states requires modifying this central file, increasing the risk of introducing bugs.
+-   **Tooling Performance:** Large files can slow down static analysis, linting, and even AI-assisted development, potentially contributing to issues like response truncation.
+
+## Proposed Solution
+
+Refactor the `Game` class to delegate its responsibilities. The existing technical debt item to "Refactor the Game View Management" using a State Machine is the correct long-term solution. This item is being added to raise the priority of that refactoring.
+
+Breaking the `Game` class into smaller, state-focused objects will naturally allow `test_game.py` to be split into smaller, more manageable test files (e.g., `test_home_state.py`, `test_shop_state.py`).
+
+### Affected Components
+-   `presentation/game.py`
+-   `tests/presentation/test_game.py`
+---
 # Issue: Data Directory Path is Relative to CWD
 
 ## Problem
@@ -169,3 +190,29 @@ Create a new `ProgramService` dedicated to all use cases related to programs the
 -   `application/deck_service.py`
 -   `ports/service_interfaces.py` (for `DeckServiceInterface`)
 -   A new `application/program_service.py` and its interface.
+---
+
+# Issue: Tests Identify UI Components by Display Text
+
+## Problem
+
+Many component tests, such as `test_file_access_view.py`, identify specific child components by their display text. For example:
+
+```python
+delete_buttons = [
+    c for c in file_access_view._components if isinstance(c, Button) and c.text == "Delete"
+]
+```
+
+This creates a brittle coupling between the tests and the UI's cosmetic details. If a designer decides to change the button's text from "Delete" to "Remove", the test will fail even though the button's functionality (its `on_click` callback) is unchanged. Tests should validate behavior, not presentation.
+
+## Proposed Solution
+
+1.  **Add a stable identifier to UI components.** Modify base components like `Button` to accept an optional `name: str` or `test_id: str` in their constructor. This identifier would be for testing and identification purposes only and would not be displayed.
+2.  **Refactor tests to use this identifier.** Update the tests to find components using this stable name (`if c.name == "delete_file_button"`) instead of the display text.
+
+This change decouples the tests from the UI's text, making them more robust and less likely to break due to cosmetic changes.
+
+### Affected Components
+-   `presentation/components/button.py` and other base widgets.
+-   All component tests in `tests/presentation/components/` that currently rely on display text for component identification.

@@ -10,6 +10,7 @@ import pygame
 
 from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.application.dtos import (
+    FileAccessViewDTO,
     IceDataViewDTO,
     MissionResultsDTO,
     RestViewDTO,
@@ -22,6 +23,7 @@ from decker_pygame.ports.service_interfaces import (
     CraftingServiceInterface,
     DeckServiceInterface,
     LoggingServiceInterface,
+    NodeServiceInterface,
     PlayerServiceInterface,
     ShopServiceInterface,
 )
@@ -33,6 +35,7 @@ from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.contract_data_view import ContractDataView
 from decker_pygame.presentation.components.contract_list_view import ContractListView
 from decker_pygame.presentation.components.deck_view import DeckView
+from decker_pygame.presentation.components.file_access_view import FileAccessView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
@@ -77,6 +80,7 @@ class Game:
         crafting_service (CraftingServiceInterface): Service for crafting ops.
         deck_service (DeckServiceInterface): The service for deck operations.
         shop_service (ShopServiceInterface): The service for shop operations.
+        node_service (NodeServiceInterface): The service for node operations.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -94,6 +98,7 @@ class Game:
         crafting_service (CraftingServiceInterface): Service for crafting operations.
         deck_service (DeckServiceInterface): The service for deck operations.
         shop_service (ShopServiceInterface): The service for shop operations.
+        node_service (NodeServiceInterface): The service for node operations.
         player_id (PlayerId): The ID of the current player.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
@@ -117,6 +122,7 @@ class Game:
         contract_data_view (Optional[ContractDataView]): The contract data view,
             if open.
         ice_data_view (Optional[IceDataView]): The ICE data view, if open.
+        file_access_view (Optional[FileAccessView]): The file access view, if open.
     """
 
     _modal_stack: list[pygame.sprite.Sprite]
@@ -133,6 +139,7 @@ class Game:
     crafting_service: CraftingServiceInterface
     deck_service: DeckServiceInterface
     shop_service: ShopServiceInterface
+    node_service: NodeServiceInterface
     player_id: PlayerId
     character_id: CharacterId
     logging_service: LoggingServiceInterface
@@ -153,6 +160,7 @@ class Game:
     contract_list_view: Optional[ContractListView] = None
     contract_data_view: Optional[ContractDataView] = None
     ice_data_view: Optional[IceDataView] = None
+    file_access_view: Optional[FileAccessView] = None
 
     def __init__(
         self,
@@ -163,6 +171,7 @@ class Game:
         crafting_service: CraftingServiceInterface,
         deck_service: DeckServiceInterface,
         shop_service: ShopServiceInterface,
+        node_service: NodeServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -178,6 +187,7 @@ class Game:
         self.crafting_service = crafting_service
         self.deck_service = deck_service
         self.shop_service = shop_service
+        self.node_service = node_service
         self.character_id = character_id
         self.logging_service = logging_service
         self._modal_stack = []
@@ -567,6 +577,43 @@ class Game:
             )
 
         self._toggle_view("contract_data_view", factory)
+
+    def _on_download_file(self, file_name: str) -> None:
+        """Callback to handle downloading a file."""
+        # In a real implementation, this would call a service.
+        self.show_message(f"Downloading {file_name}...")
+
+    def _on_delete_file(self, file_name: str) -> None:
+        """Callback to handle deleting a file."""
+        # In a real implementation, this would call a service.
+        self.show_message(f"Deleting {file_name}...")
+
+    def toggle_file_access_view(self, data: Optional[FileAccessViewDTO] = None) -> None:
+        """Opens or closes the file access view."""
+
+        def factory() -> Optional[FileAccessView]:
+            if data:
+                return FileAccessView(
+                    data=data,
+                    on_close=self.toggle_file_access_view,
+                    on_download=self._on_download_file,
+                    on_delete=self._on_delete_file,
+                )
+            return None
+
+        self._toggle_view("file_access_view", factory)
+
+    def show_file_access_view(self, node_id: str) -> None:
+        """Fetches node data and shows the file access view."""
+        if self.file_access_view:
+            self.toggle_file_access_view()
+            return
+
+        node_data = self.node_service.get_node_files(node_id)
+        if not node_data:
+            self.show_message(f"Error: Could not access node '{node_id}'.")
+            return
+        self.toggle_file_access_view(node_data)
 
     def show_message(self, text: str) -> None:
         """Displays a message in the message view."""

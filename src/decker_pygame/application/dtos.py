@@ -1,7 +1,7 @@
 """This module defines Data Transfer Objects (DTOs) for the application layer."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from decker_pygame.domain.ids import ContractId, DeckId
 from decker_pygame.domain.shop import ShopItemType
@@ -212,6 +212,33 @@ class TransferViewDTO:
 
     deck_programs: list[ProgramDTO]
     stored_programs: list[ProgramDTO]
+
+
+class FileDTO(TypedDict):
+    """Data for a single file on a node.
+
+    Attributes:
+        name (str): The name of the file.
+        size (int): The size of the file in KB or some other unit.
+        file_type (str): The type of the file (e.g., "data", "program").
+    """
+
+    name: str
+    size: int
+    file_type: str
+
+
+@dataclass
+class FileAccessViewDTO:
+    """Data for displaying the file access view for a node.
+
+    Attributes:
+        node_name (str): The name of the node being accessed.
+        files (list[FileDTO]): A list of files on the node.
+    """
+
+    node_name: str
+    files: list[FileDTO]
 
 
 @dataclass(frozen=True)
