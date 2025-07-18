@@ -14,6 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CharacterViewDTO,
         ContractSummaryDTO,
         DeckViewDTO,
+        FileAccessViewDTO,
         IceDataViewDTO,
         PlayerStatusDTO,
         ShopItemViewDTO,
@@ -177,4 +178,18 @@ class LoggingServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def log(self, message: str, data: dict[str, Any]) -> None:
         """Logs a message with associated structured data."""
+        raise NotImplementedError  # pragma: no cover
+
+
+class NodeServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for node-related use cases."""
+
+    @abstractmethod
+    def get_node_files(self, node_id: str) -> "Optional[FileAccessViewDTO]":
+        """Retrieves a DTO with all data needed for the file access view."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def validate_password(self, node_id: str, password: str) -> bool:
+        """Validates a password for a given node."""
         raise NotImplementedError  # pragma: no cover

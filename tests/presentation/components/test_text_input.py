@@ -76,3 +76,23 @@ def test_text_input_ignores_keydown_when_inactive(text_input: TextInput):
     event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_BACKSPACE})
     text_input.handle_event(event)
     assert text_input.text == "Decker"
+
+
+def test_text_input_password_masking():
+    """Tests that the input is masked when is_password is True."""
+    with patch("pygame.font.Font") as mock_font_class:
+        mock_font_instance = Mock()
+        mock_font_instance.render.return_value = pygame.Surface((50, 20))
+        mock_font_class.return_value = mock_font_instance
+
+        password_input = TextInput(
+            (0, 0), (100, 30), "Password:", "secret", is_password=True
+        )
+
+        # The internal text should be correct
+        assert password_input.text == "secret"
+
+        # But the rendered text should be masked
+        # The last call to render in __init__ is the one we care about
+        call_args, _ = mock_font_instance.render.call_args_list[-1]
+        assert call_args[0] == "******"

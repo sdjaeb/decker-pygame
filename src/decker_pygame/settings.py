@@ -28,6 +28,12 @@ UI_BORDER = Color(0, 0, 0)
 UI_BORDER_WIDTH = 1
 
 
+# --- UI Component Settings ---
+PADDING = 10
+BUTTON_WIDTH = 120
+BUTTON_HEIGHT = 30
+
+
 # --- File Paths & Assets ---
 # Using a class as a namespace for graphics settings
 class GfxSettings:

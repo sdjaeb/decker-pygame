@@ -31,6 +31,8 @@ class PygameInputHandler:
             pygame.K_l: self._game.toggle_contract_list_view,
             pygame.K_d: self._game.toggle_contract_data_view,
             pygame.K_p: self._game.toggle_deck_view,
+            pygame.K_f: lambda: self._game.show_file_access_view("corp_server_1"),
+            pygame.K_e: lambda: self._game.toggle_entry_view("corp_server_1"),
             pygame.K_q: self._game.quit,
         }
 
@@ -66,6 +68,8 @@ class PygameInputHandler:
                 self._game.contract_list_view,
                 self._game.contract_data_view,
                 self._game.ice_data_view,
+                self._game.file_access_view,
+                self._game.entry_view,
             ]:
                 if view:
                     view.handle_event(event)

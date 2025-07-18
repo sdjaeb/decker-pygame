@@ -1,6 +1,7 @@
 import uuid
 from collections.abc import Generator
 from dataclasses import dataclass
+from functools import partial
 from unittest.mock import Mock, patch
 
 import pygame
@@ -12,6 +13,7 @@ from decker_pygame.application.dtos import (
     CharacterDataDTO,
     CharacterViewDTO,
     DeckViewDTO,
+    FileAccessViewDTO,
     IceDataViewDTO,
     MissionResultsDTO,
     PlayerStatusDTO,
@@ -29,11 +31,14 @@ from decker_pygame.ports.service_interfaces import (
     CraftingServiceInterface,
     DeckServiceInterface,
     LoggingServiceInterface,
+    NodeServiceInterface,
     PlayerServiceInterface,
     ShopServiceInterface,
 )
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
+from decker_pygame.presentation.components.entry_view import EntryView
+from decker_pygame.presentation.components.file_access_view import FileAccessView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
@@ -71,6 +76,7 @@ class Mocks:
     crafting_service: Mock
     deck_service: Mock
     shop_service: Mock
+    node_service: Mock
     logging_service: Mock
 
 
@@ -83,6 +89,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_crafting_service = Mock(spec=CraftingServiceInterface)
     mock_deck_service = Mock(spec=DeckServiceInterface)
     mock_shop_service = Mock(spec=ShopServiceInterface)
+    mock_node_service = Mock(spec=NodeServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
@@ -112,6 +119,7 @@ def game_with_mocks() -> Generator[Mocks]:
             crafting_service=mock_crafting_service,
             deck_service=mock_deck_service,
             shop_service=mock_shop_service,
+            node_service=mock_node_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -123,6 +131,7 @@ def game_with_mocks() -> Generator[Mocks]:
             crafting_service=mock_crafting_service,
             deck_service=mock_deck_service,
             shop_service=mock_shop_service,
+            node_service=mock_node_service,
             logging_service=mock_logging_service,
         )
 
@@ -139,6 +148,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.crafting_service is mocks.crafting_service
     assert game.deck_service is mocks.deck_service
     assert game.shop_service is mocks.shop_service
+    assert game.node_service is mocks.node_service
     assert game.logging_service is mocks.logging_service
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.character_id, uuid.UUID)
@@ -174,6 +184,7 @@ def test_game_load_assets_with_icons():
             crafting_service=Mock(spec=CraftingServiceInterface),
             deck_service=Mock(spec=DeckServiceInterface),
             shop_service=Mock(spec=ShopServiceInterface),
+            node_service=Mock(spec=NodeServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -212,6 +223,7 @@ def test_game_load_assets_no_icons():
             crafting_service=Mock(spec=CraftingServiceInterface),
             deck_service=Mock(spec=DeckServiceInterface),
             shop_service=Mock(spec=ShopServiceInterface),
+            node_service=Mock(spec=NodeServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -1327,3 +1339,168 @@ def test_toggle_shop_item_view_without_data_does_nothing(game_with_mocks: Mocks)
 
     # View should not have been created
     assert game.shop_item_view is None
+
+
+def test_on_download_file(game_with_mocks: Mocks):
+    """Tests the callback for downloading a file."""
+    game = game_with_mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_download_file("test.dat")
+        mock_show_message.assert_called_once_with("Downloading test.dat...")
+
+
+def test_on_delete_file(game_with_mocks: Mocks):
+    """Tests the callback for deleting a file."""
+    game = game_with_mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_delete_file("test.dat")
+        mock_show_message.assert_called_once_with("Deleting test.dat...")
+
+
+def test_show_file_access_view_success(game_with_mocks: Mocks):
+    """Tests successfully showing the file access view."""
+    mocks = game_with_mocks
+    game = mocks.game
+    node_id = "corp_server_1"
+    mock_data = Mock(spec=FileAccessViewDTO)
+    mocks.node_service.get_node_files.return_value = mock_data
+
+    with patch.object(game, "toggle_file_access_view") as mock_toggle:
+        game.show_file_access_view(node_id)
+        mocks.node_service.get_node_files.assert_called_once_with(node_id)
+        mock_toggle.assert_called_once_with(mock_data)
+
+
+def test_show_file_access_view_closes_existing(game_with_mocks: Mocks):
+    """Tests that showing the view when it's open just closes it."""
+    mocks = game_with_mocks
+    game = mocks.game
+    game.file_access_view = Mock(spec=FileAccessView)
+
+    with patch.object(game, "toggle_file_access_view") as mock_toggle:
+        game.show_file_access_view("any_node")
+        mocks.node_service.get_node_files.assert_not_called()
+        mock_toggle.assert_called_once_with()
+
+
+def test_show_file_access_view_node_not_found(game_with_mocks: Mocks):
+    """Tests showing the file access view when the node is not found."""
+    mocks = game_with_mocks
+    game = mocks.game
+    node_id = "unknown_node"
+    mocks.node_service.get_node_files.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        with patch.object(game, "toggle_file_access_view") as mock_toggle:
+            game.show_file_access_view(node_id)
+            mocks.node_service.get_node_files.assert_called_once_with(node_id)
+            mock_show_message.assert_called_once_with(
+                "Error: Could not access node 'unknown_node'."
+            )
+            mock_toggle.assert_not_called()
+
+
+def test_toggle_file_access_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests calling toggle_file_access_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.file_access_view is None
+
+    # Call without data
+    game.toggle_file_access_view(data=None)
+
+    # View should not have been created
+    assert game.file_access_view is None
+
+
+def test_toggle_file_access_view_creates_view(game_with_mocks: Mocks):
+    """Tests that toggle_file_access_view creates the view when data is provided."""
+    game = game_with_mocks.game
+    mock_data = Mock(spec=FileAccessViewDTO)
+
+    assert game.file_access_view is None
+
+    with patch("decker_pygame.presentation.game.FileAccessView") as mock_view_class:
+        game.toggle_file_access_view(data=mock_data)
+
+        assert game.file_access_view is not None
+        mock_view_class.assert_called_once_with(
+            data=mock_data,
+            on_close=game.toggle_file_access_view,
+            on_download=game._on_download_file,
+            on_delete=game._on_delete_file,
+        )
+
+
+@pytest.mark.parametrize("is_valid", [True, False])
+def test_on_entry_submit(game_with_mocks: Mocks, is_valid: bool):
+    """Tests the callback for submitting text from the entry view."""
+    mocks = game_with_mocks
+    game = mocks.game
+    node_id = "test_node"
+    password = "password123"
+
+    mocks.node_service.validate_password.return_value = is_valid
+
+    with patch.object(game, "show_message") as mock_show_message:
+        with patch.object(game, "toggle_entry_view") as mock_toggle:
+            game._on_entry_submit(password, node_id)
+
+            mocks.node_service.validate_password.assert_called_once_with(
+                node_id, password
+            )
+
+            if is_valid:
+                mock_show_message.assert_called_once_with("Access Granted.")
+            else:
+                mock_show_message.assert_called_once_with("Access Denied.")
+
+            mock_toggle.assert_called_once()
+
+
+def test_toggle_entry_view_creates_view(game_with_mocks: Mocks):
+    """Tests that toggle_entry_view creates the view when a node_id is provided."""
+    game = game_with_mocks.game
+    node_id = "test_node"
+
+    assert game.entry_view is None
+
+    with patch("decker_pygame.presentation.game.EntryView") as mock_view_class:
+        with patch("decker_pygame.presentation.game.EntryViewDTO") as mock_dto_class:
+            game.toggle_entry_view(node_id=node_id)
+
+            assert game.entry_view is not None
+            mock_dto_class.assert_called_once_with(
+                prompt=f"Enter Password for {node_id}:", is_password=True
+            )
+            mock_view_class.assert_called_once()
+            # Check that the on_submit callback is a partial
+            call_args = mock_view_class.call_args.kwargs
+            assert call_args["data"] is mock_dto_class.return_value
+            assert call_args["on_close"] == game.toggle_entry_view
+            assert isinstance(call_args["on_submit"], partial)
+
+
+def test_toggle_entry_view_without_node_id(game_with_mocks: Mocks):
+    """Tests that calling toggle_entry_view without a node_id closes an open view
+    and does nothing if the view is already closed.
+    """
+    game = game_with_mocks.game
+    game.all_sprites = Mock(spec=pygame.sprite.Group)
+
+    # --- Part 1: Test closing an open view ---
+    mock_view = Mock(spec=EntryView)
+    game.entry_view = mock_view
+    game.all_sprites.add(mock_view)
+
+    game.toggle_entry_view()  # Call without node_id to close
+
+    assert game.entry_view is None, "View should be closed"
+    game.all_sprites.remove.assert_called_once_with(mock_view)
+
+    # --- Part 2: Test calling it again when already closed ---
+    # This part will execute the factory and cover the `return None` line.
+    game.toggle_entry_view()  # Call again
+
+    assert game.entry_view is None, "View should remain closed"
+    # The add method should not have been called, as the factory returns None.
+    game.all_sprites.add.assert_called_once_with(mock_view)  # From the initial setup
