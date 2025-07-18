@@ -254,6 +254,19 @@ class EntryViewDTO:
     is_password: bool
 
 
+@dataclass
+class OptionsViewDTO:
+    """Data for displaying the game options/settings view.
+
+    Attributes:
+        sound_enabled (bool): Whether the sound is currently enabled.
+        tooltips_enabled (bool): Whether tooltips are currently enabled.
+    """
+
+    sound_enabled: bool
+    tooltips_enabled: bool
+
+
 @dataclass(frozen=True)
 class ContractSummaryDTO:
     """A summary of a contract for list views.

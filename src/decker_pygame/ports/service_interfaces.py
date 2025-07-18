@@ -16,6 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DeckViewDTO,
         FileAccessViewDTO,
         IceDataViewDTO,
+        OptionsViewDTO,
         PlayerStatusDTO,
         ShopItemViewDTO,
         ShopViewDTO,
@@ -192,4 +193,23 @@ class NodeServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def validate_password(self, node_id: str, password: str) -> bool:
         """Validates a password for a given node."""
+        raise NotImplementedError  # pragma: no cover
+
+
+class SettingsServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for game settings-related use cases."""
+
+    @abstractmethod
+    def get_options(self) -> "OptionsViewDTO":
+        """Retrieves the current game options."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def set_sound_enabled(self, enabled: bool) -> None:
+        """Sets the sound enabled state."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def set_tooltips_enabled(self, enabled: bool) -> None:
+        """Sets the tooltips enabled state."""
         raise NotImplementedError  # pragma: no cover
