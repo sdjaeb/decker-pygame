@@ -1,5 +1,6 @@
 """This module defines the PygameInputHandler for the presentation layer."""
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import pygame
@@ -16,6 +17,8 @@ class PygameInputHandler:
 
     Translates raw Pygame events into calls to the Game object.
     """
+
+    _key_map: dict[int, Callable[[], None]]
 
     def __init__(self, game: "Game", logging_service: "LoggingServiceInterface"):
         self._game = game
@@ -58,6 +61,11 @@ class PygameInputHandler:
                 self._game.char_data_view,
                 self._game.deck_view,
                 self._game.transfer_view,
+                self._game.shop_view,
+                self._game.order_view,
+                self._game.contract_list_view,
+                self._game.contract_data_view,
+                self._game.ice_data_view,
             ]:
                 if view:
                     view.handle_event(event)

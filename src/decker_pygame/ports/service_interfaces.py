@@ -14,7 +14,10 @@ if TYPE_CHECKING:  # pragma: no cover
         CharacterViewDTO,
         ContractSummaryDTO,
         DeckViewDTO,
+        IceDataViewDTO,
         PlayerStatusDTO,
+        ShopItemViewDTO,
+        ShopViewDTO,
         TransferViewDTO,
     )
     from decker_pygame.domain.crafting import Schematic
@@ -88,6 +91,11 @@ class DeckServiceInterface(ABC):  # pragma: no cover
         raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
+    def get_ice_data(self, program_name: str) -> "Optional[IceDataViewDTO]":
+        """Retrieves the data needed to display the IceDataView for a program."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
     def move_program_up(self, deck_id: "DeckId", program_name: str) -> None:
         """Moves a program up in the deck order."""
         raise NotImplementedError  # pragma: no cover
@@ -116,6 +124,41 @@ class DeckServiceInterface(ABC):  # pragma: no cover
         self, character_id: "CharacterId", program_name: str
     ) -> None:
         """Moves a program from a character's deck to their storage."""
+        raise NotImplementedError  # pragma: no cover
+
+
+class ShopServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for shop-related use cases."""
+
+    @abstractmethod
+    def get_shop_view_data(self, shop_id: str) -> "Optional[ShopViewDTO]":
+        """Retrieves the data needed to display a shop's inventory."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def purchase_item(
+        self, character_id: "CharacterId", item_name: str, shop_id: str
+    ) -> None:
+        """Orchestrates the use case of a character purchasing an item."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_item_details(
+        self, shop_id: str, item_name: str
+    ) -> "Optional[ShopItemViewDTO]":
+        """Retrieves detailed information about a specific item in a shop.
+
+        Args:
+            shop_id (str): The identifier of the shop.
+            item_name (str): The name of the item.
+
+        Returns:
+            Optional[ShopItemViewDTO]: DTO containing details about the item,
+                or None if not found.
+
+        Raises:
+            NotImplementedError: If the method is not implemented.
+        """
         raise NotImplementedError  # pragma: no cover
 
 

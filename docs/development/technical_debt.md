@@ -22,6 +22,48 @@ This will ensure that the `data` folder is always created in a consistent, predi
 
 ---
 
+# Issue: Hardcoded Shop Inventory
+
+## Problem
+
+The `ShopService` currently uses a hardcoded dictionary (`SHOP_INVENTORY`) to define the contents of all shops. This approach has several drawbacks:
+- It violates our established repository pattern, where data persistence is handled by dedicated repository implementations in the `infrastructure` layer.
+- It tightly couples the application service to a specific, static set of data.
+- It makes it difficult to add new shops or modify shop inventories without changing application code.
+- It prevents shop data from being persisted or modified dynamically during gameplay.
+
+## Proposed Solution
+
+1.  **Create a `ShopRepositoryInterface`** in the `ports` layer, defining methods like `get_by_name(name: str) -> Optional[Shop]` and `save(shop: Shop)`.
+2.  **Implement a `JsonFileShopRepository`** in the `infrastructure` layer that reads shop data from dedicated JSON files.
+3.  **Refactor `ShopService`** to be injected with a `ShopRepositoryInterface`. The service will now use the repository to fetch `Shop` aggregates instead of using the hardcoded dictionary.
+4.  **Externalize the inventory data** into one or more JSON files in the `data/` directory.
+
+This change will align the shop system with our established DDD and Hexagonal architecture, improving flexibility and maintainability.
+
+### Affected Components
+-   `application/shop_service.py`
+-   `ports/repository_interfaces.py` (new `ShopRepositoryInterface`)
+-   A new `infrastructure/json_shop_repository.py`.
+---
+
+# Issue: Input Handler Ignores Modal Focus
+
+## Problem
+
+The current `PygameInputHandler` iterates through a hardcoded list of all potential views and sends events to any that are active. This breaks modal behavior. For example, when `ShopItemView` is open on top of `ShopView`, a mouse click will be processed by **both** views. This can lead to unintended actions, like closing the parent view when clicking a button on the child modal.
+
+A `_modal_stack` was introduced in the `Game` class to track focus, but the input handler does not currently use it, rendering the modal system ineffective and buggy.
+
+## Proposed Solution
+
+Refactor `PygameInputHandler.handle_events` to be aware of the `Game._modal_stack`. If the stack is not empty, events (especially mouse events) should be dispatched *only* to the topmost view on the stack (`_modal_stack[-1]`). This will ensure that only the focused modal can receive input, which is the correct and expected behavior for a modal UI system.
+
+### Affected Components
+-   `presentation/input_handler.py`
+-   `presentation/game.py`
+---
+
 # Issue: Duplicated Logic in UI View Components
 
 ## Problem
@@ -104,3 +146,26 @@ Reorganize the `components` directory into subdirectories based on the type of U
 
 -   `src/decker_pygame/presentation/components/` and all files within it.
 -   All files that import from the `components` directory.
+
+---
+
+# Issue: Program-related Logic is in DeckService
+
+## Problem
+
+Currently, logic for retrieving detailed program data (like for the `IceDataView`) resides in the `DeckService`. While this is functional for now, it violates the Single Responsibility Principle. The `DeckService` should be concerned with managing the contents of a deck, not with being a general-purpose query service for all programs.
+
+If other parts of the application (like a `ShopView` or a future `ProgramUpgradeView`) need to query program details, they would be forced to depend on the `DeckService`, creating unnecessary coupling.
+
+## Proposed Solution
+
+Create a new `ProgramService` dedicated to all use cases related to programs themselves.
+-   Move the `get_ice_data` method from `DeckService` to the new `ProgramService`.
+-   In the future, any new program-specific logic (e.g., `upgrade_program`, `get_program_stats`) should be added to this service.
+-   This will make the `DeckService`'s responsibility clearer and reduce coupling between different application services.
+
+### Affected Components
+
+-   `application/deck_service.py`
+-   `ports/service_interfaces.py` (for `DeckServiceInterface`)
+-   A new `application/program_service.py` and its interface.

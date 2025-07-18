@@ -23,6 +23,7 @@ from decker_pygame.application.domain_event_handlers import (
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.logging_service import ConsoleLogWriter, LoggingService
 from decker_pygame.application.player_service import PlayerService
+from decker_pygame.application.shop_service import ShopService
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, PlayerCreated
@@ -77,6 +78,9 @@ def main() -> None:
     deck_service = DeckService(
         deck_repo=deck_repo,
         event_dispatcher=event_dispatcher,
+        character_repo=character_repo,
+    )
+    shop_service = ShopService(
         character_repo=character_repo,
     )
 
@@ -141,6 +145,7 @@ def main() -> None:
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
         deck_service=deck_service,
+        shop_service=shop_service,
         logging_service=logging_service,
     )
 

@@ -33,3 +33,15 @@ def test_contract_data_view_initialization():
         mock_font_instance.render.assert_called_once_with(
             f"Contract: {contract_name}", True, view._font_color
         )
+
+
+def test_contract_data_view_handles_event():
+    """Tests that the view's handle_event method runs without error."""
+    view = ContractDataView(
+        position=(10, 20),
+        size=(300, 200),
+        contract_name="Test",
+    )
+    # The handle_event method is a no-op, so we just call it to ensure it's covered.
+    view.handle_event(pygame.event.Event(pygame.USEREVENT))
+    # No assertion is needed, the test passes if no error is raised.

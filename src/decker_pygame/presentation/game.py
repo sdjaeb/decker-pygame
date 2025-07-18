@@ -10,8 +10,10 @@ import pygame
 
 from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.application.dtos import (
+    IceDataViewDTO,
     MissionResultsDTO,
     RestViewDTO,
+    ShopItemViewDTO,
 )
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.ports.service_interfaces import (
@@ -21,6 +23,7 @@ from decker_pygame.ports.service_interfaces import (
     DeckServiceInterface,
     LoggingServiceInterface,
     PlayerServiceInterface,
+    ShopServiceInterface,
 )
 from decker_pygame.presentation.asset_loader import load_spritesheet
 from decker_pygame.presentation.components.active_bar import ActiveBar
@@ -32,6 +35,7 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
+from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
@@ -40,6 +44,8 @@ from decker_pygame.presentation.components.mission_results_view import (
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.rest_view import RestView
+from decker_pygame.presentation.components.shop_item_view import ShopItemView
+from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
@@ -60,55 +66,60 @@ V = TypeVar("V", bound=pygame.sprite.Sprite)
 class Game:
     """Main game loop and presentation logic.
 
+    Handles the main game loop, event processing, and the display of all UI
+    components.
+
     Args:
-        player_service (PlayerServiceInterface): Service for player ops.
-        player_id (PlayerId): The current player's ID.
+        player_service (PlayerServiceInterface): Service for player operations.
+        player_id (PlayerId): The ID of the current player.
         character_service (CharacterServiceInterface): Service for character ops.
         contract_service (ContractServiceInterface): Service for contract ops.
         crafting_service (CraftingServiceInterface): Service for crafting ops.
-        deck_service (DeckServiceInterface): Service for deck operations.
-        character_id (CharacterId): The current character's ID.
+        deck_service (DeckServiceInterface): The service for deck operations.
+        shop_service (ShopServiceInterface): The service for shop operations.
+        character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
     Attributes:
         screen (pygame.Surface): The main display surface.
         clock (pygame.time.Clock): The game clock for managing FPS.
         is_running (bool): Flag to control the main game loop.
-        all_sprites (pygame.sprite.Group[pygame.sprite.Sprite]): Group containing all
-            active sprites.
+        all_sprites (pygame.sprite.Group[pygame.sprite.Sprite]): Group for all sprites.
         active_bar (ActiveBar): The UI component for active programs.
         alarm_bar (AlarmBar): The UI component for the system alarm level.
         health_bar (HealthBar): The UI component for player health.
-        player_service (PlayerServiceInterface): The service for player operations.
-        character_service (CharacterServiceInterface): The service for character
-            operations.
-        contract_service (ContractServiceInterface): The service for contract
-            operations.
-        crafting_service (CraftingServiceInterface): The service for crafting
-            operations.
+        player_service (PlayerServiceInterface): Service for player operations.
+        character_service (CharacterServiceInterface): Service for character operations.
+        contract_service (ContractServiceInterface): Service for contract operations.
+        crafting_service (CraftingServiceInterface): Service for crafting operations.
         deck_service (DeckServiceInterface): The service for deck operations.
+        shop_service (ShopServiceInterface): The service for shop operations.
         player_id (PlayerId): The ID of the current player.
         character_id (CharacterId): The ID of the current character.
-        logging_service (LoggingServiceInterface): The service for logging.
+        logging_service (LoggingServiceInterface): Service for logging.
         message_view (MessageView): The UI component for displaying messages.
         input_handler (PygameInputHandler): The handler for user input.
         intro_view (Optional[IntroView]): The introduction view, if open.
         new_char_view (Optional[NewCharView]): The new character view, if open.
         rest_view (Optional[RestView]): The rest and recovery view, if open.
         mission_results_view (Optional[MissionResultsView]): The mission results
-            view, if open.
+            view.
         home_view (Optional[HomeView]): The main menu view, if open.
         build_view (Optional[BuildView]): The build view, if open.
+        shop_item_view (Optional[ShopItemView]): The shop item view, if open.
         char_data_view (Optional[CharDataView]): The character data view, if open.
         deck_view (Optional[DeckView]): The deck view, if open.
         order_view (Optional[OrderView]): The deck ordering view, if open.
         transfer_view (Optional[TransferView]): The program transfer view, if open.
+        shop_view (Optional[ShopView]): The shop view, if open.
         contract_list_view (Optional[ContractListView]): The contract list view,
             if open.
         contract_data_view (Optional[ContractDataView]): The contract data view,
             if open.
+        ice_data_view (Optional[IceDataView]): The ICE data view, if open.
     """
 
+    _modal_stack: list[pygame.sprite.Sprite]
     screen: pygame.Surface
     clock: pygame.time.Clock
     is_running: bool
@@ -121,6 +132,7 @@ class Game:
     contract_service: ContractServiceInterface
     crafting_service: CraftingServiceInterface
     deck_service: DeckServiceInterface
+    shop_service: ShopServiceInterface
     player_id: PlayerId
     character_id: CharacterId
     logging_service: LoggingServiceInterface
@@ -132,12 +144,15 @@ class Game:
     mission_results_view: Optional[MissionResultsView] = None
     home_view: Optional[HomeView] = None
     build_view: Optional[BuildView] = None
+    shop_item_view: Optional[ShopItemView] = None
     char_data_view: Optional[CharDataView] = None
     deck_view: Optional[DeckView] = None
     order_view: Optional[OrderView] = None
     transfer_view: Optional[TransferView] = None
+    shop_view: Optional[ShopView] = None
     contract_list_view: Optional[ContractListView] = None
     contract_data_view: Optional[ContractDataView] = None
+    ice_data_view: Optional[IceDataView] = None
 
     def __init__(
         self,
@@ -147,6 +162,7 @@ class Game:
         contract_service: ContractServiceInterface,
         crafting_service: CraftingServiceInterface,
         deck_service: DeckServiceInterface,
+        shop_service: ShopServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -161,8 +177,10 @@ class Game:
         self.player_id = player_id
         self.crafting_service = crafting_service
         self.deck_service = deck_service
+        self.shop_service = shop_service
         self.character_id = character_id
         self.logging_service = logging_service
+        self._modal_stack = []
         self.input_handler = PygameInputHandler(self, logging_service)
 
         self._load_assets()
@@ -218,11 +236,16 @@ class Game:
         if current_view:
             self.all_sprites.remove(current_view)
             setattr(self, view_attr, None)
+            if current_view in self._modal_stack:
+                self._modal_stack.remove(current_view)
+
         else:
             new_view = view_factory()
             if new_view:
                 setattr(self, view_attr, new_view)
                 self.all_sprites.add(new_view)
+                if hasattr(new_view, "handle_event"):
+                    self._modal_stack.append(new_view)
 
     def quit(self) -> None:
         """Signals the game to exit the main loop."""
@@ -268,10 +291,51 @@ class Game:
                 on_deck=self.toggle_deck_view,
                 on_contracts=self.toggle_contract_list_view,
                 on_build=self.toggle_build_view,
+                on_shop=self.toggle_shop_view,
                 on_transfer=self.toggle_transfer_view,
             )
 
         self._toggle_view("home_view", factory)
+
+    def _on_purchase(self, item_name: str) -> None:
+        """Callback to handle purchasing an item from the shop."""
+
+        def action() -> None:
+            # For now, we assume a single, default shop.
+            self.shop_service.purchase_item(self.character_id, item_name, "DefaultShop")
+            self.show_message(f"Purchased {item_name}.")
+
+        self._execute_and_refresh_view(action, self.toggle_shop_view)
+
+    def toggle_shop_view(self) -> None:
+        """Opens or closes the shop view."""
+
+        def factory() -> Optional[ShopView]:
+            shop_data = self.shop_service.get_shop_view_data("DefaultShop")
+            if not shop_data:
+                self.show_message("Error: Could not load shop data.")
+                return None
+            return ShopView(
+                data=shop_data,
+                on_close=self.toggle_shop_view,
+                on_purchase=self._on_purchase,
+                on_view_details=self._on_show_item_details,
+            )
+
+        self._toggle_view("shop_view", factory)
+
+    def toggle_shop_item_view(self, data: Optional["ShopItemViewDTO"] = None) -> None:
+        """Opens or closes the Shop Item details view."""
+
+        def factory() -> Optional["ShopItemView"]:
+            if data:
+                return ShopItemView(
+                    data=data,
+                    on_close=self.toggle_shop_item_view,
+                )
+            return None
+
+        self._toggle_view("shop_item_view", factory)
 
     def _on_rest(self) -> None:
         """Callback for when the player chooses to rest."""
@@ -406,6 +470,7 @@ class Game:
                 data=deck_data,
                 on_close=self.toggle_deck_view,
                 on_order=self._on_order_deck,
+                on_program_click=self._on_program_click,
             )
 
         self._toggle_view("deck_view", factory)
@@ -466,6 +531,24 @@ class Game:
             )
 
         self._toggle_view("transfer_view", factory)
+
+    def _on_program_click(self, program_name: str) -> None:
+        """Callback for when a program is clicked, to show its details."""
+        ice_data = self.deck_service.get_ice_data(program_name)
+        if not ice_data:
+            self.show_message(f"No detailed data available for {program_name}.")
+            return
+        self.toggle_ice_data_view(ice_data)
+
+    def toggle_ice_data_view(self, data: Optional[IceDataViewDTO] = None) -> None:
+        """Opens or closes the ICE data view."""
+
+        def factory() -> Optional[IceDataView]:
+            if data:
+                return IceDataView(data=data, on_close=self.toggle_ice_data_view)
+            return None
+
+        self._toggle_view("ice_data_view", factory)
 
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
@@ -553,3 +636,11 @@ class Game:
             on_move_down=self._on_move_program_down,
         )
         self.all_sprites.add(self.order_view)
+
+    def _on_show_item_details(self, item_name: str) -> None:
+        """Callback to handle displaying details for a specific shop item."""
+        item_details = self.shop_service.get_item_details("DefaultShop", item_name)
+        if item_details:
+            self.toggle_shop_item_view(item_details)
+        else:
+            self.show_message(f"Could not retrieve details for {item_name}.")
