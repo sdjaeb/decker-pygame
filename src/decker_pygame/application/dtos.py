@@ -241,6 +241,19 @@ class FileAccessViewDTO:
     files: list[FileDTO]
 
 
+@dataclass
+class EntryViewDTO:
+    """Data for displaying the entry view (e.g., for a password prompt).
+
+    Attributes:
+        prompt (str): The message to display to the user (e.g., "Enter Password:").
+        is_password (bool): If True, the input should be masked.
+    """
+
+    prompt: str
+    is_password: bool
+
+
 @dataclass(frozen=True)
 class ContractSummaryDTO:
     """A summary of a contract for list views.

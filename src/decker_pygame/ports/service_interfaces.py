@@ -188,3 +188,8 @@ class NodeServiceInterface(ABC):  # pragma: no cover
     def get_node_files(self, node_id: str) -> "Optional[FileAccessViewDTO]":
         """Retrieves a DTO with all data needed for the file access view."""
         raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def validate_password(self, node_id: str, password: str) -> bool:
+        """Validates a password for a given node."""
+        raise NotImplementedError  # pragma: no cover

@@ -19,6 +19,11 @@ DUMMY_NODE_FILES = {
     )
 }
 
+# For now, we'll use a hardcoded map of nodes and their passwords.
+DUMMY_NODE_PASSWORDS = {
+    "corp_server_1": "blueice",
+}
+
 
 class NodeService(NodeServiceInterface):
     """Application service for node-related operations."""
@@ -29,3 +34,11 @@ class NodeService(NodeServiceInterface):
         For now, this returns hardcoded data for a dummy node.
         """
         return DUMMY_NODE_FILES.get(node_id)
+
+    def validate_password(self, node_id: str, password: str) -> bool:
+        """Validates a password for a given node.
+
+        For now, this checks against a hardcoded password.
+        """
+        correct_password = DUMMY_NODE_PASSWORDS.get(node_id)
+        return correct_password is not None and correct_password == password

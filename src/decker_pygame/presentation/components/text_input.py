@@ -15,6 +15,8 @@ class TextInput(Clickable):
         size (tuple[int, int]): The (width, height) of the widget.
         label (str): A label to display next to the input box.
         initial_text (str, optional): The initial text in the box. Defaults to "".
+        is_password (bool, optional): If True, the input text will be masked.
+            Defaults to False.
 
     Attributes:
         image (pygame.Surface): The surface that represents the widget.
@@ -32,6 +34,7 @@ class TextInput(Clickable):
         size: tuple[int, int],
         label: str,
         initial_text: str = "",
+        is_password: bool = False,
     ):
         # TextInput doesn't have a single 'on_click' action, but it must
         # satisfy the Clickable interface. We provide a no-op lambda.
@@ -42,6 +45,7 @@ class TextInput(Clickable):
         self._label = label
         self.text = initial_text
         self._active = False
+        self._is_password = is_password
 
         self._font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
@@ -79,7 +83,10 @@ class TextInput(Clickable):
         )
         pygame.draw.rect(self.image, border_color, self.image.get_rect(), 2)
 
-        # Draw label
+        # Draw label to the left of the input box
+        # We render it to a separate surface first to position it correctly.
+        # This is a common technique for complex layouts.
+        # The label is not a child component; it's part of this component's render.
         label_surface = self._font.render(self._label, True, self._font_color)
         label_rect = label_surface.get_rect(
             midleft=(
@@ -90,7 +97,11 @@ class TextInput(Clickable):
         self.image.blit(label_surface, label_rect)
 
         # Draw text
-        text_surface = self._font.render(self.text, True, self._font_color)
+        display_text = self.text
+        if self._is_password:
+            display_text = "*" * len(self.text)
+
+        text_surface = self._font.render(display_text, True, self._font_color)
         text_rect = text_surface.get_rect(
             midleft=(self._padding, self.image.get_height() // 2)
         )

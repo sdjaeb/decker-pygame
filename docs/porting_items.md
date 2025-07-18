@@ -110,7 +110,7 @@ These views are for displaying information and handling commerce.
 **Group D: In-Mission Interaction (Status: In Progress)**
 These views are likely used during the hacking/matrix part of the game.
 - **`FileAccessDlg.cpp/h`**: Port to `FileAccessView`. (Complete).
-- **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts).
+- **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts). (In Progress).
 
 **Group E: System & Configuration (Status: To Do)**
 These are lower-priority views for game settings.

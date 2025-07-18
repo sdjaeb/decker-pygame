@@ -1,6 +1,7 @@
 import uuid
 from collections.abc import Generator
 from dataclasses import dataclass
+from functools import partial
 from unittest.mock import Mock, patch
 
 import pygame
@@ -36,6 +37,7 @@ from decker_pygame.ports.service_interfaces import (
 )
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.deck_view import DeckView
+from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
 from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
@@ -1427,3 +1429,78 @@ def test_toggle_file_access_view_creates_view(game_with_mocks: Mocks):
             on_download=game._on_download_file,
             on_delete=game._on_delete_file,
         )
+
+
+@pytest.mark.parametrize("is_valid", [True, False])
+def test_on_entry_submit(game_with_mocks: Mocks, is_valid: bool):
+    """Tests the callback for submitting text from the entry view."""
+    mocks = game_with_mocks
+    game = mocks.game
+    node_id = "test_node"
+    password = "password123"
+
+    mocks.node_service.validate_password.return_value = is_valid
+
+    with patch.object(game, "show_message") as mock_show_message:
+        with patch.object(game, "toggle_entry_view") as mock_toggle:
+            game._on_entry_submit(password, node_id)
+
+            mocks.node_service.validate_password.assert_called_once_with(
+                node_id, password
+            )
+
+            if is_valid:
+                mock_show_message.assert_called_once_with("Access Granted.")
+            else:
+                mock_show_message.assert_called_once_with("Access Denied.")
+
+            mock_toggle.assert_called_once()
+
+
+def test_toggle_entry_view_creates_view(game_with_mocks: Mocks):
+    """Tests that toggle_entry_view creates the view when a node_id is provided."""
+    game = game_with_mocks.game
+    node_id = "test_node"
+
+    assert game.entry_view is None
+
+    with patch("decker_pygame.presentation.game.EntryView") as mock_view_class:
+        with patch("decker_pygame.presentation.game.EntryViewDTO") as mock_dto_class:
+            game.toggle_entry_view(node_id=node_id)
+
+            assert game.entry_view is not None
+            mock_dto_class.assert_called_once_with(
+                prompt=f"Enter Password for {node_id}:", is_password=True
+            )
+            mock_view_class.assert_called_once()
+            # Check that the on_submit callback is a partial
+            call_args = mock_view_class.call_args.kwargs
+            assert call_args["data"] is mock_dto_class.return_value
+            assert call_args["on_close"] == game.toggle_entry_view
+            assert isinstance(call_args["on_submit"], partial)
+
+
+def test_toggle_entry_view_without_node_id(game_with_mocks: Mocks):
+    """Tests that calling toggle_entry_view without a node_id closes an open view
+    and does nothing if the view is already closed.
+    """
+    game = game_with_mocks.game
+    game.all_sprites = Mock(spec=pygame.sprite.Group)
+
+    # --- Part 1: Test closing an open view ---
+    mock_view = Mock(spec=EntryView)
+    game.entry_view = mock_view
+    game.all_sprites.add(mock_view)
+
+    game.toggle_entry_view()  # Call without node_id to close
+
+    assert game.entry_view is None, "View should be closed"
+    game.all_sprites.remove.assert_called_once_with(mock_view)
+
+    # --- Part 2: Test calling it again when already closed ---
+    # This part will execute the factory and cover the `return None` line.
+    game.toggle_entry_view()  # Call again
+
+    assert game.entry_view is None, "View should remain closed"
+    # The add method should not have been called, as the factory returns None.
+    game.all_sprites.add.assert_called_once_with(mock_view)  # From the initial setup
