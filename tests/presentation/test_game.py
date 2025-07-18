@@ -16,11 +16,13 @@ from decker_pygame.application.dtos import (
     MissionResultsDTO,
     PlayerStatusDTO,
     RestViewDTO,
+    ShopItemViewDTO,
     ShopViewDTO,
     TransferViewDTO,
 )
 from decker_pygame.application.shop_service import ShopServiceError
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
+from decker_pygame.domain.shop import ShopItemType
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
     ContractServiceInterface,
@@ -1253,13 +1255,54 @@ def test_on_program_click_no_data(game_with_mocks: Mocks):
         mock_toggle.assert_not_called()
 
 
-def test_on_show_item_details(game_with_mocks: Mocks):
-    """Tests the callback for displaying shop item details."""
-    game = game_with_mocks.game
+def test_on_show_item_details_success(game_with_mocks: Mocks):
+    """Tests that showing item details opens the item view on success."""
+    mocks = game_with_mocks
+    game = mocks.game
+    item_details_dto = ShopItemViewDTO(
+        name="Test Item",
+        cost=100,
+        description="A test item.",
+        item_type=ShopItemType.PROGRAM,
+        other_stats={},
+    )
+    mocks.shop_service.get_item_details.return_value = item_details_dto
 
-    with patch("builtins.print") as mock_print:  # Mock the print function
-        game._on_show_item_details("Energy Cell")
-        mock_print.assert_called_once_with("Show details for Energy Cell")
+    with patch.object(game, "toggle_shop_item_view") as mock_toggle:
+        game._on_show_item_details("Test Item")
+        mocks.shop_service.get_item_details.assert_called_once_with(
+            "DefaultShop", "Test Item"
+        )
+        mock_toggle.assert_called_once_with(item_details_dto)
+
+
+def test_on_show_item_details_failure(game_with_mocks: Mocks):
+    """Tests that a message is shown if item details cannot be found."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.shop_service.get_item_details.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_show_item_details("Unknown Item")
+        mock_show_message.assert_called_once_with(
+            "Could not retrieve details for Unknown Item."
+        )
+
+
+def test_game_toggles_shop_item_view(game_with_mocks: Mocks):
+    """Tests that the toggle_shop_item_view method opens and closes the view."""
+    game = game_with_mocks.game
+    item_details_dto = ShopItemViewDTO(
+        name="Test",
+        cost=0,
+        description="",
+        item_type=ShopItemType.OTHER,
+        other_stats={},
+    )
+    game.toggle_shop_item_view(item_details_dto)
+    assert game.shop_item_view is not None
+    game.toggle_shop_item_view()
+    assert game.shop_item_view is None
 
 
 def test_toggle_ice_data_view_without_data_does_nothing(game_with_mocks: Mocks):
@@ -1272,3 +1315,15 @@ def test_toggle_ice_data_view_without_data_does_nothing(game_with_mocks: Mocks):
 
     # View should not have been created
     assert game.ice_data_view is None
+
+
+def test_toggle_shop_item_view_without_data_does_nothing(game_with_mocks: Mocks):
+    """Tests calling toggle_shop_item_view without data does not open the view."""
+    game = game_with_mocks.game
+    assert game.shop_item_view is None
+
+    # Call without data to cover the `if data:` branch in the factory
+    game.toggle_shop_item_view(data=None)
+
+    # View should not have been created
+    assert game.shop_item_view is None

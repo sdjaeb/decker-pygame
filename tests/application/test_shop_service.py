@@ -3,10 +3,11 @@ from unittest.mock import Mock
 
 import pytest
 
-from decker_pygame.application.dtos import ShopItemDTO, ShopViewDTO
+from decker_pygame.application.dtos import ShopItemDTO, ShopItemViewDTO, ShopViewDTO
 from decker_pygame.application.shop_service import ShopService, ShopServiceError
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.ids import CharacterId
+from decker_pygame.domain.shop import ShopItemType
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 
 
@@ -20,6 +21,12 @@ def mock_char_repo() -> Mock:
 def shop_service(mock_char_repo: Mock) -> ShopService:
     """Provides a ShopService instance with a mocked character repository."""
     return ShopService(character_repo=mock_char_repo)
+
+
+@pytest.fixture
+def expected_non_existent_item_details() -> None:
+    """Provides the expected details for a non-existent item."""
+    return None
 
 
 def test_get_shop_view_data_success(shop_service: ShopService):
@@ -97,3 +104,26 @@ def test_purchase_item_shop_not_found(shop_service: ShopService, mock_char_repo:
 
     with pytest.raises(ShopServiceError, match="Shop not found"):
         shop_service.purchase_item(char_id, "IcePick v1", "NonExistentShop")
+
+
+def test_get_item_details_success(shop_service: ShopService):
+    """Tests retrieving item details successfully."""
+    details = shop_service.get_item_details("DefaultShop", "IcePick v1")
+
+    assert details is not None
+    assert isinstance(details, ShopItemViewDTO)
+    assert details.name == "IcePick v1"
+    assert details.cost == 500
+    assert details.item_type == ShopItemType.PROGRAM
+
+
+def test_get_item_details_item_not_found(shop_service: ShopService):
+    """Tests that get_item_details returns None for a non-existent item."""
+    details = shop_service.get_item_details("DefaultShop", "NonExistentItem")
+    assert details is None
+
+
+def test_get_item_details_shop_not_found(shop_service: ShopService):
+    """Tests that get_item_details returns None for a non-existent shop."""
+    details = shop_service.get_item_details("NonExistentShop", "AnyItem")
+    assert details is None

@@ -16,6 +16,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DeckViewDTO,
         IceDataViewDTO,
         PlayerStatusDTO,
+        ShopItemViewDTO,
         ShopViewDTO,
         TransferViewDTO,
     )
@@ -132,14 +133,33 @@ class ShopServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get_shop_view_data(self, shop_id: str) -> "Optional[ShopViewDTO]":
         """Retrieves the data needed to display a shop's inventory."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @abstractmethod
     def purchase_item(
         self, character_id: "CharacterId", item_name: str, shop_id: str
     ) -> None:
         """Orchestrates the use case of a character purchasing an item."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_item_details(
+        self, shop_id: str, item_name: str
+    ) -> "Optional[ShopItemViewDTO]":
+        """Retrieves detailed information about a specific item in a shop.
+
+        Args:
+            shop_id (str): The identifier of the shop.
+            item_name (str): The name of the item.
+
+        Returns:
+            Optional[ShopItemViewDTO]: DTO containing details about the item,
+                or None if not found.
+
+        Raises:
+            NotImplementedError: If the method is not implemented.
+        """
+        raise NotImplementedError  # pragma: no cover
 
 
 class PlayerServiceInterface(ABC):  # pragma: no cover

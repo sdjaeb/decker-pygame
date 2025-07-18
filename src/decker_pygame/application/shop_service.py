@@ -3,9 +3,10 @@
 import uuid
 from typing import Optional, TypedDict
 
-from decker_pygame.application.dtos import ShopItemDTO, ShopViewDTO
+from decker_pygame.application.dtos import ShopItemDTO, ShopItemViewDTO, ShopViewDTO
 from decker_pygame.domain.ids import CharacterId, ProgramId
 from decker_pygame.domain.program import Program
+from decker_pygame.domain.shop import ShopItemType
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 from decker_pygame.ports.service_interfaces import ShopServiceInterface
 
@@ -85,3 +86,28 @@ class ShopService(ShopServiceInterface):
 
         self.character_repo.save(character)
         # In the future, we could emit an ItemPurchased event here.
+
+    def get_item_details(
+        self, shop_id: str, item_name: str
+    ) -> Optional[ShopItemViewDTO]:
+        """Retrieves detailed information about a specific item in a shop."""
+        shop_data = SHOP_INVENTORY.get(shop_id)
+        if not shop_data:
+            return None
+
+        try:
+            item_data = next(
+                item for item in shop_data["items"] if item.name == item_name
+            )
+        except StopIteration:
+            return None
+
+        # This is a placeholder. In a real system, the ShopItem domain model
+        # would contain all this information.
+        return ShopItemViewDTO(
+            name=item_data.name,
+            cost=item_data.cost,
+            description=item_data.description,
+            item_type=ShopItemType.PROGRAM,
+            other_stats={"damage": 5, "stealth": 2},
+        )
