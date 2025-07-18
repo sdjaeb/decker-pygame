@@ -107,10 +107,10 @@ These views are for displaying information and handling commerce.
 - **`ShopItem.cpp/h`**: Port to `ShopView` and `ShopItemView`. (Complete).
 - **`IceDataDlg.cpp/h`**: Port to `IceDataView`. (Complete).
 
-**Group D: In-Mission Interaction (Status: In Progress)**
+**Group D: In-Mission Interaction (Status: Complete)**
 These views are likely used during the hacking/matrix part of the game.
 - **`FileAccessDlg.cpp/h`**: Port to `FileAccessView`. (Complete).
-- **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts). (In Progress).
+- **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts). (Complete).
 
 **Group E: System & Configuration (Status: To Do)**
 These are lower-priority views for game settings.
