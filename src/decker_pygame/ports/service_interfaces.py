@@ -20,6 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
         PlayerStatusDTO,
         ShopItemViewDTO,
         ShopViewDTO,
+        SoundEditViewDTO,
         TransferViewDTO,
     )
     from decker_pygame.domain.crafting import Schematic
@@ -212,4 +213,24 @@ class SettingsServiceInterface(ABC):  # pragma: no cover
     @abstractmethod
     def set_tooltips_enabled(self, enabled: bool) -> None:
         """Sets the tooltips enabled state."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get_sound_options(self) -> "SoundEditViewDTO":
+        """Retrieves the current sound volume options."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def set_master_volume(self, volume: float) -> None:
+        """Sets the master volume level."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def set_music_volume(self, volume: float) -> None:
+        """Sets the music volume level."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def set_sfx_volume(self, volume: float) -> None:
+        """Sets the sound effects volume level."""
         raise NotImplementedError  # pragma: no cover

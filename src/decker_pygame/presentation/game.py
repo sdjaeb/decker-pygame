@@ -54,6 +54,9 @@ from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.shop_item_view import ShopItemView
 from decker_pygame.presentation.components.shop_view import ShopView
+from decker_pygame.presentation.components.sound_edit_view import (
+    SoundEditView,
+)
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
@@ -132,6 +135,7 @@ class Game:
         file_access_view (Optional[FileAccessView]): The file access view, if open.
         entry_view (Optional[EntryView]): The text entry view, if open.
         options_view (Optional[OptionsView]): The game options view, if open.
+        sound_edit_view (Optional[SoundEditView]): The sound edit view, if open.
     """
 
     _modal_stack: list[pygame.sprite.Sprite]
@@ -173,6 +177,7 @@ class Game:
     file_access_view: Optional[FileAccessView] = None
     entry_view: Optional[EntryView] = None
     options_view: Optional[OptionsView] = None
+    sound_edit_view: Optional[SoundEditView] = None
 
     def __init__(
         self,
@@ -670,6 +675,33 @@ class Game:
             )
 
         self._toggle_view("options_view", factory)
+
+    def _on_master_volume_change(self, volume: float) -> None:
+        """Callback for master volume slider."""
+        self.settings_service.set_master_volume(volume)
+
+    def _on_music_volume_change(self, volume: float) -> None:
+        """Callback for music volume slider."""
+        self.settings_service.set_music_volume(volume)
+
+    def _on_sfx_volume_change(self, volume: float) -> None:
+        """Callback for sfx volume slider."""
+        self.settings_service.set_sfx_volume(volume)
+
+    def toggle_sound_edit_view(self) -> None:
+        """Opens or closes the sound edit view."""
+
+        def factory() -> Optional[SoundEditView]:
+            sound_data = self.settings_service.get_sound_options()
+            return SoundEditView(
+                data=sound_data,
+                on_close=self.toggle_sound_edit_view,
+                on_master_volume_change=self._on_master_volume_change,
+                on_music_volume_change=self._on_music_volume_change,
+                on_sfx_volume_change=self._on_sfx_volume_change,
+            )
+
+        self._toggle_view("sound_edit_view", factory)
 
     def _on_entry_submit(self, text: str, node_id: str) -> None:
         """Callback to handle submitting text from the entry view."""

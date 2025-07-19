@@ -66,7 +66,7 @@ These are the components that call into the Core's driving ports.
 
 -   **Input Handler (`src/decker_pygame/presentation/input_handler.py`):** The `PygameInputHandler` is a dedicated driving adapter. Its sole responsibility is to translate raw Pygame events (like key presses) into calls to methods on the `Game` object.
 -   **UI Components (`src/decker_pygame/presentation/components`):** Our Pygame components, like `CharDataView`, are also driving adapters. When a user clicks a `+` button, the view's callback calls a method on the `Game` class, which in turn calls the appropriate Application Service (e.g., `character_service.increase_skill(...)`).
-    - Other examples include `ShopView`, `DeckView`, and `FileAccessView`.
+    - Other examples include `ShopView`, `DeckView`, `FileAccessView`, and `OptionsView`.
 
 ### 3.2. Driven Adapters
 

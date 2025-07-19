@@ -114,8 +114,8 @@ These views are likely used during the hacking/matrix part of the game.
 
 **Group E: System & Configuration (Status: In Progress)**
 These are lower-priority views for game settings.
-- **`OptionsDlg.cpp/h`**: Port to `OptionsView`. (In Progress).
-- **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`.
+- **`OptionsDlg.cpp/h`**: Port to `OptionsView`. (Complete).
+- **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`. (In Progress).
 
 **Group F: "Project" Feature**
 This feature needs further analysis.

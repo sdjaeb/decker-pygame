@@ -1587,3 +1587,50 @@ def test_toggle_options_view(game_with_mocks: Mocks):
             on_toggle_sound=game._on_toggle_sound,
             on_toggle_tooltips=game._on_toggle_tooltips,
         )
+
+
+@pytest.mark.parametrize(
+    "callback_name, service_method_name",
+    [
+        ("_on_master_volume_change", "set_master_volume"),
+        ("_on_music_volume_change", "set_music_volume"),
+        ("_on_sfx_volume_change", "set_sfx_volume"),
+    ],
+)
+def test_on_volume_change_callbacks(
+    game_with_mocks: Mocks, callback_name: str, service_method_name: str
+):
+    """Tests the callbacks for volume sliders."""
+    mocks = game_with_mocks
+    game = mocks.game
+    volume = 0.75
+
+    game_method = getattr(game, callback_name)
+    service_method = getattr(mocks.settings_service, service_method_name)
+
+    game_method(volume)
+
+    service_method.assert_called_once_with(volume)
+
+
+def test_toggle_sound_edit_view(game_with_mocks: Mocks):
+    """Tests that toggle_sound_edit_view creates the view with correct data."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_sound_data = Mock()
+    mocks.settings_service.get_sound_options.return_value = mock_sound_data
+
+    assert game.sound_edit_view is None
+
+    with patch("decker_pygame.presentation.game.SoundEditView") as mock_view_class:
+        game.toggle_sound_edit_view()
+
+        assert game.sound_edit_view is not None
+        mocks.settings_service.get_sound_options.assert_called_once()
+        mock_view_class.assert_called_once_with(
+            data=mock_sound_data,
+            on_close=game.toggle_sound_edit_view,
+            on_master_volume_change=game._on_master_volume_change,
+            on_music_volume_change=game._on_music_volume_change,
+            on_sfx_volume_change=game._on_sfx_volume_change,
+        )

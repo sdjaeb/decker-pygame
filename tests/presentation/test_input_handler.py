@@ -22,6 +22,7 @@ def mock_game() -> Mock:
     game.contract_data_view = Mock()
     game.ice_data_view = Mock()
     game.options_view = Mock()
+    game.sound_edit_view = Mock()
     return game
 
 
@@ -51,6 +52,7 @@ def test_handle_quit_event(mock_game: Mock, mock_logging_service: Mock):
         (pygame.K_d, "toggle_contract_data_view"),
         (pygame.K_p, "toggle_deck_view"),
         (pygame.K_o, "toggle_options_view"),
+        (pygame.K_u, "toggle_sound_edit_view"),
         (pygame.K_q, "quit"),
     ],
 )
@@ -101,6 +103,7 @@ def test_delegates_events_to_views(mock_game: Mock, mock_logging_service: Mock):
     mock_game.contract_data_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.ice_data_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.options_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.sound_edit_view.handle_event.assert_called_once_with(mouse_event)
 
 
 def test_logs_keypress_in_dev_mode(mock_game: Mock, mock_logging_service: Mock):

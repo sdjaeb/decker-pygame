@@ -1,5 +1,6 @@
 """Tests for the Checkbox component."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pygame
@@ -23,7 +24,7 @@ def on_toggle_mock() -> Mock:
 
 
 @pytest.fixture
-def checkbox(on_toggle_mock: Mock) -> Checkbox:
+def checkbox(on_toggle_mock: Mock) -> Generator[Checkbox]:
     """Provides a Checkbox instance for testing."""
     # We need to patch the Font constructor to return a mock instance
     # that we can control, specifically its render method.
