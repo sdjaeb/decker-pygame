@@ -117,10 +117,23 @@ These are lower-priority views for game settings.
 - **`OptionsDlg.cpp/h`**: Port to `OptionsView`. (Complete).
 - **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`. (Complete).
 
-**Group F: "Project" Feature**
-This feature needs further analysis.
-- **`NewProjectDlg.cpp/h`**
-- **`ProjectDataDlg.cpp/h`**
+**Group F: Research & Development (Crafting System)**
+This is the core R&D system for creating new software and chips. It will be ported in stages.
+
+**Phase 1: Domain & Application Layer Foundation**
+-   **Task F.1:** Enhance the `Character` domain model to track an active research project's state (type, class, rating, time remaining). (Complete).
+-   **Task F.2:** Create a `SourceCode` domain object to represent the blueprints created by research projects.
+-   **Task F.3:** Create a `ProjectService` and its interface (`ProjectServiceInterface`) to contain the business logic for starting projects, working on them, and building from source code.
+-   **Task F.4:** Define the DTOs needed for the UI, such as `ProjectDataViewDTO` and `NewProjectViewDTO`.
+
+**Phase 2: "New Project" UI**
+-   **Task F.5:** Port `NewProjectDlg.cpp/h` to a `NewProjectView` component. This view will allow players to select and start a new research project.
+-   **Task F.6:** Integrate `NewProjectView` into the `Game` class, connecting it to the `ProjectService`.
+
+**Phase 3: "Project Management" UI**
+-   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions.
+-   **Task F.8:** Implement the "Work on Project" and "Build from Source" use cases, connecting the `ProjectDataView` buttons to the `ProjectService`.
+-   **Task F.9:** Integrate `ProjectDataView` into the `Game` class.
 
 **Recommendation:**
 The next step should be to implement **Group A**. This will establish a complete game startup flow: Intro -> New Character -> Home Dashboard.
