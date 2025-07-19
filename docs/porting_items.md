@@ -112,10 +112,10 @@ These views are likely used during the hacking/matrix part of the game.
 - **`FileAccessDlg.cpp/h`**: Port to `FileAccessView`. (Complete).
 - **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts). (Complete).
 
-**Group E: System & Configuration (Status: To Do)**
+**Group E: System & Configuration (Status: In Progress)**
 These are lower-priority views for game settings.
-- **`OptionsDlg.cpp/h`**: Port to `OptionsView`.
-- **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`.
+- **`OptionsDlg.cpp/h`**: Port to `OptionsView`. (Complete).
+- **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`. (In Progress).
 
 **Group F: "Project" Feature**
 This feature needs further analysis.

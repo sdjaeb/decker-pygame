@@ -27,6 +27,7 @@ from decker_pygame.ports.service_interfaces import (
     LoggingServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
+    SettingsServiceInterface,
     ShopServiceInterface,
 )
 from decker_pygame.presentation.asset_loader import load_spritesheet
@@ -48,10 +49,14 @@ from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
 )
 from decker_pygame.presentation.components.new_char_view import NewCharView
+from decker_pygame.presentation.components.options_view import OptionsView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.shop_item_view import ShopItemView
 from decker_pygame.presentation.components.shop_view import ShopView
+from decker_pygame.presentation.components.sound_edit_view import (
+    SoundEditView,
+)
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.utils import scale_icons
@@ -84,6 +89,7 @@ class Game:
         deck_service (DeckServiceInterface): The service for deck operations.
         shop_service (ShopServiceInterface): The service for shop operations.
         node_service (NodeServiceInterface): The service for node operations.
+        settings_service (SettingsServiceInterface): The service for game settings.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -102,6 +108,7 @@ class Game:
         deck_service (DeckServiceInterface): The service for deck operations.
         shop_service (ShopServiceInterface): The service for shop operations.
         node_service (NodeServiceInterface): The service for node operations.
+        settings_service (SettingsServiceInterface): The service for game settings.
         player_id (PlayerId): The ID of the current player.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
@@ -127,6 +134,8 @@ class Game:
         ice_data_view (Optional[IceDataView]): The ICE data view, if open.
         file_access_view (Optional[FileAccessView]): The file access view, if open.
         entry_view (Optional[EntryView]): The text entry view, if open.
+        options_view (Optional[OptionsView]): The game options view, if open.
+        sound_edit_view (Optional[SoundEditView]): The sound edit view, if open.
     """
 
     _modal_stack: list[pygame.sprite.Sprite]
@@ -144,6 +153,7 @@ class Game:
     deck_service: DeckServiceInterface
     shop_service: ShopServiceInterface
     node_service: NodeServiceInterface
+    settings_service: SettingsServiceInterface
     player_id: PlayerId
     character_id: CharacterId
     logging_service: LoggingServiceInterface
@@ -166,6 +176,8 @@ class Game:
     ice_data_view: Optional[IceDataView] = None
     file_access_view: Optional[FileAccessView] = None
     entry_view: Optional[EntryView] = None
+    options_view: Optional[OptionsView] = None
+    sound_edit_view: Optional[SoundEditView] = None
 
     def __init__(
         self,
@@ -177,6 +189,7 @@ class Game:
         deck_service: DeckServiceInterface,
         shop_service: ShopServiceInterface,
         node_service: NodeServiceInterface,
+        settings_service: SettingsServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -193,6 +206,7 @@ class Game:
         self.deck_service = deck_service
         self.shop_service = shop_service
         self.node_service = node_service
+        self.settings_service = settings_service
         self.character_id = character_id
         self.logging_service = logging_service
         self._modal_stack = []
@@ -619,6 +633,75 @@ class Game:
             self.show_message(f"Error: Could not access node '{node_id}'.")
             return
         self.toggle_file_access_view(node_data)
+
+    def _on_save_game(self) -> None:
+        """Callback to handle saving the game."""
+        # This will eventually call a service to persist all aggregates.
+        self.show_message("Game Saved (Not Implemented).")
+
+    def _on_load_game(self) -> None:
+        """Callback to handle loading the game."""
+        self.show_message("Game Loaded (Not Implemented).")
+
+    def _on_quit_to_menu(self) -> None:
+        """Callback to handle quitting to the main menu."""
+        # This will eventually transition the game state.
+        self.show_message("Quit to Menu (Not Implemented).")
+        self.toggle_options_view()
+
+    def _on_toggle_sound(self, enabled: bool) -> None:
+        """Callback to handle toggling sound."""
+        self.settings_service.set_sound_enabled(enabled)
+        self.show_message(f"Sound {'Enabled' if enabled else 'Disabled'}.")
+
+    def _on_toggle_tooltips(self, enabled: bool) -> None:
+        """Callback to handle toggling tooltips."""
+        self.settings_service.set_tooltips_enabled(enabled)
+        self.show_message(f"Tooltips {'Enabled' if enabled else 'Disabled'}.")
+
+    def toggle_options_view(self) -> None:
+        """Opens or closes the options view."""
+
+        def factory() -> Optional[OptionsView]:
+            options_data = self.settings_service.get_options()
+            return OptionsView(
+                data=options_data,
+                on_save=self._on_save_game,
+                on_load=self._on_load_game,
+                on_quit=self._on_quit_to_menu,
+                on_close=self.toggle_options_view,
+                on_toggle_sound=self._on_toggle_sound,
+                on_toggle_tooltips=self._on_toggle_tooltips,
+            )
+
+        self._toggle_view("options_view", factory)
+
+    def _on_master_volume_change(self, volume: float) -> None:
+        """Callback for master volume slider."""
+        self.settings_service.set_master_volume(volume)
+
+    def _on_music_volume_change(self, volume: float) -> None:
+        """Callback for music volume slider."""
+        self.settings_service.set_music_volume(volume)
+
+    def _on_sfx_volume_change(self, volume: float) -> None:
+        """Callback for sfx volume slider."""
+        self.settings_service.set_sfx_volume(volume)
+
+    def toggle_sound_edit_view(self) -> None:
+        """Opens or closes the sound edit view."""
+
+        def factory() -> Optional[SoundEditView]:
+            sound_data = self.settings_service.get_sound_options()
+            return SoundEditView(
+                data=sound_data,
+                on_close=self.toggle_sound_edit_view,
+                on_master_volume_change=self._on_master_volume_change,
+                on_music_volume_change=self._on_music_volume_change,
+                on_sfx_volume_change=self._on_sfx_volume_change,
+            )
+
+        self._toggle_view("sound_edit_view", factory)
 
     def _on_entry_submit(self, text: str, node_id: str) -> None:
         """Callback to handle submitting text from the entry view."""

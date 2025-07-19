@@ -33,6 +33,7 @@ from decker_pygame.ports.service_interfaces import (
     LoggingServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
+    SettingsServiceInterface,
     ShopServiceInterface,
 )
 from decker_pygame.presentation.components.build_view import BuildView
@@ -77,6 +78,7 @@ class Mocks:
     deck_service: Mock
     shop_service: Mock
     node_service: Mock
+    settings_service: Mock
     logging_service: Mock
 
 
@@ -90,6 +92,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_deck_service = Mock(spec=DeckServiceInterface)
     mock_shop_service = Mock(spec=ShopServiceInterface)
     mock_node_service = Mock(spec=NodeServiceInterface)
+    mock_settings_service = Mock(spec=SettingsServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
@@ -120,6 +123,7 @@ def game_with_mocks() -> Generator[Mocks]:
             deck_service=mock_deck_service,
             shop_service=mock_shop_service,
             node_service=mock_node_service,
+            settings_service=mock_settings_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -132,6 +136,7 @@ def game_with_mocks() -> Generator[Mocks]:
             deck_service=mock_deck_service,
             shop_service=mock_shop_service,
             node_service=mock_node_service,
+            settings_service=mock_settings_service,
             logging_service=mock_logging_service,
         )
 
@@ -149,6 +154,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.deck_service is mocks.deck_service
     assert game.shop_service is mocks.shop_service
     assert game.node_service is mocks.node_service
+    assert game.settings_service is mocks.settings_service
     assert game.logging_service is mocks.logging_service
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.character_id, uuid.UUID)
@@ -185,6 +191,7 @@ def test_game_load_assets_with_icons():
             deck_service=Mock(spec=DeckServiceInterface),
             shop_service=Mock(spec=ShopServiceInterface),
             node_service=Mock(spec=NodeServiceInterface),
+            settings_service=Mock(spec=SettingsServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -224,6 +231,7 @@ def test_game_load_assets_no_icons():
             deck_service=Mock(spec=DeckServiceInterface),
             shop_service=Mock(spec=ShopServiceInterface),
             node_service=Mock(spec=NodeServiceInterface),
+            settings_service=Mock(spec=SettingsServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -1504,3 +1512,125 @@ def test_toggle_entry_view_without_node_id(game_with_mocks: Mocks):
     assert game.entry_view is None, "View should remain closed"
     # The add method should not have been called, as the factory returns None.
     game.all_sprites.add.assert_called_once_with(mock_view)  # From the initial setup
+
+
+def test_on_save_game(game_with_mocks: Mocks):
+    """Tests the callback for saving the game."""
+    game = game_with_mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_save_game()
+        mock_show_message.assert_called_once_with("Game Saved (Not Implemented).")
+
+
+def test_on_load_game(game_with_mocks: Mocks):
+    """Tests the callback for loading the game."""
+    game = game_with_mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_load_game()
+        mock_show_message.assert_called_once_with("Game Loaded (Not Implemented).")
+
+
+def test_on_quit_to_menu(game_with_mocks: Mocks):
+    """Tests the callback for quitting to the main menu."""
+    game = game_with_mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        with patch.object(game, "toggle_options_view") as mock_toggle:
+            game._on_quit_to_menu()
+            mock_show_message.assert_called_once_with("Quit to Menu (Not Implemented).")
+            mock_toggle.assert_called_once()
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_on_toggle_sound(game_with_mocks: Mocks, enabled: bool):
+    """Tests the callback for toggling sound."""
+    mocks = game_with_mocks
+    game = mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_toggle_sound(enabled)
+        mocks.settings_service.set_sound_enabled.assert_called_once_with(enabled)
+        expected_msg = f"Sound {'Enabled' if enabled else 'Disabled'}."
+        mock_show_message.assert_called_once_with(expected_msg)
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_on_toggle_tooltips(game_with_mocks: Mocks, enabled: bool):
+    """Tests the callback for toggling tooltips."""
+    mocks = game_with_mocks
+    game = mocks.game
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_toggle_tooltips(enabled)
+        mocks.settings_service.set_tooltips_enabled.assert_called_once_with(enabled)
+        expected_msg = f"Tooltips {'Enabled' if enabled else 'Disabled'}."
+        mock_show_message.assert_called_once_with(expected_msg)
+
+
+def test_toggle_options_view(game_with_mocks: Mocks):
+    """Tests that toggle_options_view creates the view with correct data."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_options_data = Mock()
+    mocks.settings_service.get_options.return_value = mock_options_data
+
+    assert game.options_view is None
+
+    with patch("decker_pygame.presentation.game.OptionsView") as mock_view_class:
+        game.toggle_options_view()
+
+        assert game.options_view is not None
+        mocks.settings_service.get_options.assert_called_once()
+        mock_view_class.assert_called_once_with(
+            data=mock_options_data,
+            on_save=game._on_save_game,
+            on_load=game._on_load_game,
+            on_quit=game._on_quit_to_menu,
+            on_close=game.toggle_options_view,
+            on_toggle_sound=game._on_toggle_sound,
+            on_toggle_tooltips=game._on_toggle_tooltips,
+        )
+
+
+@pytest.mark.parametrize(
+    "callback_name, service_method_name",
+    [
+        ("_on_master_volume_change", "set_master_volume"),
+        ("_on_music_volume_change", "set_music_volume"),
+        ("_on_sfx_volume_change", "set_sfx_volume"),
+    ],
+)
+def test_on_volume_change_callbacks(
+    game_with_mocks: Mocks, callback_name: str, service_method_name: str
+):
+    """Tests the callbacks for volume sliders."""
+    mocks = game_with_mocks
+    game = mocks.game
+    volume = 0.75
+
+    game_method = getattr(game, callback_name)
+    service_method = getattr(mocks.settings_service, service_method_name)
+
+    game_method(volume)
+
+    service_method.assert_called_once_with(volume)
+
+
+def test_toggle_sound_edit_view(game_with_mocks: Mocks):
+    """Tests that toggle_sound_edit_view creates the view with correct data."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_sound_data = Mock()
+    mocks.settings_service.get_sound_options.return_value = mock_sound_data
+
+    assert game.sound_edit_view is None
+
+    with patch("decker_pygame.presentation.game.SoundEditView") as mock_view_class:
+        game.toggle_sound_edit_view()
+
+        assert game.sound_edit_view is not None
+        mocks.settings_service.get_sound_options.assert_called_once()
+        mock_view_class.assert_called_once_with(
+            data=mock_sound_data,
+            on_close=game.toggle_sound_edit_view,
+            on_master_volume_change=game._on_master_volume_change,
+            on_music_volume_change=game._on_music_volume_change,
+            on_sfx_volume_change=game._on_sfx_volume_change,
+        )

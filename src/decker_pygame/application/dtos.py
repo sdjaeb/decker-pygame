@@ -254,6 +254,34 @@ class EntryViewDTO:
     is_password: bool
 
 
+@dataclass
+class OptionsViewDTO:
+    """Data for displaying the game options/settings view.
+
+    Attributes:
+        sound_enabled (bool): Whether the sound is currently enabled.
+        tooltips_enabled (bool): Whether tooltips are currently enabled.
+    """
+
+    sound_enabled: bool
+    tooltips_enabled: bool
+
+
+@dataclass
+class SoundEditViewDTO:
+    """Data for displaying the sound editing view.
+
+    Attributes:
+        master_volume (float): The master volume level (0.0 to 1.0).
+        music_volume (float): The music volume level (0.0 to 1.0).
+        sfx_volume (float): The sound effects volume level (0.0 to 1.0).
+    """
+
+    master_volume: float
+    music_volume: float
+    sfx_volume: float
+
+
 @dataclass(frozen=True)
 class ContractSummaryDTO:
     """A summary of a contract for list views.
