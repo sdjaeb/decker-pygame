@@ -1,6 +1,6 @@
 """This module defines Data Transfer Objects (DTOs) for the application layer."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from decker_pygame.domain.ids import ContractId, DeckId
@@ -308,3 +308,38 @@ class ContractSummaryDTO:
             client=contract.client,
             reward=contract.reward_credits,
         )
+
+
+@dataclass(frozen=True)
+class ProjectDataViewDTO:
+    """A DTO containing data for the main project management view.
+
+    Attributes:
+        item_class (str): The specific class of the item (e.g., "Sentry ICE").
+        target_rating (int): The rating/level being researched.
+        time_required (int): The total time units required to complete the project.
+        time_spent (int): The time units already spent on the project.
+    """
+
+    item_class: str
+    target_rating: int
+    time_required: int
+    time_spent: int
+
+
+@dataclass(frozen=True)
+class NewProjectViewDTO:
+    """A DTO containing data needed for the "start new project" view.
+
+    Attributes:
+        programming_skill (int): The character's Programming skill level.
+        chip_design_skill (int): The character's Chip Design skill level.
+        available_software (list[str]): A list of software classes available to
+            research.
+        available_chips (list[str]): A list of chip classes available to research.
+    """
+
+    programming_skill: int
+    chip_design_skill: int
+    available_software: list[str] = field(default_factory=list)
+    available_chips: list[str] = field(default_factory=list)

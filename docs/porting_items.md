@@ -122,9 +122,9 @@ This is the core R&D system for creating new software and chips. It will be port
 
 **Phase 1: Domain & Application Layer Foundation**
 -   **Task F.1:** Enhance the `Character` domain model to track an active research project's state (type, class, rating, time remaining). (Complete).
--   **Task F.2:** Create a `SourceCode` domain object to represent the blueprints created by research projects.
--   **Task F.3:** Create a `ProjectService` and its interface (`ProjectServiceInterface`) to contain the business logic for starting projects, working on them, and building from source code.
--   **Task F.4:** Define the DTOs needed for the UI, such as `ProjectDataViewDTO` and `NewProjectViewDTO`.
+-   **Task F.2:** Create a `SourceCode` domain object to represent the blueprints created by research projects. (Complete - fulfilled by `Schematic` class).
+-   **Task F.3:** Create a `ProjectService` and its interface (`ProjectServiceInterface`) to contain the business logic for starting projects, working on them, and building from source code. (Complete).
+-   **Task F.4:** Define the DTOs needed for the UI, such as `ProjectDataViewDTO` and `NewProjectViewDTO`. (Complete).
 
 **Phase 2: "New Project" UI**
 -   **Task F.5:** Port `NewProjectDlg.cpp/h` to a `NewProjectView` component. This view will allow players to select and start a new research project.

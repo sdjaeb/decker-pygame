@@ -50,6 +50,7 @@ def test_craft_item_success(
         name="IcePick",
         produces_item_name="IcePick v1",
         produces_item_size=10,
+        rating=1,
         cost=[RequiredResource(name="credits", quantity=100)],
     )
 
@@ -76,7 +77,13 @@ def test_get_character_schematics(
     """Tests that the service can retrieve a character's schematics."""
     # Arrange
     char_id = CharacterId(uuid.uuid4())
-    schematic = Schematic("Test", "Test Item", 10, [])
+    schematic = Schematic(
+        name="Test",
+        produces_item_name="Test Item",
+        produces_item_size=10,
+        rating=1,
+        cost=[],
+    )
     mock_character = Mock(autospec=Character)
     mock_character.schematics = [schematic]
     mock_character_repo.get.return_value = mock_character
@@ -131,7 +138,11 @@ def test_craft_item_insufficient_credits_in_domain(
     """Tests that the service correctly propagates a failure from the domain layer."""
     char_id = CharacterId(uuid.uuid4())
     schematic = Schematic(
-        "IcePick", "IcePick v1", 10, [RequiredResource("credits", 100)]
+        name="IcePick",
+        produces_item_name="IcePick v1",
+        produces_item_size=10,
+        rating=1,
+        cost=[RequiredResource("credits", 100)],
     )
     mock_character = Mock(autospec=Character)
     mock_character.schematics = [schematic]

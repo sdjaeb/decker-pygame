@@ -19,6 +19,7 @@ class Schematic:
     name: str
     produces_item_name: str
     produces_item_size: int
+    rating: int
     cost: list[RequiredResource]
 
     def to_dict(self) -> dict[str, Any]:
@@ -27,6 +28,7 @@ class Schematic:
             "name": self.name,
             "produces_item_name": self.produces_item_name,
             "produces_item_size": self.produces_item_size,
+            "rating": self.rating,
             "cost": [c.__dict__ for c in self.cost],
         }
 
@@ -37,5 +39,6 @@ class Schematic:
             name=data["name"],
             produces_item_name=data["produces_item_name"],
             produces_item_size=data["produces_item_size"],
+            rating=data["rating"],
             cost=[RequiredResource(**c_data) for c_data in data["cost"]],
         )

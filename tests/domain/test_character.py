@@ -45,6 +45,7 @@ def schematic() -> Schematic:
         name="IcePick v1 Schematic",
         produces_item_name="IcePick v1",
         produces_item_size=50,
+        rating=1,
         cost=[RequiredResource(name="credits", quantity=200)],
     )
 
