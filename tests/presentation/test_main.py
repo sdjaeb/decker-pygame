@@ -53,6 +53,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_settings_service_class = mocker.patch(
         "decker_pygame.presentation.main.SettingsService"
     )
+    mock_project_service_class = mocker.patch(
+        "decker_pygame.presentation.main.ProjectService"
+    )
     mock_game_class = mocker.patch("decker_pygame.presentation.main.Game")
     mock_dispatcher_class = mocker.patch(
         "decker_pygame.presentation.main.EventDispatcher"
@@ -126,6 +129,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     )
     mock_node_service_class.assert_called_once_with()
     mock_settings_service_class.assert_called_once_with()
+    mock_project_service_class.assert_called_once_with(
+        character_repo=mock_char_repo_class.return_value
+    )
 
     create_calls = [call(name="Deckard"), call(name="Rynn")]
     mock_player_service_instance.create_new_player.assert_has_calls(
@@ -173,6 +179,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         shop_service=mock_shop_service_class.return_value,
         node_service=mock_node_service_class.return_value,
         settings_service=mock_settings_service_class.return_value,
+        project_service=mock_project_service_class.return_value,
         logging_service=mock_logging_service_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
@@ -192,6 +199,7 @@ def test_main_function_dev_mode(mocker: MockerFixture) -> None:
     mocker.patch("decker_pygame.presentation.main.ShopService")
     mocker.patch("decker_pygame.presentation.main.NodeService")
     mocker.patch("decker_pygame.presentation.main.SettingsService")
+    mocker.patch("decker_pygame.presentation.main.ProjectService")
     mocker.patch("decker_pygame.presentation.main.Game")
     mocker.patch("decker_pygame.presentation.main.EventDispatcher")
     mocker.patch("decker_pygame.presentation.main.LoggingService")

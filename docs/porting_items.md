@@ -127,8 +127,8 @@ This is the core R&D system for creating new software and chips. It will be port
 -   **Task F.4:** Define the DTOs needed for the UI, such as `ProjectDataViewDTO` and `NewProjectViewDTO`. (Complete).
 
 **Phase 2: "New Project" UI**
--   **Task F.5:** Port `NewProjectDlg.cpp/h` to a `NewProjectView` component. This view will allow players to select and start a new research project. (In Progress).
--   **Task F.6:** Integrate `NewProjectView` into the `Game` class, connecting it to the `ProjectService`.
+-   **Task F.5:** Port `NewProjectDlg.cpp/h` to a `NewProjectView` component. This view will allow players to select and start a new research project. (Complete).
+-   **Task F.6:** Integrate `NewProjectView` into the `Game` class, connecting it to the `ProjectService`. (Complete).
 
 **Phase 3: "Project Management" UI**
 -   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions.

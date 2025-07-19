@@ -24,6 +24,7 @@ from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.logging_service import ConsoleLogWriter, LoggingService
 from decker_pygame.application.node_service import NodeService
 from decker_pygame.application.player_service import PlayerService
+from decker_pygame.application.project_service import ProjectService
 from decker_pygame.application.settings_service import SettingsService
 from decker_pygame.application.shop_service import ShopService
 from decker_pygame.domain.character import Character
@@ -87,6 +88,9 @@ def main() -> None:
     )
     node_service = NodeService()
     settings_service = SettingsService()
+    project_service = ProjectService(
+        character_repo=character_repo,
+    )
 
     # 3. Set up generic event handlers
     event_logger = create_event_logging_handler(logging_service)
@@ -154,6 +158,7 @@ def main() -> None:
         shop_service=shop_service,
         node_service=node_service,
         settings_service=settings_service,
+        project_service=project_service,
         logging_service=logging_service,
     )
 

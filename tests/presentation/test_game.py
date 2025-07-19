@@ -16,6 +16,7 @@ from decker_pygame.application.dtos import (
     FileAccessViewDTO,
     IceDataViewDTO,
     MissionResultsDTO,
+    NewProjectViewDTO,
     PlayerStatusDTO,
     RestViewDTO,
     ShopItemViewDTO,
@@ -33,6 +34,7 @@ from decker_pygame.ports.service_interfaces import (
     LoggingServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
+    ProjectServiceInterface,
     SettingsServiceInterface,
     ShopServiceInterface,
 )
@@ -79,6 +81,7 @@ class Mocks:
     shop_service: Mock
     node_service: Mock
     settings_service: Mock
+    project_service: Mock
     logging_service: Mock
 
 
@@ -93,6 +96,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_shop_service = Mock(spec=ShopServiceInterface)
     mock_node_service = Mock(spec=NodeServiceInterface)
     mock_settings_service = Mock(spec=SettingsServiceInterface)
+    mock_project_service = Mock(spec=ProjectServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
@@ -124,6 +128,7 @@ def game_with_mocks() -> Generator[Mocks]:
             shop_service=mock_shop_service,
             node_service=mock_node_service,
             settings_service=mock_settings_service,
+            project_service=mock_project_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -137,6 +142,7 @@ def game_with_mocks() -> Generator[Mocks]:
             shop_service=mock_shop_service,
             node_service=mock_node_service,
             settings_service=mock_settings_service,
+            project_service=mock_project_service,
             logging_service=mock_logging_service,
         )
 
@@ -155,6 +161,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.shop_service is mocks.shop_service
     assert game.node_service is mocks.node_service
     assert game.settings_service is mocks.settings_service
+    assert game.project_service is mocks.project_service
     assert game.logging_service is mocks.logging_service
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.character_id, uuid.UUID)
@@ -192,6 +199,7 @@ def test_game_load_assets_with_icons():
             shop_service=Mock(spec=ShopServiceInterface),
             node_service=Mock(spec=NodeServiceInterface),
             settings_service=Mock(spec=SettingsServiceInterface),
+            project_service=Mock(spec=ProjectServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -232,6 +240,7 @@ def test_game_load_assets_no_icons():
             shop_service=Mock(spec=ShopServiceInterface),
             node_service=Mock(spec=NodeServiceInterface),
             settings_service=Mock(spec=SettingsServiceInterface),
+            project_service=Mock(spec=ProjectServiceInterface),
             character_id=Mock(spec=CharacterId),
             logging_service=Mock(spec=LoggingServiceInterface),
         )
@@ -1634,3 +1643,72 @@ def test_toggle_sound_edit_view(game_with_mocks: Mocks):
             on_music_volume_change=game._on_music_volume_change,
             on_sfx_volume_change=game._on_sfx_volume_change,
         )
+
+
+def test_toggle_new_project_view(game_with_mocks: Mocks):
+    """Tests that toggle_new_project_view creates the view with correct data."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_project_data = Mock(spec=NewProjectViewDTO)
+    mocks.project_service.get_new_project_data.return_value = mock_project_data
+
+    assert game.new_project_view is None
+
+    with patch("decker_pygame.presentation.game.NewProjectView") as mock_view_class:
+        game.toggle_new_project_view()
+
+        assert game.new_project_view is not None
+        mocks.project_service.get_new_project_data.assert_called_once_with(
+            game.character_id
+        )
+        mock_view_class.assert_called_once_with(
+            data=mock_project_data,
+            on_start=game._on_start_project,
+            on_close=game.toggle_new_project_view,
+        )
+
+
+def test_toggle_new_project_view_no_data(game_with_mocks: Mocks):
+    """Tests that the new project view is not opened if data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.project_service.get_new_project_data.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_new_project_view()
+        assert game.new_project_view is None
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve project data."
+        )
+
+
+def test_on_start_project_success(game_with_mocks: Mocks):
+    """Tests the callback for successfully starting a project."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with patch.object(game, "show_message") as mock_show_message:
+        with patch.object(game, "toggle_new_project_view") as mock_toggle:
+            game._on_start_project("software", "Test ICE", 2)
+
+            mocks.project_service.start_new_project.assert_called_once_with(
+                game.character_id, "software", "Test ICE", 2
+            )
+            mock_show_message.assert_called_once_with(
+                "Started research on Test ICE v2."
+            )
+            mock_toggle.assert_called_once()
+
+
+def test_on_start_project_failure(game_with_mocks: Mocks):
+    """Tests the start project callback when the service raises an error."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.project_service.start_new_project.side_effect = Exception("Service Error")
+
+    with patch.object(game, "show_message") as mock_show_message:
+        with patch.object(game, "toggle_new_project_view") as mock_toggle:
+            game._on_start_project("software", "Test ICE", 2)
+
+            mock_show_message.assert_called_once_with("Error: Service Error")
+            mock_toggle.assert_not_called()

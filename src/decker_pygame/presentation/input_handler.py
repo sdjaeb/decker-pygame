@@ -35,6 +35,7 @@ class PygameInputHandler:
             pygame.K_e: lambda: self._game.toggle_entry_view("corp_server_1"),
             pygame.K_o: self._game.toggle_options_view,
             pygame.K_u: self._game.toggle_sound_edit_view,
+            pygame.K_r: self._game.toggle_new_project_view,
             pygame.K_q: self._game.quit,
         }
 
@@ -74,6 +75,7 @@ class PygameInputHandler:
                 self._game.entry_view,
                 self._game.options_view,
                 self._game.sound_edit_view,
+                self._game.new_project_view,
             ]:
                 if view:
                     view.handle_event(event)

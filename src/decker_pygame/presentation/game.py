@@ -15,6 +15,7 @@ from decker_pygame.application.dtos import (
     FileAccessViewDTO,
     IceDataViewDTO,
     MissionResultsDTO,
+    NewProjectViewDTO,
     RestViewDTO,
     ShopItemViewDTO,
 )
@@ -27,6 +28,7 @@ from decker_pygame.ports.service_interfaces import (
     LoggingServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
+    ProjectServiceInterface,
     SettingsServiceInterface,
     ShopServiceInterface,
 )
@@ -49,6 +51,7 @@ from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
 )
 from decker_pygame.presentation.components.new_char_view import NewCharView
+from decker_pygame.presentation.components.new_project_view import NewProjectView
 from decker_pygame.presentation.components.options_view import OptionsView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.rest_view import RestView
@@ -90,6 +93,7 @@ class Game:
         shop_service (ShopServiceInterface): The service for shop operations.
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
+        project_service (ProjectServiceInterface): The service for R&D projects.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -109,6 +113,7 @@ class Game:
         shop_service (ShopServiceInterface): The service for shop operations.
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
+        project_service (ProjectServiceInterface): The service for R&D projects.
         player_id (PlayerId): The ID of the current player.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
@@ -136,6 +141,7 @@ class Game:
         entry_view (Optional[EntryView]): The text entry view, if open.
         options_view (Optional[OptionsView]): The game options view, if open.
         sound_edit_view (Optional[SoundEditView]): The sound edit view, if open.
+        new_project_view (Optional[NewProjectView]): The new project view, if open.
     """
 
     _modal_stack: list[pygame.sprite.Sprite]
@@ -154,6 +160,7 @@ class Game:
     shop_service: ShopServiceInterface
     node_service: NodeServiceInterface
     settings_service: SettingsServiceInterface
+    project_service: ProjectServiceInterface
     player_id: PlayerId
     character_id: CharacterId
     logging_service: LoggingServiceInterface
@@ -178,6 +185,7 @@ class Game:
     entry_view: Optional[EntryView] = None
     options_view: Optional[OptionsView] = None
     sound_edit_view: Optional[SoundEditView] = None
+    new_project_view: Optional[NewProjectView] = None
 
     def __init__(
         self,
@@ -190,6 +198,7 @@ class Game:
         shop_service: ShopServiceInterface,
         node_service: NodeServiceInterface,
         settings_service: SettingsServiceInterface,
+        project_service: ProjectServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -207,6 +216,7 @@ class Game:
         self.shop_service = shop_service
         self.node_service = node_service
         self.settings_service = settings_service
+        self.project_service = project_service
         self.character_id = character_id
         self.logging_service = logging_service
         self._modal_stack = []
@@ -702,6 +712,39 @@ class Game:
             )
 
         self._toggle_view("sound_edit_view", factory)
+
+    def _on_start_project(self, item_type: str, item_class: str, rating: int) -> None:
+        """Callback to handle starting a new research project."""
+        try:
+            self.project_service.start_new_project(
+                self.character_id, item_type, item_class, rating
+            )
+            self.show_message(f"Started research on {item_class} v{rating}.")
+            self.toggle_new_project_view()
+        except Exception as e:
+            self.show_message(f"Error: {e}")
+
+    def toggle_new_project_view(self) -> None:
+        """Toggles the visibility of the new project view."""
+
+        def factory() -> Optional[NewProjectView]:
+            data = self.project_service.get_new_project_data(self.character_id)
+            if not data:
+                self.show_message("Error: Could not retrieve project data.")
+                return None
+            return self._create_new_project_view(data)
+
+        self._toggle_view("new_project_view", factory)
+
+    def _create_new_project_view(
+        self, data: NewProjectViewDTO
+    ) -> Optional[NewProjectView]:
+        """Factory method for creating the NewProjectView."""
+        return NewProjectView(
+            data=data,
+            on_start=self._on_start_project,
+            on_close=self.toggle_new_project_view,
+        )
 
     def _on_entry_submit(self, text: str, node_id: str) -> None:
         """Callback to handle submitting text from the entry view."""
