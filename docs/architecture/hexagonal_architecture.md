@@ -22,7 +22,7 @@ We have two main types of ports:
 
 These define how external actors can drive the application. In our architecture, the **Service Interfaces** in `ports/service_interfaces.py` are our driving ports.
 
-**Example:** The `ShopServiceInterface` and `NodeServiceInterface` define the contracts for shop and node-related use cases, respectively. The `Game` class (a driving adapter) calls these methods, but the core application logic is completely unaware of Pygame.
+**Example:** The `ShopServiceInterface`, `NodeServiceInterface`, and `ProjectServiceInterface` define the contracts for their respective use cases. The `Game` class (a driving adapter) calls these methods, but the core application logic is completely unaware of Pygame.
 
 ```python
 # src/decker_pygame/ports/service_interfaces.py
@@ -66,7 +66,7 @@ These are the components that call into the Core's driving ports.
 
 -   **Input Handler (`src/decker_pygame/presentation/input_handler.py`):** The `PygameInputHandler` is a dedicated driving adapter. Its sole responsibility is to translate raw Pygame events (like key presses) into calls to methods on the `Game` object.
 -   **UI Components (`src/decker_pygame/presentation/components`):** Our Pygame components, like `CharDataView`, are also driving adapters. When a user clicks a `+` button, the view's callback calls a method on the `Game` class, which in turn calls the appropriate Application Service (e.g., `character_service.increase_skill(...)`).
-    - Other examples include `ShopView`, `DeckView`, `FileAccessView`, `OptionsView`, and `SoundEditView`.
+    - Other examples include `ShopView`, `DeckView`, `FileAccessView`, `OptionsView`, `SoundEditView`, and `ProjectDataView`.
 
 ### 3.2. Driven Adapters
 
