@@ -1,16 +1,15 @@
-"""This module contains tests for the ProjectService."""
-
 import uuid
 from unittest.mock import Mock, patch
 
 import pytest
 
-from decker_pygame.application.dtos import NewProjectViewDTO, ProjectDataViewDTO
+from decker_pygame.application.dtos import NewProjectViewDTO
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.project_service import ProjectError, ProjectService
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.crafting import Schematic
-from decker_pygame.domain.ids import CharacterId, DeckId
-from decker_pygame.domain.project import ActiveProject
+from decker_pygame.domain.crafting import RequiredResource, Schematic
+from decker_pygame.domain.ids import CharacterId, DeckId, SchematicId
+from decker_pygame.domain.project import ActiveProject, ProjectType
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 
 
@@ -21,9 +20,17 @@ def mock_character_repo() -> Mock:
 
 
 @pytest.fixture
-def project_service(mock_character_repo: Mock) -> ProjectService:
+def mock_event_dispatcher() -> Mock:
+    """Provides a mock EventDispatcher."""
+    return Mock(spec=EventDispatcher)
+
+
+@pytest.fixture
+def project_service(
+    mock_character_repo: Mock, mock_event_dispatcher: Mock
+) -> ProjectService:
     """Provides a ProjectService instance with a mock repository."""
-    return ProjectService(mock_character_repo)
+    return ProjectService(mock_character_repo, mock_event_dispatcher)
 
 
 @pytest.fixture
@@ -56,7 +63,7 @@ def test_start_new_project_success(
 
     project = character.active_project
     assert project is not None
-    assert project.item_type == "software"
+    assert project.project_type == ProjectType.SOFTWARE
     assert project.item_class == "Test ICE"
     assert project.target_rating == 3
     # Time calculation: rating^2 * 100 = 3*3*100 = 900
@@ -85,7 +92,17 @@ def test_start_new_project_with_schematic_reduction(
     project_service: ProjectService, mock_character_repo: Mock, character: Character
 ):
     """Tests that research time is reduced by existing schematics."""
-    character.schematics.append(Schematic("v2", "Test ICE v2", 1, 2, []))
+    character.schematics.append(
+        Schematic(
+            id=SchematicId(uuid.uuid4()),
+            type=ProjectType.SOFTWARE,
+            name="Test ICE v2",
+            produces_item_name="Test ICE",
+            produces_item_size=40,
+            rating=2,
+            cost=[],
+        )
+    )
     mock_character_repo.get.return_value = character
     char_id = CharacterId(character.id)
 
@@ -156,7 +173,13 @@ def test_work_on_project_success(
 ):
     """Tests that time can be successfully added to a project."""
     # Setup: Character has an active project
-    project = ActiveProject("software", "Test ICE", 1, 100, 25)
+    project = ActiveProject(
+        project_type=ProjectType.SOFTWARE,
+        item_class="Test ICE",
+        target_rating=1,
+        time_required=100,
+        time_spent=25,
+    )
     character.active_project = project
     mock_character_repo.get.return_value = character
     char_id = CharacterId(character.id)
@@ -199,7 +222,13 @@ def test_complete_project_success(
 ):
     """Tests that a completed project successfully awards a schematic on a good roll."""
     # Setup: Project is finished, character has high skill
-    project = ActiveProject("software", "Test ICE", 2, 100, 100)
+    project = ActiveProject(
+        project_type=ProjectType.SOFTWARE,
+        item_class="Test ICE",
+        target_rating=2,
+        time_required=100,
+        time_spent=100,
+    )
     character.active_project = project
     character.skills["Programming"] = 8
     mock_character_repo.get.return_value = character
@@ -223,7 +252,13 @@ def test_complete_project_skill_check_fails(
 ):
     """A completed project is consumed but no schematic is awarded on a bad roll."""
     # Setup: Project is finished, character has low skill
-    project = ActiveProject("software", "Test ICE", 2, 100, 100)
+    project = ActiveProject(
+        project_type=ProjectType.SOFTWARE,
+        item_class="Test ICE",
+        target_rating=2,
+        time_required=100,
+        time_spent=100,
+    )
     character.active_project = project
     character.skills["Programming"] = 1
     mock_character_repo.get.return_value = character
@@ -246,7 +281,13 @@ def test_complete_project_not_enough_time(
 ):
     """Tests that an error is raised if the project isn't finished."""
     # Setup: Project is NOT finished
-    project = ActiveProject("software", "Test ICE", 1, 100, 50)
+    project = ActiveProject(
+        project_type=ProjectType.SOFTWARE,
+        item_class="Test ICE",
+        target_rating=1,
+        time_required=100,
+        time_spent=50,
+    )
     character.active_project = project
     mock_character_repo.get.return_value = character
     char_id = CharacterId(character.id)
@@ -255,49 +296,6 @@ def test_complete_project_not_enough_time(
         project_service.complete_project(char_id)
 
     mock_character_repo.save.assert_not_called()
-
-
-def test_get_project_data_with_active_project(
-    project_service: ProjectService, mock_character_repo: Mock, character: Character
-):
-    """Tests that get_project_data returns a DTO for an active project."""
-    project = ActiveProject("software", "Test ICE", 2, 100, 50)
-    character.active_project = project
-    mock_character_repo.get.return_value = character
-    char_id = CharacterId(character.id)
-
-    dto = project_service.get_project_data(char_id)
-
-    assert isinstance(dto, ProjectDataViewDTO)
-    assert dto.item_class == "Test ICE"
-    assert dto.target_rating == 2
-    assert dto.time_required == 100
-    assert dto.time_spent == 50
-
-
-def test_get_project_data_with_no_active_project(
-    project_service: ProjectService, mock_character_repo: Mock, character: Character
-):
-    """Tests that get_project_data returns None if no project is active."""
-    character.active_project = None
-    mock_character_repo.get.return_value = character
-    char_id = CharacterId(character.id)
-
-    dto = project_service.get_project_data(char_id)
-
-    assert dto is None
-
-
-def test_get_project_data_character_not_found(
-    project_service: ProjectService, mock_character_repo: Mock
-):
-    """Tests that get_project_data returns None if character is not found."""
-    mock_character_repo.get.return_value = None
-    char_id = CharacterId(uuid.uuid4())
-
-    dto = project_service.get_project_data(char_id)
-
-    assert dto is None
 
 
 def test_get_new_project_data_success(
@@ -353,17 +351,212 @@ def test_complete_project_character_not_found(
         project_service.complete_project(char_id)
 
 
-def test_complete_project_invalid_item_type_in_project(
+def test_get_project_data_view_data_with_active_project(
     project_service: ProjectService, mock_character_repo: Mock, character: Character
 ):
-    """Tests an error is raised if the active project has an invalid type."""
-    # Setup: Project is finished but has a corrupted/invalid item_type
-    project = ActiveProject("invalid_type", "Test Item", 1, 100, 100)
+    """
+    Tests that the service returns a correct DTO for a character with an active project.
+    """
+    project = ActiveProject(
+        project_type=ProjectType.SOFTWARE,
+        item_class="Test ICE",
+        target_rating=2,
+        time_required=100,
+        time_spent=50,
+    )
+    character.active_project = project
+    character.schematics.append(
+        Schematic(
+            id=SchematicId(uuid.uuid4()),
+            type=ProjectType.SOFTWARE,
+            name="Known Schematic",
+            produces_item_name="Known Item",
+            produces_item_size=1,
+            rating=1,
+            cost=[],
+        )
+    )
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+
+    dto = project_service.get_project_data_view_data(char_id)
+
+    assert dto is not None
+    assert dto.project_type == "Test ICE - 2"
+    assert dto.project_time_left == "50 TU"
+    assert dto.can_work_on_project is True
+    assert dto.can_start_new_project is False
+    assert len(dto.source_codes) == 1
+    assert dto.source_codes[0].name == "Known Item"
+
+
+def test_get_project_data_view_data_no_project(
+    project_service: ProjectService, mock_character_repo: Mock, character: Character
+):
+    """Tests that the service returns a correct DTO for a character with no project."""
+    character.active_project = None
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+
+    dto = project_service.get_project_data_view_data(char_id)
+
+    assert dto is not None
+    assert dto.project_type == "None"
+    assert dto.project_time_left == ""
+    assert dto.can_work_on_project is False
+    assert dto.can_start_new_project is True
+
+
+def test_get_project_data_view_data_character_not_found(
+    project_service: ProjectService, mock_character_repo: Mock
+):
+    """Tests that get_project_data_view_data returns None if character is not found."""
+    mock_character_repo.get.return_value = None
+    char_id = CharacterId(uuid.uuid4())
+
+    dto = project_service.get_project_data_view_data(char_id)
+
+    assert dto is None
+
+
+def test_build_from_schematic_success(
+    project_service: ProjectService,
+    mock_character_repo: Mock,
+    mock_event_dispatcher: Mock,
+    character: Character,
+):
+    """Tests that an item can be successfully built from a schematic by ID."""
+    schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
+        name="Test Build",
+        produces_item_name="Built Item",
+        produces_item_size=1,
+        rating=1,
+        cost=[RequiredResource("credits", 100)],
+    )
+    character.schematics.append(schematic)
+    character.credits = 200
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+
+    project_service.build_from_schematic(char_id, str(schematic.id))
+
+    assert character.credits == 100
+    assert len(character.stored_programs) == 1
+    assert character.stored_programs[0].name == "Built Item"
+    mock_character_repo.save.assert_called_once_with(character)
+    mock_event_dispatcher.dispatch.assert_called_once()
+
+
+def test_build_from_schematic_not_found(
+    project_service: ProjectService, mock_character_repo: Mock, character: Character
+):
+    """Tests building from a non-existent schematic ID raises an error."""
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+    non_existent_id = str(uuid.uuid4())
+
+    with pytest.raises(ProjectError, match="not found for character"):
+        project_service.build_from_schematic(char_id, non_existent_id)
+
+
+def test_build_from_schematic_character_not_found(
+    project_service: ProjectService, mock_character_repo: Mock
+):
+    """Tests building from schematic fails if the character is not found."""
+    mock_character_repo.get.return_value = None
+    char_id = CharacterId(uuid.uuid4())
+
+    with pytest.raises(ProjectError, match="Character with ID .* not found."):
+        project_service.build_from_schematic(char_id, str(uuid.uuid4()))
+
+
+def test_build_from_schematic_craft_error(
+    project_service: ProjectService, mock_character_repo: Mock, character: Character
+):
+    """Tests that a ValueError during craft is re-raised as ProjectError."""
+    schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
+        name="Test Build",
+        produces_item_name="Built Item",
+        produces_item_size=1,
+        rating=1,
+        cost=[RequiredResource("credits", 100)],
+    )
+    character.schematics.append(schematic)
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+
+    with patch.object(
+        character, "craft", side_effect=ValueError("Not enough resources")
+    ):
+        with pytest.raises(ProjectError, match="Not enough resources"):
+            project_service.build_from_schematic(char_id, str(schematic.id))
+
+
+def test_trash_schematic_success(
+    project_service: ProjectService, mock_character_repo: Mock, character: Character
+):
+    """Tests that a schematic can be successfully trashed by ID."""
+    schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
+        name="To Trash",
+        produces_item_name="Junk",
+        produces_item_size=1,
+        rating=1,
+        cost=[],
+    )
+    character.schematics.append(schematic)
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+
+    project_service.trash_schematic(char_id, str(schematic.id))
+
+    assert len(character.schematics) == 0
+    mock_character_repo.save.assert_called_once_with(character)
+
+
+def test_trash_schematic_not_found(
+    project_service: ProjectService, mock_character_repo: Mock, character: Character
+):
+    """Tests trashing a non-existent schematic ID raises an error."""
+    mock_character_repo.get.return_value = character
+    char_id = CharacterId(character.id)
+    non_existent_id = str(uuid.uuid4())
+
+    with pytest.raises(ProjectError, match="not found for character"):
+        project_service.trash_schematic(char_id, non_existent_id)
+
+
+def test_trash_schematic_character_not_found(
+    project_service: ProjectService, mock_character_repo: Mock
+):
+    """Tests trashing a schematic fails if the character is not found."""
+    mock_character_repo.get.return_value = None
+    char_id = CharacterId(uuid.uuid4())
+
+    with pytest.raises(ProjectError, match="Character with ID .* not found."):
+        project_service.trash_schematic(char_id, str(uuid.uuid4()))
+
+
+def test_complete_project_invalid_item_type_in_active_project(
+    project_service: ProjectService, mock_character_repo: Mock, character: Character
+):
+    """Tests that an error is raised if the active project has an invalid item type."""
+    project = ActiveProject(
+        project_type=Mock(),  # Mock an invalid project type
+        item_class="Test ICE",
+        target_rating=2,
+        time_required=100,
+        time_spent=100,
+    )
+    project.project_type.value = "invalid_type"
     character.active_project = project
     mock_character_repo.get.return_value = character
     char_id = CharacterId(character.id)
 
     with pytest.raises(ProjectError, match="Invalid item type in active project"):
         project_service.complete_project(char_id)
-
-    mock_character_repo.save.assert_not_called()

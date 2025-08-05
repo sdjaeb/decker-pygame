@@ -130,7 +130,8 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_node_service_class.assert_called_once_with()
     mock_settings_service_class.assert_called_once_with()
     mock_project_service_class.assert_called_once_with(
-        character_repo=mock_char_repo_class.return_value
+        character_repo=mock_char_repo_class.return_value,
+        event_dispatcher=mock_dispatcher_class.return_value,
     )
 
     create_calls = [call(name="Deckard"), call(name="Rynn")]

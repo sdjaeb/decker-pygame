@@ -30,7 +30,8 @@ from decker_pygame.application.shop_service import ShopService
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, PlayerCreated
-from decker_pygame.domain.ids import CharacterId
+from decker_pygame.domain.ids import CharacterId, SchematicId
+from decker_pygame.domain.project import ProjectType
 from decker_pygame.infrastructure.json_character_repository import (
     JsonFileCharacterRepository,
 )
@@ -90,6 +91,7 @@ def main() -> None:
     settings_service = SettingsService()
     project_service = ProjectService(
         character_repo=character_repo,
+        event_dispatcher=event_dispatcher,
     )
 
     # 3. Set up generic event handlers
@@ -121,6 +123,8 @@ def main() -> None:
         initial_reputation=0,
     )
     schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
         name="IcePick v1",
         produces_item_name="IcePick v1",
         produces_item_size=10,
@@ -135,6 +139,8 @@ def main() -> None:
         character.credits += 5000
         # Add another schematic for testing crafting
         debug_schematic = Schematic(
+            id=SchematicId(uuid.uuid4()),
+            type=ProjectType.SOFTWARE,
             name="Debug Blaster",
             produces_item_name="Debug Blaster 9000",
             produces_item_size=50,

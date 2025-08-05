@@ -12,7 +12,8 @@ from decker_pygame.application.crafting_service import (
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
-from decker_pygame.domain.ids import CharacterId
+from decker_pygame.domain.ids import CharacterId, SchematicId
+from decker_pygame.domain.project import ProjectType
 from decker_pygame.ports.repository_interfaces import CharacterRepositoryInterface
 
 
@@ -47,6 +48,8 @@ def test_craft_item_success(
     # Arrange
     char_id = CharacterId(uuid.uuid4())
     schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
         name="IcePick",
         produces_item_name="IcePick v1",
         produces_item_size=10,
@@ -78,6 +81,8 @@ def test_get_character_schematics(
     # Arrange
     char_id = CharacterId(uuid.uuid4())
     schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
         name="Test",
         produces_item_name="Test Item",
         produces_item_size=10,
@@ -138,6 +143,8 @@ def test_craft_item_insufficient_credits_in_domain(
     """Tests that the service correctly propagates a failure from the domain layer."""
     char_id = CharacterId(uuid.uuid4())
     schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
         name="IcePick",
         produces_item_name="IcePick v1",
         produces_item_size=10,

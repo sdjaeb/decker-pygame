@@ -22,6 +22,7 @@ class HomeView(pygame.sprite.Sprite):
         on_build (Callable[[], None]): Callback for opening the build view.
         on_shop (Callable[[], None]): Callback for opening the shop view.
         on_transfer (Callable[[], None]): Callback for opening the transfer view.
+        on_projects (Callable[[], None]): Callback for opening the projects view.
 
     Attributes:
         image (pygame.Surface): The surface that represents the view.
@@ -40,6 +41,7 @@ class HomeView(pygame.sprite.Sprite):
         on_build: Callable[[], None],
         on_shop: Callable[[], None],
         on_transfer: Callable[[], None],
+        on_projects: Callable[[], None],
     ):
         super().__init__()
         self._on_char = on_char
@@ -48,8 +50,9 @@ class HomeView(pygame.sprite.Sprite):
         self._on_build = on_build
         self._on_shop = on_shop
         self._on_transfer = on_transfer
+        self._on_projects = on_projects
 
-        self.image = pygame.Surface((200, 300))
+        self.image = pygame.Surface((200, 350))
         self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
 
         self._font = pygame.font.Font(
@@ -75,6 +78,7 @@ class HomeView(pygame.sprite.Sprite):
             ("Build", self._on_build),
             ("Shop", self._on_shop),
             ("Transfer", self._on_transfer),
+            ("Projects", self._on_projects),
         ]
 
         for text, action in button_actions:

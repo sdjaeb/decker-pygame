@@ -50,10 +50,13 @@ from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
 )
+
+# from decker_pygame.presentation.components.project_data_view import ProjectDataView
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.new_project_view import NewProjectView
 from decker_pygame.presentation.components.options_view import OptionsView
 from decker_pygame.presentation.components.order_view import OrderView
+from decker_pygame.presentation.components.project_data_view import ProjectDataView
 from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.shop_item_view import ShopItemView
 from decker_pygame.presentation.components.shop_view import ShopView
@@ -142,6 +145,7 @@ class Game:
         options_view (Optional[OptionsView]): The game options view, if open.
         sound_edit_view (Optional[SoundEditView]): The sound edit view, if open.
         new_project_view (Optional[NewProjectView]): The new project view, if open.
+        project_data_view (Optional[ProjectDataView]): The project data view, if open.
     """
 
     _modal_stack: list[pygame.sprite.Sprite]
@@ -186,6 +190,7 @@ class Game:
     options_view: Optional[OptionsView] = None
     sound_edit_view: Optional[SoundEditView] = None
     new_project_view: Optional[NewProjectView] = None
+    project_data_view: Optional[ProjectDataView] = None
 
     def __init__(
         self,
@@ -332,6 +337,7 @@ class Game:
                 on_build=self.toggle_build_view,
                 on_shop=self.toggle_shop_view,
                 on_transfer=self.toggle_transfer_view,
+                on_projects=self.toggle_project_data_view,
             )
 
         self._toggle_view("home_view", factory)
@@ -375,6 +381,77 @@ class Game:
             return None
 
         self._toggle_view("shop_item_view", factory)
+
+    def _on_new_project(self) -> None:
+        """Closes the project data view and opens the new project view."""
+        self.toggle_project_data_view()
+        self.toggle_new_project_view()
+
+    def _on_work_day(self) -> None:
+        """Callback to add one day of work to the current project."""
+
+        def action() -> None:
+            self.project_service.work_on_project(self.character_id, 1)
+            self.show_message("One day of work completed.")
+
+        self._execute_and_refresh_view(action, self.toggle_project_data_view)
+
+    def _on_work_week(self) -> None:
+        """Callback to add one week of work to the current project."""
+
+        def action() -> None:
+            self.project_service.work_on_project(self.character_id, 7)
+            self.show_message("One week of work completed.")
+
+        self._execute_and_refresh_view(action, self.toggle_project_data_view)
+
+    def _on_finish_project(self) -> None:
+        """Callback to complete the current project."""
+
+        def action() -> None:
+            self.project_service.complete_project(self.character_id)
+            self.show_message("Project finished.")
+
+        self._execute_and_refresh_view(action, self.toggle_project_data_view)
+
+    def _on_build_schematic(self, schematic_id: str) -> None:
+        """Callback to build an item from a schematic."""
+
+        def action() -> None:
+            self.project_service.build_from_schematic(self.character_id, schematic_id)
+            # Success message is handled by the ItemCrafted event handler
+
+        self._execute_and_refresh_view(action, self.toggle_project_data_view)
+
+    def _on_trash_schematic(self, schematic_id: str) -> None:
+        """Callback to delete a schematic."""
+
+        def action() -> None:
+            self.project_service.trash_schematic(self.character_id, schematic_id)
+            self.show_message("Schematic trashed.")
+
+        self._execute_and_refresh_view(action, self.toggle_project_data_view)
+
+    def toggle_project_data_view(self) -> None:
+        """Opens or closes the main project management view."""
+
+        def factory() -> Optional[ProjectDataView]:
+            data = self.project_service.get_project_data_view_data(self.character_id)
+            if not data:
+                self.show_message("Error: Could not retrieve project data.")
+                return None
+            return ProjectDataView(
+                data=data,
+                on_close=self.toggle_project_data_view,
+                on_new_project=self._on_new_project,
+                on_work_day=self._on_work_day,
+                on_work_week=self._on_work_week,
+                on_finish_project=self._on_finish_project,
+                on_build=self._on_build_schematic,
+                on_trash=self._on_trash_schematic,
+            )
+
+        self._toggle_view("project_data_view", factory)
 
     def _on_rest(self) -> None:
         """Callback for when the player chooses to rest."""
@@ -514,32 +591,36 @@ class Game:
 
         self._toggle_view("deck_view", factory)
 
-    def _on_move_program_up(self, program_name: str) -> None:
-        """Callback to handle moving a program up in the deck order."""
+    def _move_program_and_refresh(self, move_action: Callable[..., None]) -> None:
+        """Generic helper to move a program and refresh the order view."""
         char_data = self.character_service.get_character_data(self.character_id)
         if not char_data:
             self.show_message("Error: Could not find character to modify deck.")
             return
         try:
-            self.deck_service.move_program_up(char_data.deck_id, program_name)
+            move_action(char_data.deck_id)
             self._on_order_deck()  # Refresh the order view
         except Exception as e:
             self.show_message(f"Error: {e}")
+
+    def _on_move_program_up(self, program_name: str) -> None:
+        """Callback to handle moving a program up in the deck order."""
+        self._move_program_and_refresh(
+            lambda deck_id: self.deck_service.move_program_up(deck_id, program_name)
+        )
 
     def _on_move_program_down(self, program_name: str) -> None:
         """Callback to handle moving a program down in the deck order."""
+        self._move_program_and_refresh(
+            lambda deck_id: self.deck_service.move_program_down(deck_id, program_name)
+        )
+
+    def _on_move_program_to_deck(self, program_name: str) -> None:
+        """Callback to handle moving a program to the deck."""
         char_data = self.character_service.get_character_data(self.character_id)
         if not char_data:
             self.show_message("Error: Could not find character to modify deck.")
             return
-        try:
-            self.deck_service.move_program_down(char_data.deck_id, program_name)
-            self._on_order_deck()  # Refresh the order view
-        except Exception as e:
-            self.show_message(f"Error: {e}")
-
-    def _on_move_program_to_deck(self, program_name: str) -> None:
-        """Callback to handle moving a program to the deck."""
 
         def action() -> None:
             self.deck_service.move_program_to_deck(self.character_id, program_name)
@@ -548,6 +629,10 @@ class Game:
 
     def _on_move_program_to_storage(self, program_name: str) -> None:
         """Callback to handle moving a program to storage."""
+        char_data = self.character_service.get_character_data(self.character_id)
+        if not char_data:
+            self.show_message("Error: Could not find character to modify deck.")
+            return
 
         def action() -> None:
             self.deck_service.move_program_to_storage(self.character_id, program_name)

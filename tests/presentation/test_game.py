@@ -18,6 +18,7 @@ from decker_pygame.application.dtos import (
     MissionResultsDTO,
     NewProjectViewDTO,
     PlayerStatusDTO,
+    ProjectDataViewDTO,
     RestViewDTO,
     ShopItemViewDTO,
     ShopViewDTO,
@@ -39,6 +40,8 @@ from decker_pygame.ports.service_interfaces import (
     ShopServiceInterface,
 )
 from decker_pygame.presentation.components.build_view import BuildView
+from decker_pygame.presentation.components.contract_data_view import ContractDataView
+from decker_pygame.presentation.components.contract_list_view import ContractListView
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
@@ -52,6 +55,7 @@ from decker_pygame.presentation.components.mission_results_view import (
 )
 from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
+from decker_pygame.presentation.components.project_data_view import ProjectDataView
 from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
@@ -518,7 +522,9 @@ def test_game_toggles_contract_list_view(game_with_mocks: Mocks):
     assert game.contract_list_view is None
 
     # Call the public method to open the view
-    with patch("decker_pygame.presentation.game.ContractListView") as mock_view_class:
+    with patch(
+        "decker_pygame.presentation.game.ContractListView", spec=ContractListView
+    ) as mock_view_class:
         game.toggle_contract_list_view()
         mock_view_class.assert_called_once()
         assert game.contract_list_view is not None
@@ -535,7 +541,9 @@ def test_game_toggles_contract_data_view(game_with_mocks: Mocks):
     assert game.contract_data_view is None
 
     # Call the public method to open the view
-    with patch("decker_pygame.presentation.game.ContractDataView") as mock_view_class:
+    with patch(
+        "decker_pygame.presentation.game.ContractDataView", spec=ContractDataView
+    ) as mock_view_class:
         game.toggle_contract_data_view()
         mock_view_class.assert_called_once()
         assert game.contract_data_view is not None
@@ -635,6 +643,67 @@ def test_on_move_program_order_refresh_fails(game_with_mocks: Mocks):
             mock_show_message.assert_called_once_with("Error: Refresh Error")
 
 
+def test_move_program_and_refresh_no_char_data(game_with_mocks: Mocks):
+    """
+    Tests that _move_program_and_refresh shows an error if character data is not found.
+    """
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.character_service.get_character_data.return_value = None
+    mock_move_action = Mock()
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._move_program_and_refresh(mock_move_action)
+        mock_show_message.assert_called_once_with(
+            "Error: Could not find character to modify deck."
+        )
+        mock_move_action.assert_not_called()
+
+
+def test_move_program_and_refresh_service_exception(game_with_mocks: Mocks):
+    """
+    Tests that _move_program_and_refresh shows an error if the move action fails.
+    """
+    mocks = game_with_mocks
+    game = mocks.game
+    mock_deck_id = DeckId(uuid.uuid4())
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
+    mock_move_action = Mock(side_effect=Exception("Service Error"))
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._move_program_and_refresh(mock_move_action)
+        mock_show_message.assert_called_once_with("Error: Service Error")
+        mock_move_action.assert_called_once_with(mock_deck_id)
+
+
+def test_on_move_program_to_storage_no_char_data(game_with_mocks: Mocks):
+    """Tests that on_move_program_to_storage shows an error if char data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.character_service.get_character_data.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_move_program_to_storage("any_program")
+        mock_show_message.assert_called_once_with(
+            "Error: Could not find character to modify deck."
+        )
+
+
+def test_on_move_program_to_deck_no_char_data(game_with_mocks: Mocks):
+    """Tests that on_move_program_to_deck shows an error if char data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.character_service.get_character_data.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._on_move_program_to_deck("any_program")
+        mock_show_message.assert_called_once_with(
+            "Error: Could not find character to modify deck."
+        )
+
+
 def test_toggle_deck_view_no_deck_data(game_with_mocks: Mocks):
     """Tests that the deck view is not opened if deck data is missing."""
     mocks = game_with_mocks
@@ -711,7 +780,7 @@ def test_on_move_program_to_deck(game_with_mocks: Mocks):
         mocks.deck_service.move_program_to_deck.assert_called_once_with(
             game.character_id, "IcePick"
         )
-        assert mock_toggle.call_count == 2
+        assert mock_toggle.call_count == 2  # Close and re-open
 
 
 def test_on_move_program_to_storage(game_with_mocks: Mocks):
@@ -735,19 +804,48 @@ def test_on_move_program_to_storage(game_with_mocks: Mocks):
         ("_on_move_program_to_storage", "move_program_to_storage"),
     ],
 )
-def test_on_move_program_failure(
+def test_on_move_program_failure_service_error(
     game_with_mocks: Mocks, method_to_test: str, service_method_to_mock: str
 ):
     """Tests the transfer callbacks when the service raises an error."""
     mocks = game_with_mocks
     game = mocks.game
+    mock_deck_id = DeckId(uuid.uuid4())
+    game_method = getattr(game, method_to_test)
+
+    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
+        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
+    )
     mock_service_method = getattr(mocks.deck_service, service_method_to_mock)
     mock_service_method.side_effect = DeckServiceError("Service Error")
 
     with patch.object(game, "show_message") as mock_show_message:
-        game_method = getattr(game, method_to_test)
         game_method("AnyProgram")
         mock_show_message.assert_called_once_with("Error: Service Error")
+        mock_show_message.assert_called_once_with("Error: Service Error")
+
+
+@pytest.mark.parametrize(
+    "method_to_test",
+    [
+        "_on_move_program_to_deck",
+        "_on_move_program_to_storage",
+    ],
+)
+def test_on_move_program_failure_no_char_data(
+    game_with_mocks: Mocks, method_to_test: str
+):
+    """Tests the transfer callbacks when character data is not found."""
+    mocks = game_with_mocks
+    game = mocks.game
+    game_method = getattr(game, method_to_test)
+
+    mocks.character_service.get_character_data.return_value = None
+    with patch.object(game, "show_message") as mock_show_message:
+        game_method("AnyProgram")
+        mock_show_message.assert_called_once_with(
+            "Error: Could not find character to modify deck."
+        )
 
 
 def test_on_order_deck_success(game_with_mocks: Mocks):
@@ -883,41 +981,6 @@ def test_on_move_program_up_and_down(game_with_mocks: Mocks):
         mock_refresh.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    "method_to_test, service_method_to_mock",
-    [
-        ("_on_move_program_up", "move_program_up"),
-        ("_on_move_program_down", "move_program_down"),
-    ],
-)
-def test_on_move_program_order_failure(
-    game_with_mocks: Mocks, method_to_test: str, service_method_to_mock: str
-):
-    """Tests the re-order callbacks when the service raises an error."""
-    mocks = game_with_mocks
-    game = mocks.game
-    mock_deck_id = DeckId(uuid.uuid4())
-    game_method = getattr(game, method_to_test)
-
-    # Test service error case
-    mocks.character_service.get_character_data.return_value = CharacterDataDTO(
-        name="Testy", credits=0, skills={}, unused_skill_points=0, deck_id=mock_deck_id
-    )
-    mock_service_method = getattr(mocks.deck_service, service_method_to_mock)
-    mock_service_method.side_effect = DeckServiceError("Service Error")
-    with patch.object(game, "show_message") as mock_show_message:
-        game_method("AnyProgram")
-        mock_show_message.assert_called_once_with("Error: Service Error")
-
-    # Test character not found case
-    mocks.character_service.get_character_data.return_value = None
-    with patch.object(game, "show_message") as mock_show_message:
-        game_method("AnyProgram")
-        mock_show_message.assert_called_once_with(
-            "Error: Could not find character to modify deck."
-        )
-
-
 def test_game_toggles_home_view(game_with_mocks: Mocks):
     """Tests that the toggle_home_view method opens and closes the view."""
     game = game_with_mocks.game
@@ -935,6 +998,7 @@ def test_game_toggles_home_view(game_with_mocks: Mocks):
             on_build=game.toggle_build_view,
             on_shop=game.toggle_shop_view,
             on_transfer=game.toggle_transfer_view,
+            on_projects=game.toggle_project_data_view,
         )
         assert game.home_view is not None
 
@@ -946,7 +1010,7 @@ def test_game_toggles_home_view(game_with_mocks: Mocks):
 def test_game_toggles_intro_view(game_with_mocks: Mocks):
     """Tests that the toggle_intro_view method opens and closes the view."""
     game = game_with_mocks.game
-    # It starts open from __init__, so it should exist
+    # It starts open from __init__,
     assert game.intro_view is not None
 
     # Toggle to close
@@ -1712,3 +1776,193 @@ def test_on_start_project_failure(game_with_mocks: Mocks):
 
             mock_show_message.assert_called_once_with("Error: Service Error")
             mock_toggle.assert_not_called()
+
+
+def test_execute_and_refresh_view_success(game_with_mocks: Mocks):
+    """
+    Tests that _execute_and_refresh_view correctly executes action and toggles view
+    on success.
+    """
+    game = game_with_mocks.game
+    mock_action = Mock()
+    mock_view_toggler = Mock()
+
+    game._execute_and_refresh_view(mock_action, mock_view_toggler)
+
+    mock_action.assert_called_once()
+    assert mock_view_toggler.call_count == 2
+    mock_view_toggler.assert_called_with()  # Ensure it was called without arguments
+
+
+def test_execute_and_refresh_view_failure(game_with_mocks: Mocks):
+    """
+    Tests that _execute_and_refresh_view handles exceptions and does not toggle view
+    on failure.
+    """
+    game = game_with_mocks.game
+    mock_action = Mock(side_effect=ValueError("Test Error"))
+    mock_view_toggler = Mock()
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game._execute_and_refresh_view(mock_action, mock_view_toggler)
+
+        mock_action.assert_called_once()
+        mock_view_toggler.assert_not_called()
+        mock_show_message.assert_called_once_with("Error: Test Error")
+
+
+def test_game_toggles_project_data_view(game_with_mocks: Mocks):
+    """Tests that the toggle_project_data_view method opens and closes the view."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Mock the DTO from the service
+    project_data = Mock(spec=ProjectDataViewDTO)
+    mocks.project_service.get_project_data_view_data.return_value = project_data
+
+    assert game.project_data_view is None
+
+    # Call the public method to open the view
+    with patch(
+        "decker_pygame.presentation.game.ProjectDataView", spec=ProjectDataView
+    ) as mock_view_class:
+        game.toggle_project_data_view()
+
+        mocks.project_service.get_project_data_view_data.assert_called_once_with(
+            game.character_id
+        )
+        mock_view_class.assert_called_once_with(
+            data=project_data,
+            on_close=game.toggle_project_data_view,
+            on_new_project=game._on_new_project,
+            on_work_day=game._on_work_day,
+            on_work_week=game._on_work_week,
+            on_finish_project=game._on_finish_project,
+            on_build=game._on_build_schematic,
+            on_trash=game._on_trash_schematic,
+        )
+        assert game.project_data_view is not None
+
+    # Call again to close the view
+    game.toggle_project_data_view()
+    assert game.project_data_view is None
+
+
+def test_on_new_project_callback(game_with_mocks: Mocks):
+    """Tests the callback for starting a new project from the project data view."""
+    game = game_with_mocks.game
+
+    with (
+        patch.object(game, "toggle_project_data_view") as mock_toggle_project_data,
+        patch.object(game, "toggle_new_project_view") as mock_toggle_new_project,
+    ):
+        game._on_new_project()
+
+        mock_toggle_project_data.assert_called_once()
+        mock_toggle_new_project.assert_called_once()
+
+
+def test_on_work_day(game_with_mocks: Mocks):
+    """Tests the callback for working on a project for a day."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with (
+        patch.object(game, "toggle_project_data_view") as mock_toggle,
+        patch.object(game, "show_message") as mock_show_message,
+    ):
+        game._on_work_day()
+
+        mocks.project_service.work_on_project.assert_called_once_with(
+            game.character_id, 1
+        )
+        mock_show_message.assert_called_once_with("One day of work completed.")
+        assert mock_toggle.call_count == 2
+
+
+def test_on_work_week(game_with_mocks: Mocks):
+    """Tests the callback for working on a project for a week."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with (
+        patch.object(game, "toggle_project_data_view") as mock_toggle,
+        patch.object(game, "show_message") as mock_show_message,
+    ):
+        game._on_work_week()
+
+        mocks.project_service.work_on_project.assert_called_once_with(
+            game.character_id, 7
+        )
+        mock_show_message.assert_called_once_with("One week of work completed.")
+        assert mock_toggle.call_count == 2
+
+
+def test_on_finish_project(game_with_mocks: Mocks):
+    """Tests the callback for finishing a project."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    with (
+        patch.object(game, "toggle_project_data_view") as mock_toggle,
+        patch.object(game, "show_message") as mock_show_message,
+    ):
+        game._on_finish_project()
+
+        mocks.project_service.complete_project.assert_called_once_with(
+            game.character_id
+        )
+        mock_show_message.assert_called_once_with("Project finished.")
+        assert mock_toggle.call_count == 2
+
+
+def test_on_build_schematic(game_with_mocks: Mocks):
+    """Tests the callback for building a schematic."""
+    mocks = game_with_mocks
+    game = mocks.game
+    schematic_id = str(uuid.uuid4())
+
+    with (
+        patch.object(game, "toggle_project_data_view") as mock_toggle,
+        patch.object(game, "show_message") as mock_show_message,
+    ):
+        game._on_build_schematic(schematic_id)
+
+        mocks.project_service.build_from_schematic.assert_called_once_with(
+            game.character_id, schematic_id
+        )
+        mock_show_message.assert_not_called()
+        assert mock_toggle.call_count == 2
+
+
+def test_on_trash_schematic(game_with_mocks: Mocks):
+    """Tests the callback for trashing a schematic."""
+    mocks = game_with_mocks
+    game = mocks.game
+    schematic_id = str(uuid.uuid4())
+
+    with (
+        patch.object(game, "toggle_project_data_view") as mock_toggle,
+        patch.object(game, "show_message") as mock_show_message,
+    ):
+        game._on_trash_schematic(schematic_id)
+
+        mocks.project_service.trash_schematic.assert_called_once_with(
+            game.character_id, schematic_id
+        )
+        mock_show_message.assert_called_once_with("Schematic trashed.")
+        assert mock_toggle.call_count == 2
+
+
+def test_toggle_project_data_view_no_data(game_with_mocks: Mocks):
+    """Tests that the project data view is not opened if data is missing."""
+    mocks = game_with_mocks
+    game = mocks.game
+    mocks.project_service.get_project_data_view_data.return_value = None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_project_data_view()
+        assert game.project_data_view is None
+        mock_show_message.assert_called_once_with(
+            "Error: Could not retrieve project data."
+        )

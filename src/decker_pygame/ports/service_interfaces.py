@@ -242,10 +242,22 @@ class ProjectServiceInterface(ABC):
     """Interface for the R&D Project application service."""
 
     @abstractmethod
-    def get_project_data(
+    def get_project_data_view_data(
         self, character_id: "CharacterId"
     ) -> "Optional[ProjectDataViewDTO]":
-        """Retrieves data about the character's active project for the UI."""
+        """Retrieves a comprehensive DTO for the project management view."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def build_from_schematic(
+        self, character_id: "CharacterId", schematic_id: str
+    ) -> None:
+        """Builds an item from a known schematic."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def trash_schematic(self, character_id: "CharacterId", schematic_id: str) -> None:
+        """Deletes a known schematic."""
         ...  # pragma: no cover
 
     @abstractmethod

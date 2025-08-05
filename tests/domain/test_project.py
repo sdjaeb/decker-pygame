@@ -1,12 +1,12 @@
 """This module contains tests for the domain objects related to the R&D system."""
 
-from decker_pygame.domain.project import ActiveProject
+from decker_pygame.domain.project import ActiveProject, ProjectType
 
 
 def test_active_project_serialization():
     """Tests that ActiveProject can be serialized to and from a dictionary."""
     project = ActiveProject(
-        item_type="software",
+        project_type=ProjectType.SOFTWARE,
         item_class="Sentry ICE",
         target_rating=1,
         time_required=100,
@@ -16,7 +16,7 @@ def test_active_project_serialization():
     data = project.to_dict()
 
     assert data == {
-        "item_type": "software",
+        "project_type": "software",
         "item_class": "Sentry ICE",
         "target_rating": 1,
         "time_required": 100,

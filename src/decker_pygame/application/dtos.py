@@ -311,20 +311,36 @@ class ContractSummaryDTO:
 
 
 @dataclass(frozen=True)
-class ProjectDataViewDTO:
-    """A DTO containing data for the main project management view.
+class SourceCodeDTO:
+    """DTO for a single piece of source code, representing a completed schematic.
 
-    Attributes:
-        item_class (str): The specific class of the item (e.g., "Sentry ICE").
-        target_rating (int): The rating/level being researched.
-        time_required (int): The total time units required to complete the project.
-        time_spent (int): The time units already spent on the project.
+    This is used to populate the list in the ProjectDataView.
     """
 
-    item_class: str
-    target_rating: int
-    time_required: int
-    time_spent: int
+    id: str  # A unique identifier for this source code instance.
+    type: str  # e.g., "Software" or "Chip"
+    name: str  # e.g., "Sentry ICE"
+    rating: int
+    current_rating: str  # The rating of the currently installed version, or "-"
+
+
+@dataclass(frozen=True)
+class ProjectDataViewDTO:
+    """A comprehensive DTO for the main project management view (`ProjectDataView`).
+
+    This contains all data needed to render the ProjectDataView, including the
+    current date, active project status, chip burning status, and all known
+    source codes.
+    """
+
+    date: str
+    project_type: str  # e.g., "Sentry ICE - 5" or "None".
+    project_time_left: str  # e.g., "10 days" or an empty string.
+    chip_type: str  # e.g., "Cortex Bomb Lvl 2" or "None".
+    chip_time_left: str  # e.g., "5 days" or an empty string.
+    can_start_new_project: bool  # Controls 'New Project' button state.
+    can_work_on_project: bool  # Controls 'Work Day/Week/Finish' button states.
+    source_codes: list[SourceCodeDTO] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

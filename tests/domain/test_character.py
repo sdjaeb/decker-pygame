@@ -7,9 +7,9 @@ import pytest
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, SkillDecreased, SkillIncreased
-from decker_pygame.domain.ids import CharacterId, DeckId, ProgramId
+from decker_pygame.domain.ids import CharacterId, DeckId, ProgramId, SchematicId
 from decker_pygame.domain.program import Program
-from decker_pygame.domain.project import ActiveProject
+from decker_pygame.domain.project import ActiveProject, ProjectType
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def character() -> Character:
 def active_project() -> ActiveProject:
     """Provides a default ActiveProject instance for testing."""
     return ActiveProject(
-        item_type="software",
+        project_type=ProjectType.SOFTWARE,
         item_class="Sentry ICE",
         target_rating=1,
         time_required=100,
@@ -42,6 +42,8 @@ def active_project() -> ActiveProject:
 def schematic() -> Schematic:
     """Provides a default Schematic instance for testing."""
     return Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
         name="IcePick v1 Schematic",
         produces_item_name="IcePick v1",
         produces_item_size=50,

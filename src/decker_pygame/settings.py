@@ -26,6 +26,7 @@ UI_FACE = Color(192, 192, 192)  # A standard grey
 UI_FACE_PRESSED = Color(20, 20, 20)  # A dark grey for pressed states
 UI_BORDER = Color(0, 0, 0)
 UI_BORDER_WIDTH = 1
+UI_FONT_DISABLED = Color(128, 128, 128)  # A standard grey for disabled text
 
 
 # --- UI Component Settings ---
