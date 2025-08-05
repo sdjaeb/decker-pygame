@@ -23,6 +23,7 @@ def test_home_view_initialization():
     mock_on_build = Mock()
     mock_on_shop = Mock()
     mock_on_transfer = Mock()
+    mock_on_projects = Mock()
 
     with (
         patch("pygame.font.Font") as mock_font_class,
@@ -47,6 +48,7 @@ def test_home_view_initialization():
             on_build=mock_on_build,
             on_shop=mock_on_shop,
             on_transfer=mock_on_transfer,
+            on_projects=mock_on_projects,
         )
 
         assert view is not None
@@ -54,7 +56,7 @@ def test_home_view_initialization():
         assert mock_font_instance.render.call_args[0][0] == "Main Menu"
 
         # 5 buttons should be created
-        assert mock_button_class.call_count == 6
+        assert mock_button_class.call_count == 7
         button_calls = mock_button_class.call_args_list
         button_texts = [call.args[2] for call in button_calls]
         button_callbacks = [call.args[3] for call in button_calls]
@@ -65,6 +67,7 @@ def test_home_view_initialization():
         assert "Build" in button_texts
         assert "Shop" in button_texts
         assert "Transfer" in button_texts
+        assert "Projects" in button_texts
 
         assert mock_on_char in button_callbacks
         assert mock_on_deck in button_callbacks
@@ -72,6 +75,7 @@ def test_home_view_initialization():
         assert mock_on_build in button_callbacks
         assert mock_on_shop in button_callbacks
         assert mock_on_transfer in button_callbacks
+        assert mock_on_projects in button_callbacks
 
 
 def test_home_view_event_handling():
@@ -82,6 +86,7 @@ def test_home_view_event_handling():
     mock_on_build = Mock()
     mock_on_shop = Mock()
     mock_on_transfer = Mock()
+    mock_on_projects = Mock()
 
     with (
         patch("pygame.font.Font") as mock_font_class,
@@ -106,6 +111,7 @@ def test_home_view_event_handling():
             on_build=mock_on_build,
             on_shop=mock_on_shop,
             on_transfer=mock_on_transfer,
+            on_projects=mock_on_projects,
         )
 
         # We can test the event delegation by checking if the button's method is called

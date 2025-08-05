@@ -4,6 +4,7 @@ import pygame
 import pytest
 
 from decker_pygame.presentation.components.button import Button
+from decker_pygame.settings import UI_FONT_DISABLED
 
 
 @pytest.fixture(autouse=True)
@@ -117,3 +118,70 @@ def test_transparent_button_renders_no_background():
     # The background should be fully transparent (alpha=0)
     # We check a corner pixel to be sure.
     assert button.image.get_at((0, 0)).a == 0
+
+
+def test_disabled_button_does_not_handle_events():
+    """Tests that a disabled button does not handle any mouse events."""
+    mock_callback = Mock()
+    button = Button(
+        position=(100, 100), size=(100, 50), text="Click", on_click=mock_callback
+    )
+    button.set_enabled(False)  # Disable the button
+
+    # Simulate a click
+    down_event = pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": button.rect.center}
+    )
+    button.handle_event(down_event)
+
+    up_event = pygame.event.Event(
+        pygame.MOUSEBUTTONUP, {"button": 1, "pos": button.rect.center}
+    )
+    button.handle_event(up_event)
+
+    mock_callback.assert_not_called()
+    assert button._is_pressed is False  # Should remain false
+
+
+def test_disabled_button_renders_correctly():
+    """Tests that a disabled button renders with the correct text color."""
+    mock_callback = Mock()
+    button = Button(
+        position=(10, 20),
+        size=(100, 50),
+        text="Disabled",
+        on_click=mock_callback,
+        is_transparent=True,  # Make button transparent for easier color checking
+    )
+    button.set_enabled(False)
+
+    # Re-render the button to apply the disabled state visual
+    button._render()
+
+    # Get the color of a pixel where the text should be
+    # This assumes the text is rendered in the center. Adjust if necessary.
+    text_x, text_y = button.image.get_rect().center
+    # Find a pixel that is not the background color (0,0,0,0 for transparent)
+    # Iterate a small area around the center to find a non-transparent pixel
+    found_color = None
+    for x_offset in range(-5, 6):
+        for y_offset in range(-5, 6):
+            try:
+                pixel_color = button.image.get_at(
+                    (text_x + x_offset, text_y + y_offset)
+                )
+                if pixel_color.a != 0:  # Check for non-transparent pixel
+                    found_color = pixel_color
+                    break
+            except IndexError:  # Handle cases where offset goes out of bounds
+                continue
+        if found_color:
+            break
+
+    assert found_color is not None, (
+        "No non-transparent pixel found, text might not be rendered."
+    )
+    # Compare the RGB values, ignoring alpha
+    assert found_color.r == UI_FONT_DISABLED.r
+    assert found_color.g == UI_FONT_DISABLED.g
+    assert found_color.b == UI_FONT_DISABLED.b

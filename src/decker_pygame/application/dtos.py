@@ -1,6 +1,6 @@
 """This module defines Data Transfer Objects (DTOs) for the application layer."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from decker_pygame.domain.ids import ContractId, DeckId
@@ -308,3 +308,54 @@ class ContractSummaryDTO:
             client=contract.client,
             reward=contract.reward_credits,
         )
+
+
+@dataclass(frozen=True)
+class SourceCodeDTO:
+    """DTO for a single piece of source code, representing a completed schematic.
+
+    This is used to populate the list in the ProjectDataView.
+    """
+
+    id: str  # A unique identifier for this source code instance.
+    type: str  # e.g., "Software" or "Chip"
+    name: str  # e.g., "Sentry ICE"
+    rating: int
+    current_rating: str  # The rating of the currently installed version, or "-"
+
+
+@dataclass(frozen=True)
+class ProjectDataViewDTO:
+    """A comprehensive DTO for the main project management view (`ProjectDataView`).
+
+    This contains all data needed to render the ProjectDataView, including the
+    current date, active project status, chip burning status, and all known
+    source codes.
+    """
+
+    date: str
+    project_type: str  # e.g., "Sentry ICE - 5" or "None".
+    project_time_left: str  # e.g., "10 days" or an empty string.
+    chip_type: str  # e.g., "Cortex Bomb Lvl 2" or "None".
+    chip_time_left: str  # e.g., "5 days" or an empty string.
+    can_start_new_project: bool  # Controls 'New Project' button state.
+    can_work_on_project: bool  # Controls 'Work Day/Week/Finish' button states.
+    source_codes: list[SourceCodeDTO] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class NewProjectViewDTO:
+    """A DTO containing data needed for the "start new project" view.
+
+    Attributes:
+        programming_skill (int): The character's Programming skill level.
+        chip_design_skill (int): The character's Chip Design skill level.
+        available_software (list[str]): A list of software classes available to
+            research.
+        available_chips (list[str]): A list of chip classes available to research.
+    """
+
+    programming_skill: int
+    chip_design_skill: int
+    available_software: list[str] = field(default_factory=list)
+    available_chips: list[str] = field(default_factory=list)

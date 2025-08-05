@@ -16,8 +16,10 @@ if TYPE_CHECKING:  # pragma: no cover
         DeckViewDTO,
         FileAccessViewDTO,
         IceDataViewDTO,
+        NewProjectViewDTO,
         OptionsViewDTO,
         PlayerStatusDTO,
+        ProjectDataViewDTO,
         ShopItemViewDTO,
         ShopViewDTO,
         SoundEditViewDTO,
@@ -234,3 +236,53 @@ class SettingsServiceInterface(ABC):  # pragma: no cover
     def set_sfx_volume(self, volume: float) -> None:
         """Sets the sound effects volume level."""
         raise NotImplementedError  # pragma: no cover
+
+
+class ProjectServiceInterface(ABC):
+    """Interface for the R&D Project application service."""
+
+    @abstractmethod
+    def get_project_data_view_data(
+        self, character_id: "CharacterId"
+    ) -> "Optional[ProjectDataViewDTO]":
+        """Retrieves a comprehensive DTO for the project management view."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def build_from_schematic(
+        self, character_id: "CharacterId", schematic_id: str
+    ) -> None:
+        """Builds an item from a known schematic."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def trash_schematic(self, character_id: "CharacterId", schematic_id: str) -> None:
+        """Deletes a known schematic."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def get_new_project_data(
+        self, character_id: "CharacterId"
+    ) -> "Optional[NewProjectViewDTO]":
+        """Retrieves data needed to start a new project for the UI."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def start_new_project(
+        self, character_id: "CharacterId", item_type: str, item_class: str, rating: int
+    ) -> None:
+        """Starts a new research project for the character."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def work_on_project(self, character_id: "CharacterId", time_to_add: int) -> None:
+        """Adds time to the character's active project."""
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def complete_project(self, character_id: "CharacterId") -> None:
+        """Checks if the project is finished.
+
+        If so, performs a skill check and awards a schematic on success.
+        """
+        ...  # pragma: no cover

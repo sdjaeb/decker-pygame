@@ -10,6 +10,7 @@ from decker_pygame.settings import (
     UI_FACE,
     UI_FACE_PRESSED,
     UI_FONT,
+    UI_FONT_DISABLED,
 )
 
 from .base_widgets import Clickable
@@ -40,6 +41,7 @@ class Button(Clickable):
         self.rect = self.image.get_rect(topleft=position)
         self.text = text
         self._is_pressed = False
+        self._is_enabled = True
         self._font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
         )
@@ -47,11 +49,20 @@ class Button(Clickable):
 
         self._render()
 
+    def set_enabled(self, enabled: bool) -> None:
+        """Sets the button's enabled state and redraws it."""
+        if self._is_enabled != enabled:
+            self._is_enabled = enabled
+            self._render()
+
     def _render(self) -> None:
         """Renders the button's surface based on its current state."""
-        text_color = (
-            UI_FONT.light_font_color if self._is_pressed else UI_FONT.dark_font_color
-        )
+        if not self._is_enabled:
+            text_color = UI_FONT_DISABLED
+        elif self._is_pressed:
+            text_color = UI_FONT.light_font_color
+        else:
+            text_color = UI_FONT.dark_font_color
         bg_color = UI_FACE_PRESSED if self._is_pressed else UI_FACE
 
         # Use SRCALPHA to support transparency
@@ -69,6 +80,9 @@ class Button(Clickable):
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Handles mouse click events with press and release states."""
+        if not self._is_enabled:
+            return
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 self._is_pressed = True

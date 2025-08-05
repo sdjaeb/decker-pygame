@@ -17,7 +17,7 @@ With the core architecture now stable, the primary focus is on implementing the 
 -   **Player Progression:**
     -   Flesh out the skill and credit systems.
     -   Implement the "Upgrade Lifestyle" feature.
-    -   Design and implement hardware chips and crafting components.
+    -   Design and implement hardware chips and crafting components. (R&D system complete).
     -   Balance the in-game economy (contract rewards vs. item costs).
 
 ## 2. Future Architectural Enhancements
