@@ -1,7 +1,7 @@
 """This module defines the Character aggregate root."""
 
 import uuid
-from typing import Any
+from typing import Any, Optional
 
 from decker_pygame.application.decorators import emits
 from decker_pygame.domain.crafting import Schematic
@@ -14,6 +14,7 @@ from decker_pygame.domain.events import (
 )
 from decker_pygame.domain.ids import AggregateId, CharacterId, DeckId, ProgramId
 from decker_pygame.domain.program import Program
+from decker_pygame.domain.project import ActiveProject
 
 
 class Character(AggregateRoot):
@@ -28,6 +29,8 @@ class Character(AggregateRoot):
         schematics (list[Schematic]): List of known program schematics.
         credits (int): Amount of credits the character has.
         unused_skill_points (int): Points available to spend on skills.
+        reputation (int): The character's reputation score.
+        active_project (Optional[ActiveProject]): The character's current research.
     """
 
     def __init__(
@@ -40,6 +43,8 @@ class Character(AggregateRoot):
         schematics: list[Schematic],
         credits: int,
         unused_skill_points: int,
+        reputation: int,
+        active_project: Optional[ActiveProject],
     ) -> None:
         super().__init__(id=AggregateId(id))
         self.name = name
@@ -49,6 +54,8 @@ class Character(AggregateRoot):
         self.credits = credits
         self.schematics = schematics
         self.unused_skill_points = unused_skill_points
+        self.reputation = reputation
+        self.active_project = active_project
 
     @staticmethod
     @emits(CharacterCreated)
@@ -59,6 +66,7 @@ class Character(AggregateRoot):
         initial_skills: dict[str, int],
         initial_credits: int,
         initial_skill_points: int,
+        initial_reputation: int,
     ) -> "Character":
         """Factory to create a new character, raising a CharacterCreated domain event.
 
@@ -69,6 +77,7 @@ class Character(AggregateRoot):
             initial_skills (dict[str, int]): Initial skills.
             initial_credits (int): Starting credits.
             initial_skill_points (int): Starting skill points.
+            initial_reputation (int): Starting reputation.
 
         Returns:
             "Character": The newly created character.
@@ -82,6 +91,8 @@ class Character(AggregateRoot):
             schematics=[],
             credits=initial_credits,
             unused_skill_points=initial_skill_points,
+            reputation=initial_reputation,
+            active_project=None,
         )
         character._events.append(
             CharacterCreated(
@@ -189,6 +200,26 @@ class Character(AggregateRoot):
             )
         )
 
+    def start_new_project(self, project: ActiveProject) -> None:
+        """Assigns a new research project to the character.
+
+        Any existing project is overwritten. The confirmation logic for this
+        action belongs in the Application Service layer.
+        """
+        self.active_project = project
+
+    def work_on_project(self, time_to_add: int) -> None:
+        """Adds time to the active project."""
+        if self.active_project is None:
+            raise ValueError("No active project to work on.")
+        self.active_project.time_spent += time_to_add
+
+    def complete_project(self) -> None:
+        """Completes and removes the active project from the character."""
+        if self.active_project is None:
+            raise ValueError("No active project to complete.")
+        self.active_project = None
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize the aggregate to a dictionary.
 
@@ -204,6 +235,10 @@ class Character(AggregateRoot):
             "schematics": [s.to_dict() for s in self.schematics],
             "credits": self.credits,
             "unused_skill_points": self.unused_skill_points,
+            "reputation": self.reputation,
+            "active_project": self.active_project.to_dict()
+            if self.active_project
+            else None,
         }
 
     @classmethod
@@ -227,4 +262,6 @@ class Character(AggregateRoot):
             schematics=[Schematic.from_dict(s_data) for s_data in data["schematics"]],
             credits=data["credits"],
             unused_skill_points=data["unused_skill_points"],
+            reputation=data.get("reputation", 0),
+            active_project=ActiveProject.from_dict(data.get("active_project")),
         )

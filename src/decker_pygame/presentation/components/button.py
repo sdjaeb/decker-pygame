@@ -4,7 +4,14 @@ from collections.abc import Callable
 
 import pygame
 
-from decker_pygame.settings import UI_FACE, UI_FONT
+from decker_pygame.settings import (
+    UI_BORDER,
+    UI_BORDER_WIDTH,
+    UI_FACE,
+    UI_FACE_PRESSED,
+    UI_FONT,
+    UI_FONT_DISABLED,
+)
 
 from .base_widgets import Clickable
 
@@ -17,6 +24,8 @@ class Button(Clickable):
         size (tuple[int, int]): The (width, height) of the button.
         text (str): The text to display on the button.
         on_click (Callable[[], None]): The function to call when clicked.
+        is_transparent (bool): If True, the button will have no visible background
+            or border. Defaults to False.
     """
 
     def __init__(
@@ -25,40 +34,59 @@ class Button(Clickable):
         size: tuple[int, int],
         text: str,
         on_click: Callable[[], None],
+        is_transparent: bool = False,
     ):
-        super().__init__(on_click=on_click)
-        self.rect = pygame.Rect(position, size)
+        super().__init__(on_click)
+        self.image = pygame.Surface(size, pygame.SRCALPHA)
+        self.rect = self.image.get_rect(topleft=position)
         self.text = text
-
-        font = pygame.font.Font(UI_FONT.default_font_name, UI_FONT.default_font_size)
-
-        # Unpressed state
-        self._image_up = pygame.Surface(size)
-        self._image_up.fill(UI_FACE)
-        pygame.draw.rect(self._image_up, (0, 0, 0), self._image_up.get_rect(), 1)
-        text_surf_up = font.render(text, True, UI_FONT.dark_font_color)
-        text_rect_up = text_surf_up.get_rect(center=self._image_up.get_rect().center)
-        self._image_up.blit(text_surf_up, text_rect_up)
-
-        # Pressed state (inverted colors)
-        self._image_down = pygame.Surface(size)
-        self._image_down.fill(UI_FONT.dark_font_color)  # Inverted background
-        pygame.draw.rect(self._image_down, (0, 0, 0), self._image_down.get_rect(), 1)
-        text_surf_down = font.render(text, True, UI_FACE)  # Inverted font color
-        text_rect_down = text_surf_down.get_rect(
-            center=self._image_down.get_rect().center
-        )
-        self._image_down.blit(text_surf_down, text_rect_down)
-
-        self.image = self._image_up
         self._is_pressed = False
+        self._is_enabled = True
+        self._font = pygame.font.Font(
+            UI_FONT.default_font_name, UI_FONT.default_font_size
+        )
+        self._is_transparent = is_transparent
+
+        self._render()
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Sets the button's enabled state and redraws it."""
+        if self._is_enabled != enabled:
+            self._is_enabled = enabled
+            self._render()
+
+    def _render(self) -> None:
+        """Renders the button's surface based on its current state."""
+        if not self._is_enabled:
+            text_color = UI_FONT_DISABLED
+        elif self._is_pressed:
+            text_color = UI_FONT.light_font_color
+        else:
+            text_color = UI_FONT.dark_font_color
+        bg_color = UI_FACE_PRESSED if self._is_pressed else UI_FACE
+
+        # Use SRCALPHA to support transparency
+        self.image.fill((0, 0, 0, 0))
+
+        if not self._is_transparent:
+            self.image.fill(bg_color)
+            pygame.draw.rect(
+                self.image, UI_BORDER, self.image.get_rect(), UI_BORDER_WIDTH
+            )
+
+        text_surface = self._font.render(self.text, True, text_color)
+        text_rect = text_surface.get_rect(center=self.image.get_rect().center)
+        self.image.blit(text_surface, text_rect)
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Handles mouse click events with press and release states."""
+        if not self._is_enabled:
+            return
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 self._is_pressed = True
-                self.image = self._image_down
+                self._render()
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             # Only trigger the click if the mouse is released over the button
             if self.rect.collidepoint(event.pos) and self._is_pressed:
@@ -66,4 +94,4 @@ class Button(Clickable):
 
             # Always reset state on mouse up
             self._is_pressed = False
-            self.image = self._image_up
+            self._render()

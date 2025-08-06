@@ -67,24 +67,73 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **ContractDataDialog.cpp/h** (`Ported as ContractDataView`)
 - **ContractListDialog.cpp/h** (`Ported as ContractListView`)
 - **DeckDataDialog.cpp/h** (`Ported as DeckView`)
-- **EntryDlg.cpp/h**
-- **FileAccessDlg.cpp/h**
-- **HomeView.cpp/h**
-- **IceDataDlg.cpp/h**
-- **IntroDlg.cpp/h**
-- **MissionResultsDlg.cpp/h**
-- **NameDlg.cpp/h**
-- **NewCharDlg.cpp/h**
-- **NewProjectDlg.cpp/h**
-- **OptionsDlg.cpp/h**
+- **EntryDlg.cpp/h** (`Ported as EntryView`)
+- **FileAccessDlg.cpp/h** (`Ported as FileAccessView`)
+- **HomeView.cpp/h** (`Ported as HomeView`)
+- **IceDataDlg.cpp/h** (`Ported as IceDataView`)
+- **IntroDlg.cpp/h** (`Ported as IntroView`)
+- **MissionResultsDlg.cpp/h** (`Ported as MissionResultsView`)
+- **NameDlg.cpp/h** (`Ported as TextInput component`)
+- **NewCharDlg.cpp/h** (`Ported as NewCharView`)
+- **NewProjectDlg.cpp/h** (`Ported as NewProjectView`)
+- **OptionsDlg.cpp/h** (`Ported as OptionsView`)
 - **OrderDlg.cpp/h** (`Ported as OrderView`)
-- **ProjectDataDlg.cpp/h**
-- **RestDlg.cpp/h**
-- **ShopItem.cpp/h**
-- **SoundEditDlg.cpp/h**
+- **ProjectDataDlg.cpp/h** (`Ported as ProjectDataView`)
+- **RestDlg.cpp/h** (`Ported as RestView`)
+- **ShopItem.cpp/h** (`Ported as ShopView` and `ShopItemView`)
+- **SoundEditDlg.cpp/h** (`Ported as SoundEditView`)
 - **TransferDlg.cpp/h** (`Ported as TransferView`)
 
 **Porting Priority:** 3
+
+#### Proposed Porting Groups for Remaining Dialogs
+
+Based on an analysis of the remaining dialogs, we can group them by functionality to guide the next phase of porting. The status of each group will be updated as work progresses.
+
+**Group A: Core Player Lifecycle (Status: Complete)**
+These views are essential for starting a new game and providing a central hub for the player.
+- **`HomeView.cpp/h`**: Port to `HomeView`. This will be the main player dashboard, with buttons to access Character data, Deck, Contracts, etc.
+- **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process. (Complete).
+- **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`. (Complete).
+- **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction. (Complete).
+
+**Group B: Core Gameplay Loop (Status: Complete)**
+These views are part of the main contract/mission cycle.
+- **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`. (Complete).
+- **`RestDlg.cpp/h`**: Port to `RestView`. (Complete).
+
+**Group C: Data Display & Shop (Status: Complete)**
+These views are for displaying information and handling commerce.
+- **`ShopItem.cpp/h`**: Port to `ShopView` and `ShopItemView`. (Complete).
+- **`IceDataDlg.cpp/h`**: Port to `IceDataView`. (Complete).
+
+**Group D: In-Mission Interaction (Status: Complete)**
+These views are likely used during the hacking/matrix part of the game.
+- **`FileAccessDlg.cpp/h`**: Port to `FileAccessView`. (Complete).
+- **`EntryDlg.cpp/h`**: Port to `EntryView` (e.g., for password prompts). (Complete).
+
+**Group E: System & Configuration (Status: Complete)**
+These are lower-priority views for game settings.
+- **`OptionsDlg.cpp/h`**: Port to `OptionsView`. (Complete).
+- **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`. (Complete).
+
+**Group F: Research & Development (Crafting System) (Status: Complete)**
+This is the core R&D system for creating new software and chips. It will be ported in stages.
+
+**Phase 1: Domain & Application Layer Foundation**
+-   **Task F.1:** Enhance the `Character` domain model to track an active research project's state (type, class, rating, time remaining). (Complete).
+-   **Task F.2:** Create a `SourceCode` domain object to represent the blueprints created by research projects. (Complete - fulfilled by `Schematic` class).
+-   **Task F.3:** Create a `ProjectService` and its interface (`ProjectServiceInterface`) to contain the business logic for starting projects, working on them, and building from source code. (Complete).
+-   **Task F.4:** Define the DTOs needed for the UI, such as `ProjectDataViewDTO` and `NewProjectViewDTO`. (Complete).
+
+**Phase 2: "New Project" UI**
+-   **Task F.5:** Port `NewProjectDlg.cpp/h` to a `NewProjectView` component. This view will allow players to select and start a new research project. (Complete).
+-   **Task F.6:** Integrate `NewProjectView` into the `Game` class, connecting it to the `ProjectService`. (Complete).
+
+**Phase 3: "Project Management" UI**
+-   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions. (Complete).
+-   **Task F.8:** Implement the "Work on Project" and "Build from Source" use cases, connecting the `ProjectDataView` buttons to the `ProjectService`. (Complete).
+-   **Task F.9:** Integrate `ProjectDataView` into the `Game` class. (Complete).
 
 ---
 

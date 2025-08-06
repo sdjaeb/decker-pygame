@@ -22,11 +22,16 @@ from decker_pygame.application.domain_event_handlers import (
 )
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.logging_service import ConsoleLogWriter, LoggingService
+from decker_pygame.application.node_service import NodeService
 from decker_pygame.application.player_service import PlayerService
+from decker_pygame.application.project_service import ProjectService
+from decker_pygame.application.settings_service import SettingsService
+from decker_pygame.application.shop_service import ShopService
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
 from decker_pygame.domain.events import ItemCrafted, PlayerCreated
-from decker_pygame.domain.ids import CharacterId
+from decker_pygame.domain.ids import CharacterId, SchematicId
+from decker_pygame.domain.project import ProjectType
 from decker_pygame.infrastructure.json_character_repository import (
     JsonFileCharacterRepository,
 )
@@ -79,6 +84,15 @@ def main() -> None:
         event_dispatcher=event_dispatcher,
         character_repo=character_repo,
     )
+    shop_service = ShopService(
+        character_repo=character_repo,
+    )
+    node_service = NodeService()
+    settings_service = SettingsService()
+    project_service = ProjectService(
+        character_repo=character_repo,
+        event_dispatcher=event_dispatcher,
+    )
 
     # 3. Set up generic event handlers
     event_logger = create_event_logging_handler(logging_service)
@@ -106,11 +120,15 @@ def main() -> None:
         initial_skills={"crafting": 5},
         initial_credits=2000,
         initial_skill_points=5,
+        initial_reputation=0,
     )
     schematic = Schematic(
+        id=SchematicId(uuid.uuid4()),
+        type=ProjectType.SOFTWARE,
         name="IcePick v1",
         produces_item_name="IcePick v1",
         produces_item_size=10,
+        rating=1,
         cost=[RequiredResource(name="credits", quantity=500)],
     )
     character.schematics.append(schematic)
@@ -121,9 +139,12 @@ def main() -> None:
         character.credits += 5000
         # Add another schematic for testing crafting
         debug_schematic = Schematic(
+            id=SchematicId(uuid.uuid4()),
+            type=ProjectType.SOFTWARE,
             name="Debug Blaster",
             produces_item_name="Debug Blaster 9000",
             produces_item_size=50,
+            rating=2,
             cost=[RequiredResource(name="credits", quantity=1)],
         )
         character.schematics.append(debug_schematic)
@@ -140,6 +161,10 @@ def main() -> None:
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
         deck_service=deck_service,
+        shop_service=shop_service,
+        node_service=node_service,
+        settings_service=settings_service,
+        project_service=project_service,
         logging_service=logging_service,
     )
 

@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any
+from typing import Any, Optional
 
 from decker_pygame.domain.ids import PlayerId
 from decker_pygame.domain.player import Player
@@ -31,7 +31,7 @@ class JsonFilePlayerRepository(PlayerRepositoryInterface):
         with open(self._get_path(PlayerId(player.id)), "w") as f:
             json.dump(player.to_dict(), f, indent=4)
 
-    def get(self, player_id: PlayerId) -> Player | None:
+    def get(self, player_id: PlayerId) -> Optional[Player]:
         """Retrieve a Player aggregate from a JSON file, or None if not found."""
         filepath = self._get_path(player_id)
         if not os.path.exists(filepath):
@@ -42,7 +42,7 @@ class JsonFilePlayerRepository(PlayerRepositoryInterface):
 
         return Player.from_dict(data)
 
-    def get_by_name(self, name: str) -> Player | None:
+    def get_by_name(self, name: str) -> Optional[Player]:
         """Retrieve a Player aggregate by name, or None if not found."""
         if not os.path.exists(self._base_path):
             return None

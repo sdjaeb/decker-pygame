@@ -52,7 +52,7 @@ The user-facing part of the application. It's responsible for rendering the game
 A conceptual boundary around a cluster of related objects that are treated as a single unit for data changes. The entry point to an Aggregate is always an **Aggregate Root**, which is a specific type of Entity.
 
 - **Concept:** The `Player` is the central figure for many game actions. The `Area` manages which `Contract`s are available within it.
-- **Implementation:** The `Player` class in `domain/player.py` and the `Area` class in `domain/area.py` are Aggregate Roots. They inherit from the `AggregateRoot` base class in `domain/ddd/aggregate.py`.
+- **Implementation:** The `Player` class in `domain/player.py`, the `Area` class in `domain/area.py`, the `Shop` class in `domain/shop.py`, and the `Project` class in `domain/project.py` are Aggregate Roots. They inherit from the `AggregateRoot` base class in `domain/ddd/aggregate.py`.
 
 ### Entity
 
@@ -81,8 +81,8 @@ Mediates between the domain and the persistence mechanism, providing an in-memor
 
 A stateless service that executes a use case by orchestrating domain objects. It does not contain business logic itself.
 
-- **Concept:** A use case like "Create a New Player".
-- **Implementation:** The `PlayerService` in `application/player_service.py` contains the `create_new_player` method. It gets a new ID, calls the `Player.create` factory, and uses the repository to save the result.
+- **Concept:** A use case like "Create a New Player" or "Purchase an Item".
+- **Implementation:** The `PlayerService` in `application/player_service.py` contains the `create_new_player` method. The `ShopService` in `application/shop_service.py` contains the `purchase_item` method. The `ProjectService` in `application/project_service.py` contains methods like `start_new_project` and `work_on_project`.
 
 ### Domain Event
 

@@ -1,5 +1,6 @@
 import types
 from pathlib import Path
+from typing import Optional
 from unittest.mock import MagicMock, call
 
 import pygame
@@ -74,7 +75,7 @@ def test_load_images_default_path(mocker: MockerFixture):
     ],
 )
 def test_load_spritesheet(
-    mocker: MockerFixture, colorkey: tuple | None, expect_colorkey_call: bool
+    mocker: MockerFixture, colorkey: Optional[tuple], expect_colorkey_call: bool
 ):
     """Test loading and slicing a spritesheet with and without a colorkey."""
     # 1. Arrange

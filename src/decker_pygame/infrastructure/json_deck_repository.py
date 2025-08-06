@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any
+from typing import Any, Optional
 
 from decker_pygame.domain.deck import Deck
 from decker_pygame.domain.ids import DeckId
@@ -29,7 +29,7 @@ class JsonFileDeckRepository(DeckRepositoryInterface):
         with open(self._get_path(DeckId(deck.id)), "w") as f:
             json.dump(deck.to_dict(), f, indent=4)
 
-    def get(self, deck_id: DeckId) -> Deck | None:
+    def get(self, deck_id: DeckId) -> Optional[Deck]:
         """Retrieve a Deck aggregate from a JSON file, or None if not found."""
         filepath = self._get_path(deck_id)
         if not os.path.exists(filepath):

@@ -44,6 +44,18 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_crafting_service_class = mocker.patch(
         "decker_pygame.presentation.main.CraftingService"
     )
+    mock_shop_service_class = mocker.patch(
+        "decker_pygame.presentation.main.ShopService"
+    )
+    mock_node_service_class = mocker.patch(
+        "decker_pygame.presentation.main.NodeService"
+    )
+    mock_settings_service_class = mocker.patch(
+        "decker_pygame.presentation.main.SettingsService"
+    )
+    mock_project_service_class = mocker.patch(
+        "decker_pygame.presentation.main.ProjectService"
+    )
     mock_game_class = mocker.patch("decker_pygame.presentation.main.Game")
     mock_dispatcher_class = mocker.patch(
         "decker_pygame.presentation.main.EventDispatcher"
@@ -112,6 +124,15 @@ def test_main_function(mocker: MockerFixture) -> None:
         event_dispatcher=mock_dispatcher_class.return_value,
         character_repo=mock_char_repo_class.return_value,
     )
+    mock_shop_service_class.assert_called_once_with(
+        character_repo=mock_char_repo_class.return_value
+    )
+    mock_node_service_class.assert_called_once_with()
+    mock_settings_service_class.assert_called_once_with()
+    mock_project_service_class.assert_called_once_with(
+        character_repo=mock_char_repo_class.return_value,
+        event_dispatcher=mock_dispatcher_class.return_value,
+    )
 
     create_calls = [call(name="Deckard"), call(name="Rynn")]
     mock_player_service_instance.create_new_player.assert_has_calls(
@@ -126,6 +147,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         initial_skills={"crafting": 5},
         initial_credits=2000,
         initial_skill_points=5,
+        initial_reputation=0,
     )
     mock_char_repo_class.return_value.save.assert_called_once_with(mock_character)
 
@@ -155,6 +177,10 @@ def test_main_function(mocker: MockerFixture) -> None:
         crafting_service=mock_crafting_service_class.return_value,
         character_id=mock_character.id,
         deck_service=mock_deck_service_class.return_value,
+        shop_service=mock_shop_service_class.return_value,
+        node_service=mock_node_service_class.return_value,
+        settings_service=mock_settings_service_class.return_value,
+        project_service=mock_project_service_class.return_value,
         logging_service=mock_logging_service_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
@@ -171,6 +197,10 @@ def test_main_function_dev_mode(mocker: MockerFixture) -> None:
     )
     mocker.patch("decker_pygame.presentation.main.PlayerService")
     mocker.patch("decker_pygame.presentation.main.CraftingService")
+    mocker.patch("decker_pygame.presentation.main.ShopService")
+    mocker.patch("decker_pygame.presentation.main.NodeService")
+    mocker.patch("decker_pygame.presentation.main.SettingsService")
+    mocker.patch("decker_pygame.presentation.main.ProjectService")
     mocker.patch("decker_pygame.presentation.main.Game")
     mocker.patch("decker_pygame.presentation.main.EventDispatcher")
     mocker.patch("decker_pygame.presentation.main.LoggingService")
@@ -189,6 +219,7 @@ def test_main_function_dev_mode(mocker: MockerFixture) -> None:
     mock_character = mocker.Mock(spec=Character)
     mock_character.credits = 2000
     mock_character.schematics = []
+    mock_character.reputation = 0
     mock_character_create.return_value = mock_character
 
     # Act

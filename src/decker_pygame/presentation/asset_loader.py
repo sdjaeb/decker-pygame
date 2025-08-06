@@ -4,6 +4,7 @@ This includes helpers for loading images and spritesheets.
 """
 
 from pathlib import Path
+from typing import Optional
 
 import pygame
 from pygame.typing import ColorLike
@@ -13,16 +14,16 @@ from decker_pygame.settings import GFX
 
 def load_images(
     subdirectory: str,
-    size: tuple[int, int] | None = None,
-    base_path: Path | None = None,
+    size: Optional[tuple[int, int]] = None,
+    base_path: Optional[Path] = None,
 ) -> list[pygame.Surface]:
     """Loads all images from a subdirectory within the main asset folder.
 
     Args:
         subdirectory (str): The name of the folder within the assets directory.
-        size (tuple[int, int] | None): An optional (width, height) tuple to scale
+        size (Optional[tuple[int, int]]): An optional (width, height) tuple to scale
             the images to.
-        base_path (Path | None): The base path to the assets folder, for testing.
+        base_path (Optional[Path]): The base path to the assets folder, for testing.
 
     Returns:
         list[pygame.Surface]: A list of loaded and optionally resized pygame.Surface
@@ -45,8 +46,8 @@ def load_spritesheet(
     filename: str,
     sprite_width: int,
     sprite_height: int,
-    base_path: Path | None = None,
-    colorkey: ColorLike | None = None,
+    base_path: Optional[Path] = None,
+    colorkey: Optional[ColorLike] = None,
 ) -> tuple[list[pygame.Surface], tuple[int, int]]:
     """Loads images from a spritesheet by introspecting its dimensions.
 
@@ -54,8 +55,8 @@ def load_spritesheet(
         filename (str): The filename of the spritesheet in the assets folder.
         sprite_width (int): The width of a single sprite.
         sprite_height (int): The height of a single sprite.
-        base_path (Path | None): The base path to the assets folder, for testing.
-        colorkey (ColorLike | None): The color to treat as transparent.
+        base_path (Optional[Path]): The base path to the assets folder, for testing.
+        colorkey (Optional[ColorLike]): The color to treat as transparent.
 
     Returns:
         tuple[list[pygame.Surface], tuple[int, int]]: A tuple containing the list of

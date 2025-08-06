@@ -23,6 +23,8 @@ def test_save_and_get_character():
             schematics=[],
             credits=100,
             unused_skill_points=5,
+            reputation=0,
+            active_project=None,
         )
 
         repo.save(character)

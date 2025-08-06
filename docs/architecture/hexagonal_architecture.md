@@ -20,16 +20,24 @@ We have two main types of ports:
 
 ### 2.1. Driving Ports (Input)
 
-These define how external actors can drive the application. In our architecture, the **Service Interfaces** are our driving ports.
+These define how external actors can drive the application. In our architecture, the **Service Interfaces** in `ports/service_interfaces.py` are our driving ports.
 
-**Example:** The `CharacterServiceInterface` in `ports/service_interfaces.py` defines the contract for character-related use cases, such as `increase_skill(...)` and `get_character_view_data(...)`.
+**Example:** The `ShopServiceInterface`, `NodeServiceInterface`, and `ProjectServiceInterface` define the contracts for their respective use cases. The `Game` class (a driving adapter) calls these methods, but the core application logic is completely unaware of Pygame.
 
 ```python
 # src/decker_pygame/ports/service_interfaces.py
 
-class CharacterServiceInterface(ABC):
+class ShopServiceInterface(ABC):
     @abstractmethod
-    def increase_skill(self, character_id: "CharacterId", skill_name: str) -> None:
+    def purchase_item(
+        self, character_id: "CharacterId", item_name: str, shop_id: str
+    ) -> None:
+        ...
+
+    @abstractmethod
+    def get_item_details(
+        self, shop_id: str, item_name: str
+    ) -> "Optional[ShopItemViewDTO]":
         ...
 ```
 
@@ -58,6 +66,7 @@ These are the components that call into the Core's driving ports.
 
 -   **Input Handler (`src/decker_pygame/presentation/input_handler.py`):** The `PygameInputHandler` is a dedicated driving adapter. Its sole responsibility is to translate raw Pygame events (like key presses) into calls to methods on the `Game` object.
 -   **UI Components (`src/decker_pygame/presentation/components`):** Our Pygame components, like `CharDataView`, are also driving adapters. When a user clicks a `+` button, the view's callback calls a method on the `Game` class, which in turn calls the appropriate Application Service (e.g., `character_service.increase_skill(...)`).
+    - Other examples include `ShopView`, `DeckView`, `FileAccessView`, `OptionsView`, `SoundEditView`, and `ProjectDataView`.
 
 ### 3.2. Driven Adapters
 
@@ -70,20 +79,7 @@ These are the concrete implementations of the Core's driven ports.
 
 To maintain a clean boundary between the application and presentation layers, we use dedicated **View Model DTOs**.
 
-**Example:** The `CharacterService` provides a `get_character_view_data()` method. This method is a query that assembles a `CharacterViewData` DTO, which contains all the specific fields required by the `CharDataView` component. This prevents the presentation layer from needing to make multiple service calls and assemble data itself, keeping it "dumb" and focused on rendering.
-
-```python
-# src/decker_pygame/application/character_service.py
-
-@dataclass(frozen=True)
-class CharacterViewData:
-    name: str
-    credits: int
-    reputation: int
-    skills: dict[str, int]
-    unused_skill_points: int
-    health: int
-```
+**Example:** The `CharacterService` provides a `get_character_view_data()` method. This method is a query that assembles a `CharacterViewDTO`, which contains all the specific fields required by the `CharDataView` component. Similarly, the `ShopService` provides `get_shop_view_data()` and `get_item_details()`, which return `ShopViewDTO` and `ShopItemViewDTO` respectively. This prevents the presentation layer from needing to make multiple service calls and assemble data itself, keeping it "dumb" and focused on rendering.
 
 ## 5. External API Adapters (Future)
 

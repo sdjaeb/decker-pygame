@@ -49,3 +49,8 @@ class ContractListView(pygame.sprite.Sprite):
         text_rect = text_surface.get_rect(topleft=(self._padding, self._padding))
 
         self.image.blit(text_surface, text_rect)
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        """Handles events passed from the input handler."""
+        # This view is not interactive yet.
+        pass

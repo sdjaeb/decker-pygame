@@ -5,6 +5,7 @@ making them easy to adjust.
 """
 
 from pathlib import Path
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pygame.color import Color
@@ -22,6 +23,16 @@ BLACK = Color(0, 0, 0)
 WHITE = Color(255, 255, 255)
 TRANSPARENT_COLOR = Color(255, 0, 255)  # A common magenta colorkey
 UI_FACE = Color(192, 192, 192)  # A standard grey
+UI_FACE_PRESSED = Color(20, 20, 20)  # A dark grey for pressed states
+UI_BORDER = Color(0, 0, 0)
+UI_BORDER_WIDTH = 1
+UI_FONT_DISABLED = Color(128, 128, 128)  # A standard grey for disabled text
+
+
+# --- UI Component Settings ---
+PADDING = 10
+BUTTON_WIDTH = 120
+BUTTON_HEIGHT = 30
 
 
 # --- File Paths & Assets ---
@@ -59,10 +70,11 @@ PATHS = Paths()
 class UiFontSettings:
     """A namespace for UI font settings."""
 
-    default_font_name: str | None = None  # Use pygame default
+    default_font_name: Optional[str] = None  # Use pygame default
     default_font_size: int = 18
     default_font_color: Color = Color(200, 200, 200)  # Light grey
     dark_font_color: Color = Color(20, 20, 20)  # Near-black for light backgrounds
+    light_font_color: Color = Color(220, 220, 220)  # Off-white for dark backgrounds
 
 
 UI_FONT = UiFontSettings()

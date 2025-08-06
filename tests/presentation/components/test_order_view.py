@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.application.deck_service import DeckProgramDTO, DeckViewData
+from decker_pygame.application.dtos import DeckViewDTO, ProgramDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.presentation.components.order_view import OrderView
 
@@ -21,11 +21,13 @@ def test_order_view_initialization():
     mock_on_close = Mock()
     mock_on_move_up = Mock()
     mock_on_move_down = Mock()
-    view_data = DeckViewData(
+    view_data = DeckViewDTO(
         programs=[
-            DeckProgramDTO(name="IcePick", size=10),
-            DeckProgramDTO(name="Hammer", size=20),
-        ]
+            ProgramDTO(name="IcePick", size=10),
+            ProgramDTO(name="Hammer", size=20),
+        ],
+        used_deck_size=30,
+        total_deck_size=100,
     )
 
     with (
@@ -68,11 +70,13 @@ def test_order_view_button_clicks():
     mock_on_close = Mock()
     mock_on_move_up = Mock()
     mock_on_move_down = Mock()
-    view_data = DeckViewData(
+    view_data = DeckViewDTO(
         programs=[
-            DeckProgramDTO(name="IcePick", size=10),
-            DeckProgramDTO(name="Hammer", size=20),
-        ]
+            ProgramDTO(name="IcePick", size=10),
+            ProgramDTO(name="Hammer", size=20),
+        ],
+        used_deck_size=30,
+        total_deck_size=100,
     )
 
     # We use real buttons for this test to verify the whole interaction

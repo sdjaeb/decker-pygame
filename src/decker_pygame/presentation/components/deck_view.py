@@ -1,10 +1,11 @@
 """This module defines the DeckView component."""
 
 from collections.abc import Callable
+from functools import partial
 
 import pygame
 
-from decker_pygame.application.deck_service import DeckViewData
+from decker_pygame.application.dtos import DeckViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import SCREEN_HEIGHT, SCREEN_WIDTH, UI_FACE, UI_FONT
 
@@ -15,11 +16,13 @@ class DeckView(pygame.sprite.Sprite):
     """A UI component that displays the player's deck of programs.
 
     Args:
-        data (DeckViewData): The data required to render the view.
+        data (DeckViewDTO): The data required to render the view.
         on_close (Callable[[], None]): A callback function to execute when the view is
             closed.
         on_order (Callable[[], None]): A callback function to execute when the order
             button is clicked.
+        on_program_click (Callable[[str], None]): A callback for when a program
+            is clicked.
 
     Attributes:
         image (pygame.Surface): The surface that represents the view.
@@ -29,17 +32,21 @@ class DeckView(pygame.sprite.Sprite):
     image: pygame.Surface
     rect: pygame.Rect
     _components: pygame.sprite.Group[pygame.sprite.Sprite]
+    _program_buttons: dict[str, Button]
 
     def __init__(
         self,
-        data: DeckViewData,
+        data: DeckViewDTO,
         on_close: Callable[[], None],
         on_order: Callable[[], None],
+        on_program_click: Callable[[str], None],
     ) -> None:
         super().__init__()
         self._data = data
         self._on_close = on_close
         self._on_order = on_order
+        self._on_program_click = on_program_click
+        self._program_buttons = {}
 
         self.image = pygame.Surface((400, 450))
         self.rect = self.image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
@@ -80,13 +87,23 @@ class DeckView(pygame.sprite.Sprite):
         self.image.blit(title_surface, (self._padding, self._padding))
 
         y_offset = self._padding + self._line_height * 2
-        for program in self._data.programs:
-            program_text = f"- {program.name} ({program.size}MB)"
-            program_surface = self._font.render(program_text, True, self._font_color)
-            self.image.blit(program_surface, (self._padding, y_offset))
-            y_offset += self._line_height
+        self._render_programs(y_offset)
 
         self._components.draw(self.image)
+
+    def _render_programs(self, y_offset: int) -> None:
+        """Renders the list of programs as clickable buttons."""
+        for program in self._data.programs:
+            program_text = f"- {program.name} ({program.size}MB)"
+            program_button = Button(
+                (self._padding, y_offset),
+                (self.image.get_width() - self._padding * 2, self._line_height),
+                program_text,
+                partial(self._on_program_click, program.name),
+                is_transparent=True,
+            )
+            self._components.add(program_button)
+            y_offset += self._line_height
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Handles events passed from the input handler."""

@@ -7,7 +7,7 @@ manner by subscribing to and dispatching domain events.
 
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Any, TypeVar, cast
+from typing import Any, Optional, TypeVar, cast
 
 from decker_pygame.domain.events import Event
 
@@ -29,7 +29,7 @@ class EventDispatcher:
         # The public `subscribe` method provides the necessary type safety.
         self._subscribers: dict[
             type[Event],
-            list[tuple[Callable[[Any], None], Callable[[Any], bool] | None]],
+            list[tuple[Callable[[Any], None], Optional[Callable[[Any], bool]]]],
         ] = defaultdict(list)
 
     def subscribe(
@@ -37,7 +37,7 @@ class EventDispatcher:
         event_type: type[E],
         subscriber: Subscriber[E],
         *,
-        condition: Condition[E] | None = None,
+        condition: Optional[Condition[E]] = None,
     ) -> None:
         """Register a subscriber for a specific event type.
 
@@ -45,13 +45,13 @@ class EventDispatcher:
             event_type (type[E]): The class of the event to subscribe to.
             subscriber (Subscriber[E]): A callable that will be invoked with the
                 event.
-            condition (Condition[E] | None): An optional callable that must return
+            condition (Optional[Condition[E]]): An optional callable that must return
                 True for the subscriber to be invoked.
         """
         # We cast here to satisfy the internal storage type. The public signature
         # with the TypeVar E ensures the caller provides a valid pair.
         self._subscribers[event_type].append(
-            (subscriber, cast(Callable[[Any], bool] | None, condition))
+            (subscriber, cast(Optional[Callable[[Any], bool]], condition))
         )
 
     def dispatch(self, events: list[Event]) -> None:

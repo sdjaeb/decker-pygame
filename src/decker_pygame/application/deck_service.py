@@ -1,14 +1,19 @@
 """This module defines the application service for deck-related operations.
 
 It includes the DeckService, which orchestrates use cases like moving programs
-between a character's deck and storage, and the Data Transfer Objects (DTOs)
-used to pass deck data to the presentation layer.
+between a character's deck and storage.
 """
 
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from typing import Optional
 
+from decker_pygame.application.dtos import (
+    DeckViewDTO,
+    IceDataViewDTO,
+    ProgramDTO,
+    TransferViewDTO,
+)
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.deck import Deck
 from decker_pygame.domain.ids import CharacterId, DeckId
@@ -18,37 +23,17 @@ from decker_pygame.ports.repository_interfaces import (
 )
 from decker_pygame.ports.service_interfaces import DeckServiceInterface
 
-
-@dataclass(frozen=True)
-class DeckProgramDTO:
-    """Data Transfer Object for a single program in the deck."""
-
-    name: str
-    size: int
-
-
-@dataclass(frozen=True)
-class DeckViewData:
-    """A dedicated View Model DTO for the deck view.
-
-    This class aggregates all data needed by the DeckView and OrderView components.
-    """
-
-    programs: list[DeckProgramDTO]
-    # TODO: These will be derived from character stats later
-    total_deck_size: int = 100
-    used_deck_size: int = 0
-
-
-@dataclass(frozen=True)
-class TransferViewData:
-    """A dedicated View Model DTO for the transfer view.
-
-    This class aggregates all data needed by the TransferView component.
-    """
-
-    deck_programs: list[DeckProgramDTO]
-    stored_programs: list[DeckProgramDTO]
+# For now, we'll use a hardcoded map of program names to their detailed data.
+# In the future, this would come from a ProgramRepository or similar.
+ICE_DATA_MAP = {
+    "IcePick v1": IceDataViewDTO(
+        name="IcePick v1",
+        ice_type="Intrusion",
+        strength=4,
+        description="A basic intrusion program used to bypass simple ICE.",
+        cost=500,
+    )
+}
 
 
 class DeckServiceError(Exception):
@@ -82,20 +67,24 @@ class DeckService(DeckServiceInterface):
         self.deck_repo.save(deck)
         return deck_id
 
-    def get_deck_view_data(self, deck_id: DeckId) -> DeckViewData | None:
+    def get_deck_view_data(self, deck_id: DeckId) -> Optional[DeckViewDTO]:
         """Retrieves and aggregates all data needed for the deck view."""
         deck = self.deck_repo.get(deck_id)
         if not deck:
             return None
 
-        program_dtos = [DeckProgramDTO(name=p.name, size=p.size) for p in deck.programs]
+        program_dtos = [ProgramDTO(name=p.name, size=p.size) for p in deck.programs]
         used_size = sum(p.size for p in deck.programs)
 
-        return DeckViewData(programs=program_dtos, used_deck_size=used_size)
+        return DeckViewDTO(
+            programs=program_dtos,
+            used_deck_size=used_size,
+            total_deck_size=100,  # TODO: This will be derived from character stats
+        )
 
     def get_transfer_view_data(
         self, character_id: CharacterId
-    ) -> TransferViewData | None:
+    ) -> Optional[TransferViewDTO]:
         """Retrieves and aggregates all data needed for the transfer view."""
         character = self.character_repo.get(character_id)
         if not character:
@@ -105,14 +94,12 @@ class DeckService(DeckServiceInterface):
         if not deck:
             return None
 
-        deck_programs = [
-            DeckProgramDTO(name=p.name, size=p.size) for p in deck.programs
-        ]
+        deck_programs = [ProgramDTO(name=p.name, size=p.size) for p in deck.programs]
         stored_programs = [
-            DeckProgramDTO(name=p.name, size=p.size) for p in character.stored_programs
+            ProgramDTO(name=p.name, size=p.size) for p in character.stored_programs
         ]
 
-        return TransferViewData(
+        return TransferViewDTO(
             deck_programs=deck_programs, stored_programs=stored_programs
         )
 
@@ -187,3 +174,9 @@ class DeckService(DeckServiceInterface):
         self._execute_deck_change(
             deck_id, lambda deck: deck.move_program_down(program_name)
         )
+
+    def get_ice_data(self, program_name: str) -> Optional[IceDataViewDTO]:
+        """Retrieves the data needed to display the IceDataView for a program."""
+        # This is a simplification. A real implementation would fetch this from a
+        # dedicated repository or have more complete Program domain objects.
+        return ICE_DATA_MAP.get(program_name)

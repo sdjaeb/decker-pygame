@@ -1,9 +1,12 @@
+import uuid
 from unittest.mock import Mock, patch
 
 import pygame
 import pytest
 
 from decker_pygame.domain.crafting import RequiredResource, Schematic
+from decker_pygame.domain.ids import SchematicId
+from decker_pygame.domain.project import ProjectType
 from decker_pygame.presentation.components.build_view import BuildView
 
 
@@ -20,15 +23,21 @@ def schematics_list() -> list[Schematic]:
     """Provides a sample list of schematics for testing."""
     return [
         Schematic(
+            id=SchematicId(uuid.uuid4()),
+            type=ProjectType.SOFTWARE,
             name="IcePick v1",
             produces_item_name="IcePick v1",
             produces_item_size=10,
+            rating=1,
             cost=[RequiredResource(name="credits", quantity=500)],
         ),
         Schematic(
+            id=SchematicId(uuid.uuid4()),
+            type=ProjectType.SOFTWARE,
             name="Hammer",
             produces_item_name="Hammer",
             produces_item_size=20,
+            rating=2,
             cost=[RequiredResource(name="credits", quantity=1000)],
         ),
     ]

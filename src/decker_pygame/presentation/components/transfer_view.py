@@ -5,7 +5,7 @@ from functools import partial
 
 import pygame
 
-from decker_pygame.application.deck_service import TransferViewData
+from decker_pygame.application.dtos import TransferViewDTO
 from decker_pygame.presentation.components.button import Button
 from decker_pygame.settings import SCREEN_HEIGHT, SCREEN_WIDTH, UI_FACE, UI_FONT
 
@@ -16,7 +16,7 @@ class TransferView(pygame.sprite.Sprite):
     """A UI component for transferring items.
 
     Args:
-        data (TransferViewData): The data required to render the view.
+        data (TransferViewDTO): The data required to render the view.
         on_close (Callable[[], None]): A callback function to execute when the view is
             closed.
         on_move_to_deck (Callable[[str], None]): Callback for moving an item to the
@@ -35,7 +35,7 @@ class TransferView(pygame.sprite.Sprite):
 
     def __init__(
         self,
-        data: TransferViewData,
+        data: TransferViewDTO,
         on_close: Callable[[], None],
         on_move_to_deck: Callable[[str], None],
         on_move_to_storage: Callable[[str], None],

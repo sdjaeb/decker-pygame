@@ -59,3 +59,36 @@ Readability: For more complex cases with multiple arguments, partial can be much
 In short, partial is the perfect tool here for adapting a function that requires arguments (_on_decrease_skill) to an interface that expects a function with no arguments (Button's on_click).
 
 *********
+
+*********
+To make this process even more efficient, you can add the following bash function to your shell's configuration file (e.g., `~/.bashrc` or `~/.zshrc`). This `preflight` function will stage your files, run pre-commit hooks (and retry if they make changes), and then run the test suite with coverage.
+
+```bash
+# A pre-commit and testing workflow function.
+# 1. Stages all files.
+# 2. Runs pre-commit hooks.
+# 3. If hooks modify files, it re-stages and re-runs the hooks.
+# 4. If hooks pass, it runs the pytest coverage report.
+preflight() {
+    echo "Staging all changes..."
+    git add .
+
+    echo "Running pre-commit hooks..."
+    # Run pre-commit. If it fails...
+    if ! pre-commit run --all; then
+        echo "Pre-commit hooks modified files. Re-staging and re-running..."
+        # ...stage the new changes and run it again.
+        git add .
+        # If the second run also fails, abort.
+        if ! pre-commit run --all; then
+            echo "Pre-commit hooks failed after retry. Aborting."
+            return 1 # Return a failure code
+        fi
+    fi
+
+    # If we reach here, pre-commit has passed.
+    echo "Pre-commit hooks passed. Running tests with coverage..."
+    pytest --cov=src/decker_pygame --cov-report=term-missing
+}
+```
+*********

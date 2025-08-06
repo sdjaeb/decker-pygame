@@ -25,7 +25,7 @@ Our current system is **event-driven**, which is the necessary foundation for be
 #### What We Have (The Foundation)
 
 -   **Immutable Domain Events:** Classes like `PlayerCreated` are perfect, factual records of things that have successfully occurred.
--   **Aggregates as Event Producers:** Our Aggregate Roots (`Player`, `Character`) are responsible for creating valid events when their state changes.
+-   **Aggregates as Event Producers:** Our Aggregate Roots (`Player`, `Character`, `Project`) are responsible for creating valid events when their state changes.
 -   **Event Dispatcher:** We have a mechanism to publish these events to the rest of the application.
 
 #### The Missing Pieces

@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Optional
 
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.ids import CharacterId
@@ -30,7 +31,7 @@ class JsonFileCharacterRepository(CharacterRepositoryInterface):
         with open(self._get_path(CharacterId(character.id)), "w") as f:
             json.dump(character.to_dict(), f, indent=4)
 
-    def get(self, character_id: CharacterId) -> Character | None:
+    def get(self, character_id: CharacterId) -> Optional[Character]:
         """Retrieve a Character aggregate from a JSON file, or None if not found."""
         filepath = self._get_path(character_id)
         if not os.path.exists(filepath):

@@ -1,5 +1,7 @@
 """This module defines the ActiveBar component for the main game UI."""
 
+from typing import Optional
+
 import pygame
 import pygame.sprite
 
@@ -89,14 +91,14 @@ class ActiveBar(pygame.sprite.Sprite):
             del self.active_programs[slot]
             self.update()
 
-    def get_active_program(self, slot: int) -> int | None:
+    def get_active_program(self, slot: int) -> Optional[int]:
         """Gets the program ID from a specific slot.
 
         Args:
             slot (int): The slot index to query.
 
         Returns:
-            int | None: The program_id if the slot is active, otherwise None.
+            Optional[int]: The program_id if the slot is active, otherwise None.
         """
         if not (0 <= slot < GFX.active_bar_max_slots):
             print(f"Warning: Invalid slot index {slot} for ActiveBar.")

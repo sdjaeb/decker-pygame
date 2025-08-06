@@ -4,11 +4,14 @@ from unittest.mock import Mock
 import pytest
 
 from decker_pygame.application.deck_service import (
-    DeckProgramDTO,
+    ICE_DATA_MAP,
     DeckService,
     DeckServiceError,
-    DeckViewData,
-    TransferViewData,
+)
+from decker_pygame.application.dtos import (
+    DeckViewDTO,
+    ProgramDTO,
+    TransferViewDTO,
 )
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.character import Character
@@ -73,9 +76,9 @@ def test_get_deck_view_data_success(deck_service: DeckService, mock_deck_repo: M
 
     view_data = deck_service.get_deck_view_data(deck_id)
 
-    assert isinstance(view_data, DeckViewData)
+    assert isinstance(view_data, DeckViewDTO)
     assert len(view_data.programs) == 2
-    assert isinstance(view_data.programs[0], DeckProgramDTO)
+    assert isinstance(view_data.programs[0], ProgramDTO)
     assert view_data.programs[0].name == "IcePick"
     assert view_data.used_deck_size == 30
 
@@ -157,7 +160,7 @@ def test_get_transfer_view_data_success(
 
     view_data = deck_service.get_transfer_view_data(char_id)
 
-    assert isinstance(view_data, TransferViewData)
+    assert isinstance(view_data, TransferViewDTO)
     assert len(view_data.stored_programs) == 1
     assert view_data.stored_programs[0].name == "IcePick"
     assert len(view_data.deck_programs) == 1
@@ -276,3 +279,16 @@ def test_move_program_transfer_repo_failure(
         deck_service.move_program_to_deck(char_id, "any")
     with pytest.raises(DeckServiceError, match="Deck.*not found"):
         deck_service.move_program_to_storage(char_id, "any")
+
+
+def test_get_ice_data_success(deck_service: DeckService):
+    """Tests successfully retrieving ICE data for a known program."""
+    ice_data = deck_service.get_ice_data("IcePick v1")
+    assert ice_data is not None
+    assert ice_data.name == "IcePick v1"
+    assert ice_data == ICE_DATA_MAP["IcePick v1"]
+
+
+def test_get_ice_data_not_found(deck_service: DeckService):
+    """Tests that None is returned for a program without detailed data."""
+    assert deck_service.get_ice_data("UnknownProgram") is None

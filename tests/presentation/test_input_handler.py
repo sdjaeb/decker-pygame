@@ -12,10 +12,25 @@ from decker_pygame.presentation.input_handler import PygameInputHandler
 def mock_game() -> Mock:
     """Provides a mock Game object with mock views."""
     game = Mock(spec=Game)
+    game.intro_view = Mock()
+    game.new_char_view = Mock()
+    game.rest_view = Mock()
+    game.mission_results_view = Mock()
+    game.home_view = Mock()
+    game.file_access_view = Mock()
+    game.entry_view = Mock()
     game.build_view = Mock()
     game.char_data_view = Mock()
     game.deck_view = Mock()
     game.transfer_view = Mock()
+    game.shop_view = Mock()
+    game.order_view = Mock()
+    game.contract_list_view = Mock()
+    game.contract_data_view = Mock()
+    game.ice_data_view = Mock()
+    game.options_view = Mock()
+    game.sound_edit_view = Mock()
+    game.new_project_view = Mock()
     return game
 
 
@@ -39,11 +54,16 @@ def test_handle_quit_event(mock_game: Mock, mock_logging_service: Mock):
 @pytest.mark.parametrize(
     "key, method_name",
     [
+        (pygame.K_h, "toggle_home_view"),
+        (pygame.K_t, "toggle_transfer_view"),
         (pygame.K_b, "toggle_build_view"),
         (pygame.K_c, "toggle_char_data_view"),
         (pygame.K_l, "toggle_contract_list_view"),
         (pygame.K_d, "toggle_contract_data_view"),
         (pygame.K_p, "toggle_deck_view"),
+        (pygame.K_o, "toggle_options_view"),
+        (pygame.K_u, "toggle_sound_edit_view"),
+        (pygame.K_r, "toggle_new_project_view"),
         (pygame.K_q, "quit"),
     ],
 )
@@ -84,10 +104,25 @@ def test_delegates_events_to_views(mock_game: Mock, mock_logging_service: Mock):
     with patch("pygame.event.get", return_value=[mouse_event]):
         handler.handle_events()
 
+    mock_game.intro_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.new_char_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.rest_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.mission_results_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.home_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.file_access_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.entry_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.build_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.char_data_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.deck_view.handle_event.assert_called_once_with(mouse_event)
     mock_game.transfer_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.shop_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.order_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.contract_list_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.contract_data_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.ice_data_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.options_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.sound_edit_view.handle_event.assert_called_once_with(mouse_event)
+    mock_game.new_project_view.handle_event.assert_called_once_with(mouse_event)
 
 
 def test_logs_keypress_in_dev_mode(mock_game: Mock, mock_logging_service: Mock):
