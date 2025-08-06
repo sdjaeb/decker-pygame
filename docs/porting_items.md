@@ -93,14 +93,14 @@ Based on an analysis of the remaining dialogs, we can group them by functionalit
 **Group A: Core Player Lifecycle (Status: Complete)**
 These views are essential for starting a new game and providing a central hub for the player.
 - **`HomeView.cpp/h`**: Port to `HomeView`. This will be the main player dashboard, with buttons to access Character data, Deck, Contracts, etc.
-- **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process. (Complete).
-- **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`. (Complete).
-- **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction. (Complete).
+- **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process.
+- **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`.
+- **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction.
 
 **Group B: Core Gameplay Loop (Status: Complete)**
 These views are part of the main contract/mission cycle.
-- **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`. (Complete).
-- **`RestDlg.cpp/h`**: Port to `RestView`. (Complete).
+- **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`.
+- **`RestDlg.cpp/h`**: Port to `RestView`.
 
 **Group C: Data Display & Shop (Status: Complete)**
 These views are for displaying information and handling commerce.
@@ -131,22 +131,50 @@ This is the core R&D system for creating new software and chips. It will be port
 -   **Task F.6:** Integrate `NewProjectView` into the `Game` class, connecting it to the `ProjectService`. (Complete).
 
 **Phase 3: "Project Management" UI**
--   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions. (Complete).
--   **Task F.8:** Implement the "Work on Project" and "Build from Source" use cases, connecting the `ProjectDataView` buttons to the `ProjectService`. (Complete).
--   **Task F.9:** Integrate `ProjectDataView` into the `Game` class. (Complete).
+-   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions.
+-   **Task F.8:** Implement the "Work on Project" and "Build from Source" use cases, connecting the `ProjectDataView` buttons to the `ProjectService`.
+-   **Task F.9:** Integrate `ProjectDataView` into the `Game` class.
+
+**Recommendation:**
+The next step should be to implement **Group A**. This will establish a complete game startup flow: Intro -> New Character -> Home Dashboard.
 
 ---
 
-### 4. Main Application / Engine (**Highest Importance**)
+### 4. Main Application / Engine (**Highest Importance**) - Status: In Progress
 Top-level application logic, main loop, graphics, sound, and file handling. These are essential for the game to run and should be ported alongside the core models.
 
 - **Decker.cpp/h**: Main application/game loop.
 - **DeckerGraphics.cpp/h**: Graphics rendering.
 - **DeckerSound.cpp/h**: Sound and music.
 - **DSFile.cpp/h**: File I/O.
-- **StdAfx.cpp/h**: Precompiled headers/support (may not be needed in Python).
+- **StdAfx.cpp/h**: Precompiled headers/support.
+- **Global.cpp/h**: Global constants and utility functions.
 
 **Porting Priority:** 1
+
+#### Proposed Porting Plan
+
+-   **Task G.1: Port Core Engine Logic (Status: In Progress)**
+    -   **`Decker.cpp/h`**: The application lifecycle logic (initialization, main loop, shutdown) is being ported to `src/decker_pygame/presentation/main.py` and `src/decker_pygame/presentation/game.py`.
+
+-   **Task G.2: Create Data-Driven Asset Loading (Status: To Do)**
+    -   **`DeckerGraphics.cpp/h` & `DeckerSound.cpp/h`**: This logic will be replaced by a modern, data-driven asset loading system.
+    -   **`Decker.ini`**: The asset configuration will be moved from the INI format to a new `data/assets.json` file.
+    -   **Action:** Create an `AssetService` responsible for loading all Pygame surfaces and sounds based on the new JSON configuration. This will centralize asset management.
+
+-   **Task G.3: Port Core Gameplay Entities (Status: To Do)**
+    -   **`DSFile.cpp/h`**: This is a critical domain entity representing files within a system's datastore.
+    -   **Action:** Port `CDSFile` to a new `DSFile` domain model in `src/decker_pygame/domain/`. This is a prerequisite for implementing the matrix run gameplay loop.
+
+-   **Task G.4: Finalize Utility Porting (Status: In Progress)**
+    -   **`Global.cpp/h`**: Port any remaining constants and utility functions (like `DoDieRoll`) to `src/decker_pygame/settings.py` and `src/decker_pygame/utils.py`. The `DoDieRoll` logic should become part of a `DiceService` in the domain.
+
+-   **Task G.5: Retire Obsolete Files (Status: Complete)**
+    -   **`StdAfx.cpp/h`**: Precompiled headers are not used in Python. This file is obsolete.
+    -   **`Decker.rc`**: Windows resource file. Its purpose has been fulfilled by the new Python/Pygame `View` components. This file is obsolete.
+
+-   **Task G.6: Archive Non-Code Files (Status: Complete)**
+    -   The `Ideas/` directory contains design notes and concepts for future features, not code for direct porting. It will be kept for reference.
 
 ---
 
