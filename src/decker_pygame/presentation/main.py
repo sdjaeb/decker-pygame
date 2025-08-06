@@ -8,6 +8,7 @@ presentation), wiring up their dependencies, and starting the main game loop.
 import os
 import tempfile
 import uuid
+from pathlib import Path
 
 import pygame
 
@@ -42,6 +43,7 @@ from decker_pygame.infrastructure.json_deck_repository import (
     JsonFileDeckRepository,
 )
 from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
+from decker_pygame.presentation.asset_service import AssetService
 from decker_pygame.presentation.game import Game
 from decker_pygame.settings import DEV_SETTINGS, PATHS
 
@@ -63,6 +65,9 @@ def main() -> None:
     deck_repo = JsonFileDeckRepository(base_path=PATHS.decks_data)
     event_dispatcher = EventDispatcher()
     logging_service = LoggingService(writers=[ConsoleLogWriter()])
+    asset_service = AssetService(
+        assets_config_path=Path(PATHS.base_path) / "assets.json"
+    )
 
     # 2. Set up application services
     player_service = PlayerService(
@@ -154,6 +159,7 @@ def main() -> None:
 
     # 5. Compose the presentation layer, injecting dependencies
     game = Game(
+        asset_service=asset_service,
         player_service=player_service,
         player_id=player_id,
         character_service=character_service,

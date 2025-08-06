@@ -154,19 +154,19 @@ Top-level application logic, main loop, graphics, sound, and file handling. Thes
 
 #### Proposed Porting Plan
 
--   **Task G.1: Port Core Engine Logic (Status: In Progress)**
-    -   **`Decker.cpp/h`**: The application lifecycle logic (initialization, main loop, shutdown) is being ported to `src/decker_pygame/presentation/main.py` and `src/decker_pygame/presentation/game.py`.
-
--   **Task G.2: Create Data-Driven Asset Loading (Status: To Do)**
+-   **Task G.1: Create Data-Driven Asset Loading (Status: In Progress)**
     -   **`DeckerGraphics.cpp/h` & `DeckerSound.cpp/h`**: This logic will be replaced by a modern, data-driven asset loading system.
     -   **`Decker.ini`**: The asset configuration will be moved from the INI format to a new `data/assets.json` file.
     -   **Action:** Create an `AssetService` responsible for loading all Pygame surfaces and sounds based on the new JSON configuration. This will centralize asset management.
 
--   **Task G.3: Port Core Gameplay Entities (Status: To Do)**
+-   **Task G.2: Port Core Gameplay Entities (Status: To Do)**
     -   **`DSFile.cpp/h`**: This is a critical domain entity representing files within a system's datastore.
     -   **Action:** Port `CDSFile` to a new `DSFile` domain model in `src/decker_pygame/domain/`. This is a prerequisite for implementing the matrix run gameplay loop.
 
--   **Task G.4: Finalize Utility Porting (Status: In Progress)**
+-   **Task G.3: Port Core Engine Logic (Status: In Progress)**
+    -   **`Decker.cpp/h`**: The application lifecycle logic (initialization, main loop, shutdown) is being ported to `src/decker_pygame/presentation/main.py` and `src/decker_pygame/presentation/game.py`.
+
+-   **Task G.4: Finalize Utility Porting (Status: To Do)**
     -   **`Global.cpp/h`**: Port any remaining constants and utility functions (like `DoDieRoll`) to `src/decker_pygame/settings.py` and `src/decker_pygame/utils.py`. The `DoDieRoll` logic should become part of a `DiceService` in the domain.
 
 -   **Task G.5: Retire Obsolete Files (Status: Complete)**

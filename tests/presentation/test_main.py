@@ -56,6 +56,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_project_service_class = mocker.patch(
         "decker_pygame.presentation.main.ProjectService"
     )
+    mock_asset_service_class = mocker.patch(
+        "decker_pygame.presentation.main.AssetService"
+    )
     mock_game_class = mocker.patch("decker_pygame.presentation.main.Game")
     mock_dispatcher_class = mocker.patch(
         "decker_pygame.presentation.main.EventDispatcher"
@@ -170,6 +173,7 @@ def test_main_function(mocker: MockerFixture) -> None:
 
     # Assert that the presentation layer was composed and run
     mock_game_class.assert_called_once_with(
+        asset_service=mock_asset_service_class.return_value,
         player_service=mock_player_service_instance,
         player_id=deckard_player_id,
         character_service=mock_char_service_class.return_value,
@@ -201,6 +205,7 @@ def test_main_function_dev_mode(mocker: MockerFixture) -> None:
     mocker.patch("decker_pygame.presentation.main.NodeService")
     mocker.patch("decker_pygame.presentation.main.SettingsService")
     mocker.patch("decker_pygame.presentation.main.ProjectService")
+    mocker.patch("decker_pygame.presentation.main.AssetService")
     mocker.patch("decker_pygame.presentation.main.Game")
     mocker.patch("decker_pygame.presentation.main.EventDispatcher")
     mocker.patch("decker_pygame.presentation.main.LoggingService")

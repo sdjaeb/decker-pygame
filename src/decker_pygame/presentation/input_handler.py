@@ -55,27 +55,8 @@ class PygameInputHandler:
                         "Key Press", {"key": pygame.key.name(event.key)}
                     )
 
-            # Delegate events to active views that need to handle mouse clicks, etc.
-            for view in [
-                self._game.intro_view,
-                self._game.new_char_view,
-                self._game.rest_view,
-                self._game.mission_results_view,
-                self._game.home_view,
-                self._game.build_view,
-                self._game.char_data_view,
-                self._game.deck_view,
-                self._game.transfer_view,
-                self._game.shop_view,
-                self._game.order_view,
-                self._game.contract_list_view,
-                self._game.contract_data_view,
-                self._game.ice_data_view,
-                self._game.file_access_view,
-                self._game.entry_view,
-                self._game.options_view,
-                self._game.sound_edit_view,
-                self._game.new_project_view,
-            ]:
-                if view:
-                    view.handle_event(event)
+            # If a modal view is open, it gets exclusive event handling.
+            # This prevents underlying views from receiving events.
+            if self._game._modal_stack:
+                # Send event to the top-most modal view
+                self._game._modal_stack[-1].handle_event(event)

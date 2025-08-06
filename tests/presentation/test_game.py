@@ -39,6 +39,7 @@ from decker_pygame.ports.service_interfaces import (
     SettingsServiceInterface,
     ShopServiceInterface,
 )
+from decker_pygame.presentation.asset_service import AssetService
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.contract_data_view import ContractDataView
 from decker_pygame.presentation.components.contract_list_view import ContractListView
@@ -61,7 +62,7 @@ from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
-from decker_pygame.settings import FPS, GFX
+from decker_pygame.settings import FPS
 
 
 @pytest.fixture(autouse=True)
@@ -77,6 +78,7 @@ class Mocks:
     """A container for all mocked objects used in game tests."""
 
     game: Game
+    asset_service: Mock
     player_service: Mock
     character_service: Mock
     contract_service: Mock
@@ -92,6 +94,7 @@ class Mocks:
 @pytest.fixture
 def game_with_mocks() -> Generator[Mocks]:
     """Provides a fully mocked Game instance and its mocked dependencies."""
+    mock_asset_service = Mock(spec=AssetService)
     mock_player_service = Mock(spec=PlayerServiceInterface)
     mock_character_service = Mock(spec=CharacterServiceInterface)
     mock_contract_service = Mock(spec=ContractServiceInterface)
@@ -105,6 +108,9 @@ def game_with_mocks() -> Generator[Mocks]:
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
 
+    # Configure the asset service mock to return a valid icon
+    mock_asset_service.get_spritesheet.return_value = [pygame.Surface((16, 16))]
+
     # Mock all external dependencies called in Game.__init__ and Game.run
     with (
         patch("pygame.display.set_mode"),
@@ -115,14 +121,11 @@ def game_with_mocks() -> Generator[Mocks]:
             "decker_pygame.presentation.game.PygameInputHandler",
             spec=PygameInputHandler,
         ),
-        patch(
-            "decker_pygame.presentation.game.load_spritesheet",
-            return_value=([pygame.Surface((16, 16))], (16, 16)),
-        ),
         patch("decker_pygame.presentation.game.scale_icons") as mock_scale_icons,
     ):
         mock_scale_icons.return_value = [pygame.Surface((32, 32))]
         game = Game(
+            asset_service=mock_asset_service,
             player_service=mock_player_service,
             player_id=dummy_player_id,
             character_service=mock_character_service,
@@ -138,6 +141,7 @@ def game_with_mocks() -> Generator[Mocks]:
         )
         yield Mocks(
             game=game,
+            asset_service=mock_asset_service,
             player_service=mock_player_service,
             character_service=mock_character_service,
             contract_service=mock_contract_service,
@@ -157,6 +161,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     game = mocks.game
 
     # The __init__ method should store the service and id
+    assert game.asset_service is mocks.asset_service
     assert game.player_service is mocks.player_service
     assert game.character_service is mocks.character_service
     assert game.contract_service is mocks.contract_service
@@ -174,85 +179,6 @@ def test_game_initialization(game_with_mocks: Mocks):
 
     pygame.display.set_mode.assert_called_once()
     pygame.display.set_caption.assert_called_once()
-
-
-def test_game_load_assets_with_icons():
-    """Tests that asset loading correctly scales icons when they are present."""
-    # This test needs its own setup to override the fixture's mock
-    with (
-        patch("pygame.display.set_mode"),
-        patch("pygame.display.set_caption"),
-        patch("pygame.time.Clock"),
-        patch("decker_pygame.presentation.game.PygameInputHandler"),
-        patch("decker_pygame.presentation.game.load_spritesheet") as mock_load,
-        patch("decker_pygame.presentation.game.scale_icons") as mock_scale_icons,
-    ):
-        # Simulate finding one icon
-        mock_icon = pygame.Surface((16, 16))
-        mock_load.return_value = ([mock_icon], (16, 16))
-        mock_scale_icons.return_value = [pygame.Surface((32, 32))]
-
-        # We don't need a real service or ID for this test
-        game = Game(
-            player_service=Mock(spec=PlayerServiceInterface),
-            player_id=Mock(spec=PlayerId),
-            character_service=Mock(spec=CharacterServiceInterface),
-            contract_service=Mock(spec=ContractServiceInterface),
-            crafting_service=Mock(spec=CraftingServiceInterface),
-            deck_service=Mock(spec=DeckServiceInterface),
-            shop_service=Mock(spec=ShopServiceInterface),
-            node_service=Mock(spec=NodeServiceInterface),
-            settings_service=Mock(spec=SettingsServiceInterface),
-            project_service=Mock(spec=ProjectServiceInterface),
-            character_id=Mock(spec=CharacterId),
-            logging_service=Mock(spec=LoggingServiceInterface),
-        )
-
-        # Assert that the scaling logic was called
-        mock_load.assert_called_once()
-        mock_scale_icons.assert_called_once_with(
-            [mock_icon],
-            (GFX.active_bar_image_size, GFX.active_bar_image_size),
-        )
-        assert len(game.active_bar._image_list) == 1
-
-
-def test_game_load_assets_no_icons():
-    """Tests that asset loading handles the case where no icons are found."""
-    # This test needs its own setup to override the fixture's mock
-    with (
-        patch("pygame.display.set_mode"),
-        patch("pygame.display.set_caption"),
-        patch("pygame.time.Clock"),
-        patch("decker_pygame.presentation.game.PygameInputHandler"),
-        patch("decker_pygame.presentation.game.load_spritesheet") as mock_load,
-        patch("decker_pygame.presentation.game.scale_icons") as mock_scale_icons,
-        # We also patch ActiveBar to prevent it from raising an error on an empty list
-        patch("decker_pygame.presentation.game.ActiveBar") as mock_active_bar,
-    ):
-        # Simulate finding no icons
-        mock_load.return_value = ([], (16, 16))
-        mock_scale_icons.return_value = []
-
-        Game(
-            player_service=Mock(spec=PlayerServiceInterface),
-            player_id=Mock(spec=PlayerId),
-            character_service=Mock(spec=CharacterServiceInterface),
-            contract_service=Mock(spec=ContractServiceInterface),
-            crafting_service=Mock(spec=CraftingServiceInterface),
-            deck_service=Mock(spec=DeckServiceInterface),
-            shop_service=Mock(spec=ShopServiceInterface),
-            node_service=Mock(spec=NodeServiceInterface),
-            settings_service=Mock(spec=SettingsServiceInterface),
-            project_service=Mock(spec=ProjectServiceInterface),
-            character_id=Mock(spec=CharacterId),
-            logging_service=Mock(spec=LoggingServiceInterface),
-        )
-
-        mock_scale_icons.assert_called_once_with(
-            [], (GFX.active_bar_image_size, GFX.active_bar_image_size)
-        )
-        mock_active_bar.assert_called_once_with(position=(0, 0), image_list=[])
 
 
 def test_run_loop_calls_methods(game_with_mocks: Mocks):
