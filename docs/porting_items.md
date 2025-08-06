@@ -67,21 +67,21 @@ Modal dialogs and main screens for editing/viewing specific data. These depend o
 - **ContractDataDialog.cpp/h** (`Ported as ContractDataView`)
 - **ContractListDialog.cpp/h** (`Ported as ContractListView`)
 - **DeckDataDialog.cpp/h** (`Ported as DeckView`)
-- **EntryDlg.cpp/h**
-- **FileAccessDlg.cpp/h**
+- **EntryDlg.cpp/h** (`Ported as EntryView`)
+- **FileAccessDlg.cpp/h** (`Ported as FileAccessView`)
 - **HomeView.cpp/h** (`Ported as HomeView`)
-- **IceDataDlg.cpp/h**
+- **IceDataDlg.cpp/h** (`Ported as IceDataView`)
 - **IntroDlg.cpp/h** (`Ported as IntroView`)
-- **MissionResultsDlg.cpp/h**
+- **MissionResultsDlg.cpp/h** (`Ported as MissionResultsView`)
 - **NameDlg.cpp/h** (`Ported as TextInput component`)
 - **NewCharDlg.cpp/h** (`Ported as NewCharView`)
-- **NewProjectDlg.cpp/h**
-- **OptionsDlg.cpp/h**
+- **NewProjectDlg.cpp/h** (`Ported as NewProjectView`)
+- **OptionsDlg.cpp/h** (`Ported as OptionsView`)
 - **OrderDlg.cpp/h** (`Ported as OrderView`)
-- **ProjectDataDlg.cpp/h**
-- **RestDlg.cpp/h**
-- **ShopItem.cpp/h**
-- **SoundEditDlg.cpp/h**
+- **ProjectDataDlg.cpp/h** (`Ported as ProjectDataView`)
+- **RestDlg.cpp/h** (`Ported as RestView`)
+- **ShopItem.cpp/h** (`Ported as ShopView` and `ShopItemView`)
+- **SoundEditDlg.cpp/h** (`Ported as SoundEditView`)
 - **TransferDlg.cpp/h** (`Ported as TransferView`)
 
 **Porting Priority:** 3
@@ -93,14 +93,14 @@ Based on an analysis of the remaining dialogs, we can group them by functionalit
 **Group A: Core Player Lifecycle (Status: Complete)**
 These views are essential for starting a new game and providing a central hub for the player.
 - **`HomeView.cpp/h`**: Port to `HomeView`. This will be the main player dashboard, with buttons to access Character data, Deck, Contracts, etc.
-- **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process.
-- **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`.
-- **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction.
+- **`NewCharDlg.cpp/h`**: Port to `NewCharView`. This view will handle the character creation process. (Complete).
+- **`NameDlg.cpp/h`**: Port to a reusable `NameInputView` or similar text input component, to be used by `NewCharView`. (Complete).
+- **`IntroDlg.cpp/h`**: Port to `IntroView`. A simple view to display the game's introduction. (Complete).
 
 **Group B: Core Gameplay Loop (Status: Complete)**
 These views are part of the main contract/mission cycle.
-- **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`.
-- **`RestDlg.cpp/h`**: Port to `RestView`.
+- **`MissionResultsDlg.cpp/h`**: Port to `MissionResultsView`. (Complete).
+- **`RestDlg.cpp/h`**: Port to `RestView`. (Complete).
 
 **Group C: Data Display & Shop (Status: Complete)**
 These views are for displaying information and handling commerce.
@@ -117,7 +117,7 @@ These are lower-priority views for game settings.
 - **`OptionsDlg.cpp/h`**: Port to `OptionsView`. (Complete).
 - **`SoundEditDlg.cpp/h`**: Port to `SoundEditView`. (Complete).
 
-**Group F: Research & Development (Crafting System)**
+**Group F: Research & Development (Crafting System) (Status: Complete)**
 This is the core R&D system for creating new software and chips. It will be ported in stages.
 
 **Phase 1: Domain & Application Layer Foundation**
@@ -131,12 +131,9 @@ This is the core R&D system for creating new software and chips. It will be port
 -   **Task F.6:** Integrate `NewProjectView` into the `Game` class, connecting it to the `ProjectService`. (Complete).
 
 **Phase 3: "Project Management" UI**
--   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions.
--   **Task F.8:** Implement the "Work on Project" and "Build from Source" use cases, connecting the `ProjectDataView` buttons to the `ProjectService`.
--   **Task F.9:** Integrate `ProjectDataView` into the `Game` class.
-
-**Recommendation:**
-The next step should be to implement **Group A**. This will establish a complete game startup flow: Intro -> New Character -> Home Dashboard.
+-   **Task F.7:** Port `ProjectDataDlg.cpp/h` to a `ProjectDataView` component. This will be the main dashboard for viewing current project status, owned source codes, and initiating actions. (Complete).
+-   **Task F.8:** Implement the "Work on Project" and "Build from Source" use cases, connecting the `ProjectDataView` buttons to the `ProjectService`. (Complete).
+-   **Task F.9:** Integrate `ProjectDataView` into the `Game` class. (Complete).
 
 ---
 
