@@ -12,25 +12,8 @@ from decker_pygame.presentation.input_handler import PygameInputHandler
 def mock_game() -> Mock:
     """Provides a mock Game object with mock views."""
     game = Mock(spec=Game)
-    game.intro_view = Mock()
-    game.new_char_view = Mock()
-    game.rest_view = Mock()
-    game.mission_results_view = Mock()
-    game.home_view = Mock()
-    game.file_access_view = Mock()
-    game.entry_view = Mock()
-    game.build_view = Mock()
-    game.char_data_view = Mock()
-    game.deck_view = Mock()
-    game.transfer_view = Mock()
-    game.shop_view = Mock()
-    game.order_view = Mock()
-    game.contract_list_view = Mock()
-    game.contract_data_view = Mock()
-    game.ice_data_view = Mock()
-    game.options_view = Mock()
-    game.sound_edit_view = Mock()
-    game.new_project_view = Mock()
+    # The input handler now depends on the _modal_stack attribute.
+    game._modal_stack = []
     return game
 
 
@@ -96,33 +79,24 @@ def test_handle_unmapped_keydown(mock_game: Mock, mock_logging_service: Mock):
     mock_game.quit.assert_not_called()
 
 
-def test_delegates_events_to_views(mock_game: Mock, mock_logging_service: Mock):
-    """Tests that events are passed to active views."""
+def test_handle_events_delegates_to_top_modal_view(
+    mock_game: Mock, mock_logging_service: Mock
+):
+    """Tests that events are delegated only to the top-most view on the modal stack."""
     handler = PygameInputHandler(mock_game, mock_logging_service)
     mouse_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN)
+
+    # Create mock views that conform to the Eventful protocol
+    view1 = Mock(spec=["handle_event"])
+    view2 = Mock(spec=["handle_event"])
+    mock_game._modal_stack = [view1, view2]
 
     with patch("pygame.event.get", return_value=[mouse_event]):
         handler.handle_events()
 
-    mock_game.intro_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.new_char_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.rest_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.mission_results_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.home_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.file_access_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.entry_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.build_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.char_data_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.deck_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.transfer_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.shop_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.order_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.contract_list_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.contract_data_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.ice_data_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.options_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.sound_edit_view.handle_event.assert_called_once_with(mouse_event)
-    mock_game.new_project_view.handle_event.assert_called_once_with(mouse_event)
+    # Only the top view (view2) should receive the event
+    view1.handle_event.assert_not_called()
+    view2.handle_event.assert_called_once_with(mouse_event)
 
 
 def test_logs_keypress_in_dev_mode(mock_game: Mock, mock_logging_service: Mock):

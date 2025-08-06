@@ -67,7 +67,9 @@ The paths used to initialize the repositories in `presentation/main.py` should b
 
 ---
 
-# Issue: Input Handler Ignores Modal Focus
+# Issue: Input Handler Ignores Modal Focus (Status: Complete)
+
+**Resolution:** The `PygameInputHandler` was refactored to check the `Game._modal_stack`. If the stack is not empty, events are now dispatched *only* to the topmost view, correctly implementing modal behavior. The old logic of broadcasting events to all views has been removed.
 
 ## Problem
 
@@ -179,3 +181,92 @@ For every new feature or refactoring, a corresponding work item must be included
 
 -   All new and existing code.
 -   The `pre-commit` configuration.
+---
+
+# Issue: Magic Numbers for Work Units in ProjectService
+
+## Problem
+
+Currently, the `ProjectService.work_on_project` method accepts an integer representing an amount of time. The presentation layer (`Game` class) calls this service with hardcoded "magic numbers" (`1` for a day, `7` for a week). This has a few disadvantages:
+-   **Lack of Clarity:** The meaning of the integer `1` is not immediately obvious from the service's method signature.
+-   **Brittleness:** If we ever wanted to change the scale of work units (e.g., from days to hours, where a "day" would become `24`), we would have to find and update these magic numbers in the presentation layer.
+-   **Inconsistency:** It violates the principle of making the domain language explicit.
+
+## Proposed Solution
+
+1.  **Create a `WorkUnit` Enum:** In the `domain` layer (e.g., `domain/project.py`), create a new `WorkUnit(Enum)` with members like `DAY = 1` and `WEEK = 7`.
+2.  **Refactor `ProjectService`:** Update the `work_on_project` method to accept a `WorkUnit` enum member. The service will then use the enum's `value` to perform its calculations.
+3.  **Update `Game` Callbacks:** Refactor the `_on_work_day` and `_on_work_week` methods in `presentation/game.py` to pass the appropriate enum member (e.g., `WorkUnit.DAY`) to the service.
+
+This change will make the domain concept of a "work unit" explicit, improving code clarity and maintainability.
+
+### Affected Components
+-   `application/project_service.py`
+-   `presentation/game.py`
+-   `domain/project.py`
+---
+
+# Issue: Placeholder for Current Rating in Project View
+
+## Problem
+
+The `ProjectDataViewDTO` and its underlying `SourceCodeDTO` have a field for `current_rating`, which is intended to show the rating of a schematic's item that the character currently has installed. The `ProjectService` currently populates this with a placeholder `"-"`.
+
+To fully implement this, the service would need to query the character's equipped software (from the `Deck`) and installed chips, which is currently outside its scope.
+
+## Proposed Solution
+
+1.  Enhance the `Character` aggregate with methods to query for installed software/chip ratings by name.
+2.  Update the `ProjectService.get_project_data_view_data` method to use these new queries to populate the `current_rating` field accurately.
+
+This will provide more useful information to the player in the R&D screen.
+
+### Affected Components
+-   `domain/character.py`
+-   `application/project_service.py`
+---
+
+# Issue: Hardcoded R&D Project Availability
+
+## Problem
+
+Similar to the "Hardcoded Shop Inventory" issue, the `ProjectService.get_new_project_data` method uses hardcoded lists of available software and chip classes for research. This makes it difficult to add or modify the available research options without changing application code.
+
+## Proposed Solution
+
+1.  **Externalize the data:** Create one or more JSON files in the `data/` directory to define the available researchable items (software and chips), including their base complexity values (see `NewProjectDlg.cpp` for original logic).
+2.  **Create a Repository:** Define a `ResearchRepositoryInterface` in the `ports` layer and a `JsonFileResearchRepository` in the `infrastructure` layer to load this data.
+3.  **Refactor `ProjectService`:** Inject the `ResearchRepositoryInterface` into the `ProjectService`. The service will now use the repository to fetch the lists of available projects instead of using hardcoded lists.
+
+This change will make the R&D system more data-driven and maintainable.
+
+### Affected Components
+-   `application/project_service.py`
+-   `ports/repository_interfaces.py` (new `ResearchRepositoryInterface`)
+-   A new `infrastructure/json_research_repository.py`.
+-   New data files in `data/`.
+---
+
+# Issue: Discrepancy in Project Time Calculation
+
+## Problem
+
+There is a notable difference between the original C++ project time calculation and the new Python implementation.
+
+*   **Original C++ Logic (`NewProjectDlg.cpp`):** Used a "complexity" value for each item class (e.g., `GetProgramComplexity`) and a skill-based division to reduce time (`time = (base_time + skill - 1) / skill`). This created a non-linear reduction in time as skill increased.
+*   **Current Python Logic (`project_service.py`):** Uses a simplified formula based on the target rating squared (`rating^2 * 100`) and subtracts values based on existing ratings and skill levels.
+
+The current implementation is a valid design choice for game balance, but it deviates from the original game's mechanics.
+
+## Proposed Solution
+
+This is not an urgent issue, but a design choice to be aware of. If we decide to restore the original game's feel, the following steps would be necessary:
+
+1.  **Externalize Complexity Data:** As part of the "Hardcoded R&D Project Availability" task, the data files for researchable items should include their base "complexity" value.
+2.  **Update `ProjectService`:** Refactor the `start_new_project` method to use the complexity value and the original division-based formula to calculate `time_required`.
+
+This would more accurately replicate the original game's progression curve for research and development.
+
+### Affected Components
+-   `application/project_service.py`
+-   Data files created for R&D project availability.

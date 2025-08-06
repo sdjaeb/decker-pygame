@@ -5,7 +5,7 @@ It handles the main game loop, event processing, and the display of all UI compo
 
 from collections.abc import Callable
 from functools import partial
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, cast
 
 import pygame
 
@@ -32,7 +32,7 @@ from decker_pygame.ports.service_interfaces import (
     SettingsServiceInterface,
     ShopServiceInterface,
 )
-from decker_pygame.presentation.asset_loader import load_spritesheet
+from decker_pygame.presentation.asset_service import AssetService
 from decker_pygame.presentation.components.active_bar import ActiveBar
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.presentation.components.build_view import BuildView
@@ -65,6 +65,7 @@ from decker_pygame.presentation.components.sound_edit_view import (
 )
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.input_handler import PygameInputHandler
+from decker_pygame.presentation.protocols import Eventful
 from decker_pygame.presentation.utils import scale_icons
 from decker_pygame.settings import (
     BLACK,
@@ -73,7 +74,6 @@ from decker_pygame.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     TITLE,
-    TRANSPARENT_COLOR,
     UI_FACE,
 )
 
@@ -87,6 +87,7 @@ class Game:
     components.
 
     Args:
+        asset_service (AssetService): The service for loading game assets.
         player_service (PlayerServiceInterface): Service for player operations.
         player_id (PlayerId): The ID of the current player.
         character_service (CharacterServiceInterface): Service for character ops.
@@ -105,6 +106,7 @@ class Game:
         clock (pygame.time.Clock): The game clock for managing FPS.
         is_running (bool): Flag to control the main game loop.
         all_sprites (pygame.sprite.Group[pygame.sprite.Sprite]): Group for all sprites.
+        asset_service (AssetService): The service for loading game assets.
         active_bar (ActiveBar): The UI component for active programs.
         alarm_bar (AlarmBar): The UI component for the system alarm level.
         health_bar (HealthBar): The UI component for player health.
@@ -148,11 +150,12 @@ class Game:
         project_data_view (Optional[ProjectDataView]): The project data view, if open.
     """
 
-    _modal_stack: list[pygame.sprite.Sprite]
+    _modal_stack: list[Eventful]
     screen: pygame.Surface
     clock: pygame.time.Clock
     is_running: bool
     all_sprites: pygame.sprite.Group[pygame.sprite.Sprite]
+    asset_service: AssetService
     active_bar: ActiveBar
     alarm_bar: AlarmBar
     health_bar: HealthBar
@@ -194,6 +197,7 @@ class Game:
 
     def __init__(
         self,
+        asset_service: AssetService,
         player_service: PlayerServiceInterface,
         player_id: PlayerId,
         character_service: CharacterServiceInterface,
@@ -212,6 +216,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.is_running = True
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
+        self.asset_service = asset_service
         self.player_service = player_service
         self.character_service = character_service
         self.contract_service = contract_service
@@ -236,19 +241,14 @@ class Game:
         Returns:
             None:
         """
-        # Load icons at their native source size
-        native_icons, _ = load_spritesheet(
-            GFX.program_icon_sheet,
-            sprite_width=GFX.program_icon_source_size,
-            sprite_height=GFX.program_icon_source_size,
-            colorkey=TRANSPARENT_COLOR,
-        )
+        # Get pre-loaded icons from the asset service
+        program_icons = self.asset_service.get_spritesheet("program_icons")
 
         # Scale the icons up to the size required by the UI components
         target_size = (GFX.active_bar_image_size, GFX.active_bar_image_size)
-        program_icons = scale_icons(native_icons, target_size)
+        scaled_program_icons = scale_icons(program_icons, target_size)
 
-        self.active_bar = ActiveBar(position=(0, 0), image_list=program_icons)
+        self.active_bar = ActiveBar(position=(0, 0), image_list=scaled_program_icons)
         self.all_sprites.add(self.active_bar)
 
         # Position from DeckerSource_1_12/MatrixView.cpp
@@ -280,8 +280,10 @@ class Game:
         if current_view:
             self.all_sprites.remove(current_view)
             setattr(self, view_attr, None)
-            if current_view in self._modal_stack:
-                self._modal_stack.remove(current_view)
+            if hasattr(current_view, "handle_event"):
+                eventful_view = cast(Eventful, current_view)
+                if eventful_view in self._modal_stack:
+                    self._modal_stack.remove(eventful_view)
 
         else:
             new_view = view_factory()
@@ -289,7 +291,7 @@ class Game:
                 setattr(self, view_attr, new_view)
                 self.all_sprites.add(new_view)
                 if hasattr(new_view, "handle_event"):
-                    self._modal_stack.append(new_view)
+                    self._modal_stack.append(cast(Eventful, new_view))
 
     def quit(self) -> None:
         """Signals the game to exit the main loop."""

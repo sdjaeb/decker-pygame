@@ -5,8 +5,11 @@ __pycache__/
 *.pyd
 *.so
 
-# Game data
-/data/
+# User-generated game data (saves, etc.)
+/data/characters/
+/data/contracts/
+/data/decks/
+/data/players/
 
 # Distribution / packaging
 build/

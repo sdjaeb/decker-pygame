@@ -1,0 +1,10 @@
+{
+  "spritesheets": {
+    "program_icons": {
+      "file": "program_bmps/software_il.bmp",
+      "sprite_width": 16,
+      "sprite_height": 16,
+      "colorkey": [255, 0, 255]
+    }
+  }
+}
