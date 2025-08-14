@@ -22,7 +22,7 @@ The heart of the application. Contains all core game rules and logic, with zero 
 - **Aggregates & Entities:** `domain/player.py`, `domain/character.py`, etc.
 - **Domain Events:** `domain/events.py` (`PlayerCreated` class)
 - **DDD Base Classes:** `domain/ddd/entity.py`, `domain/ddd/aggregate.py`
-- **Repository Interfaces:** `domain/player_repository_interface.py` (`PlayerRepositoryInterface` abstract class)
+- **Repository Interfaces:** `ports/repository_interfaces.py` (`PlayerRepositoryInterface` abstract class)
 
 ### Application Layer
 
@@ -74,7 +74,7 @@ Mediates between the domain and the persistence mechanism, providing an in-memor
 
 - **Concept:** We need a way to "get a player" or "save a player" without the domain knowing about files or databases.
 - **Implementation:**
-    - **Interface (Domain Layer):** The `PlayerRepositoryInterface` abstract class in `domain/player_repository_interface.py` defines the contract (e.g., `get`, `save`).
+    - **Interface (Ports Layer):** The `PlayerRepositoryInterface` abstract class in `ports/repository_interfaces.py` defines the contract (e.g., `get`, `save`). The ports are technically part of the application core.
     - **Implementation (Infrastructure Layer):** The `JsonFilePlayerRepository` in `infrastructure/json_player_repository.py` provides the concrete logic to save a `Player` to a JSON file.
 
 ### Application Service

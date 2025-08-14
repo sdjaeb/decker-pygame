@@ -17,6 +17,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     """
     # Patch all dependencies within the main module
     mock_pygame_init = mocker.patch("decker_pygame.presentation.main.pygame.init")
+    mock_pygame_set_mode = mocker.patch(
+        "decker_pygame.presentation.main.pygame.display.set_mode"
+    )
     mock_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFilePlayerRepository"
     )
@@ -29,11 +32,17 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_deck_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFileDeckRepository"
     )
+    mock_ds_file_repo_class = mocker.patch(
+        "decker_pygame.presentation.main.JsonFileDSFileRepository"
+    )
     mock_deck_service_class = mocker.patch(
         "decker_pygame.presentation.main.DeckService"
     )
     mock_char_service_class = mocker.patch(
         "decker_pygame.presentation.main.CharacterService"
+    )
+    mock_ds_file_service_class = mocker.patch(
+        "decker_pygame.presentation.main.DSFileService"
     )
     mock_contract_service_class = mocker.patch(
         "decker_pygame.presentation.main.ContractService"
@@ -108,6 +117,7 @@ def test_main_function(mocker: MockerFixture) -> None:
     )
     mock_contract_repo_class.assert_called_once_with(base_path=PATHS.contracts_data)
     mock_deck_repo_class.assert_called_once_with(base_path=PATHS.decks_data)
+    mock_ds_file_repo_class.assert_called_once_with(file_path=PATHS.ds_files_data)
 
     mock_player_service_class.assert_called_once_with(
         player_repo=mock_repo_class.return_value,
@@ -126,6 +136,9 @@ def test_main_function(mocker: MockerFixture) -> None:
         deck_repo=mock_deck_repo_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
         character_repo=mock_char_repo_class.return_value,
+    )
+    mock_ds_file_service_class.assert_called_once_with(
+        ds_file_repo=mock_ds_file_repo_class.return_value
     )
     mock_shop_service_class.assert_called_once_with(
         character_repo=mock_char_repo_class.return_value
@@ -173,6 +186,7 @@ def test_main_function(mocker: MockerFixture) -> None:
 
     # Assert that the presentation layer was composed and run
     mock_game_class.assert_called_once_with(
+        screen=mock_pygame_set_mode.return_value,
         asset_service=mock_asset_service_class.return_value,
         player_service=mock_player_service_instance,
         player_id=deckard_player_id,
@@ -181,6 +195,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         crafting_service=mock_crafting_service_class.return_value,
         character_id=mock_character.id,
         deck_service=mock_deck_service_class.return_value,
+        ds_file_service=mock_ds_file_service_class.return_value,
         shop_service=mock_shop_service_class.return_value,
         node_service=mock_node_service_class.return_value,
         settings_service=mock_settings_service_class.return_value,

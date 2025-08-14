@@ -1,0 +1,11 @@
+{
+    "ds_files": [
+        {
+            "id": "a1b2c3d4-e5f6-4890-a234-567890abcdef",
+            "name": "corp_payroll.dat",
+            "file_type": "data",
+            "size": 2048,
+            "content": "Sensitive corporate payroll information."
+        }
+    ]
+}

@@ -60,6 +60,7 @@ class Paths:
     characters_data: str = "data/characters"
     contracts_data: str = "data/contracts"
     decks_data: str = "data/decks"
+    ds_files_data: str = "data/ds_files.json"
     players_data: str = "data/players"
 
 

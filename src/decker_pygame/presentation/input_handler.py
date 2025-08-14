@@ -9,6 +9,7 @@ from decker_pygame.settings import DEV_SETTINGS
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.ports.service_interfaces import LoggingServiceInterface
+    from decker_pygame.presentation.debug_actions import DebugActions
     from decker_pygame.presentation.game import Game
 
 
@@ -20,9 +21,15 @@ class PygameInputHandler:
 
     _key_map: dict[int, Callable[[], None]]
 
-    def __init__(self, game: "Game", logging_service: "LoggingServiceInterface"):
+    def __init__(
+        self,
+        game: "Game",
+        logging_service: "LoggingServiceInterface",
+        debug_actions: "DebugActions",
+    ):
         self._game = game
         self._logging_service = logging_service
+        self._debug_actions = debug_actions
         self._key_map = {
             pygame.K_h: self._game.toggle_home_view,
             pygame.K_b: self._game.toggle_build_view,
@@ -31,6 +38,7 @@ class PygameInputHandler:
             pygame.K_l: self._game.toggle_contract_list_view,
             pygame.K_d: self._game.toggle_contract_data_view,
             pygame.K_p: self._game.toggle_deck_view,
+            pygame.K_m: self._debug_actions.get_ds_file,
             pygame.K_f: lambda: self._game.show_file_access_view("corp_server_1"),
             pygame.K_e: lambda: self._game.toggle_entry_view("corp_server_1"),
             pygame.K_o: self._game.toggle_options_view,

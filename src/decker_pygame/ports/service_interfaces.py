@@ -14,6 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CharacterViewDTO,
         ContractSummaryDTO,
         DeckViewDTO,
+        DSFileDTO,
         FileAccessViewDTO,
         IceDataViewDTO,
         NewProjectViewDTO,
@@ -26,7 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TransferViewDTO,
     )
     from decker_pygame.domain.crafting import Schematic
-    from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
+    from decker_pygame.domain.ids import CharacterId, DeckId, DSFileId, PlayerId
 
 
 class CharacterServiceInterface(ABC):  # pragma: no cover
@@ -129,6 +130,15 @@ class DeckServiceInterface(ABC):  # pragma: no cover
         self, character_id: "CharacterId", program_name: str
     ) -> None:
         """Moves a program from a character's deck to their storage."""
+        raise NotImplementedError  # pragma: no cover
+
+
+class DSFileServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for DSFile-related use cases."""
+
+    @abstractmethod
+    def get_ds_file_data(self, ds_file_id: "DSFileId") -> "Optional[DSFileDTO]":
+        """Retrieves a DTO with data for a specific DSFile."""
         raise NotImplementedError  # pragma: no cover
 
 

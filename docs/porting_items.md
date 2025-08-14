@@ -32,9 +32,9 @@ These files define the fundamental data structures and logic for the game. They 
 **Porting Status:** Largely Complete.
 
 **Architectural Notes:** The logic from these core C++ files has been refactored into our new Domain-Driven Design architecture.
-- **Core rules and state** (e.g., `Player` data) are now **Aggregates** in `src/decker_pygame/domain/model.py`.
-- **Use cases** (e.g., creating a character) are handled by **Application Services** in `src/decker_pygame/application/services.py`.
-- **Persistence** (saving/loading) is managed by **Repositories** defined in `src/decker_pygame/domain/repositories.py` and implemented in `src/decker_pygame/infrastructure/persistence.py`.
+- **Core rules and state** (e.g., `Player` data) are now **Aggregates** in individual modules within `src/decker_pygame/domain/` (e.g., `domain/character.py`).
+- **Use cases** (e.g., creating a character) are handled by **Application Services** in individual modules within `src/decker_pygame/application/` (e.g., `application/character_service.py`).
+- **Persistence** (saving/loading) is managed by **Repositories**. Their interfaces are defined in `src/decker_pygame/ports/repository_interfaces.py` and implemented in individual modules within `src/decker_pygame/infrastructure/` (e.g., `infrastructure/json_character_repository.py`).
 - This separation ensures our core game logic is independent of UI or data storage details.
 
 ---
@@ -154,14 +154,14 @@ Top-level application logic, main loop, graphics, sound, and file handling. Thes
 
 #### Proposed Porting Plan
 
--   **Task G.1: Create Data-Driven Asset Loading (Status: In Progress)**
+-   **Task G.1: Create Data-Driven Asset Loading (Status: Complete)**
     -   **`DeckerGraphics.cpp/h` & `DeckerSound.cpp/h`**: This logic will be replaced by a modern, data-driven asset loading system.
     -   **`Decker.ini`**: The asset configuration will be moved from the INI format to a new `data/assets.json` file.
     -   **Action:** Create an `AssetService` responsible for loading all Pygame surfaces and sounds based on the new JSON configuration. This will centralize asset management.
 
--   **Task G.2: Port Core Gameplay Entities (Status: To Do)**
+-   **Task G.2: Port Core Gameplay Entities (Status: In Progress)**
     -   **`DSFile.cpp/h`**: This is a critical domain entity representing files within a system's datastore.
-    -   **Action:** Port `CDSFile` to a new `DSFile` domain model in `src/decker_pygame/domain/`. This is a prerequisite for implementing the matrix run gameplay loop.
+    -   **Action:** Port `CDSFile` to a new `DSFile` domain model in `src/decker_pygame/domain/ds_file.py`. The domain model, repository interface, and persistence layer (`JsonFileDSFileRepository`) are now defined. This is a prerequisite for implementing the matrix run gameplay loop.
 
 -   **Task G.3: Port Core Engine Logic (Status: In Progress)**
     -   **`Decker.cpp/h`**: The application lifecycle logic (initialization, main loop, shutdown) is being ported to `src/decker_pygame/presentation/main.py` and `src/decker_pygame/presentation/game.py`.
