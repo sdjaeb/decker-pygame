@@ -21,6 +21,7 @@ from decker_pygame.application.domain_event_handlers import (
     is_special_player,
     log_special_player_created,
 )
+from decker_pygame.application.ds_file_service import DSFileService
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.logging_service import ConsoleLogWriter, LoggingService
 from decker_pygame.application.node_service import NodeService
@@ -42,10 +43,19 @@ from decker_pygame.infrastructure.json_contract_repository import (
 from decker_pygame.infrastructure.json_deck_repository import (
     JsonFileDeckRepository,
 )
+from decker_pygame.infrastructure.json_ds_file_repository import (
+    JsonFileDSFileRepository,
+)
 from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
 from decker_pygame.presentation.asset_service import AssetService
 from decker_pygame.presentation.game import Game
-from decker_pygame.settings import DEV_SETTINGS, PATHS
+from decker_pygame.settings import (
+    DEV_SETTINGS,
+    PATHS,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    TITLE,
+)
 
 
 def main() -> None:
@@ -54,6 +64,8 @@ def main() -> None:
     This is the "Composition Root" where we wire up our dependencies.
     """
     pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption(TITLE)
 
     print("--- Decker Game Initializing ---")
 
@@ -63,6 +75,7 @@ def main() -> None:
     player_repo = JsonFilePlayerRepository(base_path=PATHS.players_data)
     contract_repo = JsonFileContractRepository(base_path=PATHS.contracts_data)
     deck_repo = JsonFileDeckRepository(base_path=PATHS.decks_data)
+    ds_file_repo = JsonFileDSFileRepository(file_path=PATHS.ds_files_data)
     event_dispatcher = EventDispatcher()
     logging_service = LoggingService(writers=[ConsoleLogWriter()])
     asset_service = AssetService(
@@ -89,6 +102,7 @@ def main() -> None:
         event_dispatcher=event_dispatcher,
         character_repo=character_repo,
     )
+    ds_file_service = DSFileService(ds_file_repo=ds_file_repo)
     shop_service = ShopService(
         character_repo=character_repo,
     )
@@ -159,6 +173,7 @@ def main() -> None:
 
     # 5. Compose the presentation layer, injecting dependencies
     game = Game(
+        screen=screen,
         asset_service=asset_service,
         player_service=player_service,
         player_id=player_id,
@@ -167,6 +182,7 @@ def main() -> None:
         crafting_service=crafting_service,
         character_id=CharacterId(character.id),
         deck_service=deck_service,
+        ds_file_service=ds_file_service,
         shop_service=shop_service,
         node_service=node_service,
         settings_service=settings_service,

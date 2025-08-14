@@ -25,6 +25,7 @@ from decker_pygame.ports.service_interfaces import (
     ContractServiceInterface,
     CraftingServiceInterface,
     DeckServiceInterface,
+    DSFileServiceInterface,
     LoggingServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
@@ -64,6 +65,7 @@ from decker_pygame.presentation.components.sound_edit_view import (
     SoundEditView,
 )
 from decker_pygame.presentation.components.transfer_view import TransferView
+from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.protocols import Eventful
 from decker_pygame.presentation.utils import scale_icons
@@ -71,9 +73,6 @@ from decker_pygame.settings import (
     BLACK,
     FPS,
     GFX,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-    TITLE,
     UI_FACE,
 )
 
@@ -87,6 +86,7 @@ class Game:
     components.
 
     Args:
+        screen (pygame.Surface): The main display surface.
         asset_service (AssetService): The service for loading game assets.
         player_service (PlayerServiceInterface): Service for player operations.
         player_id (PlayerId): The ID of the current player.
@@ -94,6 +94,7 @@ class Game:
         contract_service (ContractServiceInterface): Service for contract ops.
         crafting_service (CraftingServiceInterface): Service for crafting ops.
         deck_service (DeckServiceInterface): The service for deck operations.
+        ds_file_service (DSFileServiceInterface): Service for DSFile operations.
         shop_service (ShopServiceInterface): The service for shop operations.
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
@@ -114,6 +115,7 @@ class Game:
         character_service (CharacterServiceInterface): Service for character operations.
         contract_service (ContractServiceInterface): Service for contract operations.
         crafting_service (CraftingServiceInterface): Service for crafting operations.
+        ds_file_service (DSFileServiceInterface): Service for DSFile operations.
         deck_service (DeckServiceInterface): The service for deck operations.
         shop_service (ShopServiceInterface): The service for shop operations.
         node_service (NodeServiceInterface): The service for node operations.
@@ -124,6 +126,7 @@ class Game:
         logging_service (LoggingServiceInterface): Service for logging.
         message_view (MessageView): The UI component for displaying messages.
         input_handler (PygameInputHandler): The handler for user input.
+        debug_actions (DebugActions): A container for debugging actions.
         intro_view (Optional[IntroView]): The introduction view, if open.
         new_char_view (Optional[NewCharView]): The new character view, if open.
         rest_view (Optional[RestView]): The rest and recovery view, if open.
@@ -163,6 +166,7 @@ class Game:
     character_service: CharacterServiceInterface
     contract_service: ContractServiceInterface
     crafting_service: CraftingServiceInterface
+    ds_file_service: DSFileServiceInterface
     deck_service: DeckServiceInterface
     shop_service: ShopServiceInterface
     node_service: NodeServiceInterface
@@ -173,6 +177,7 @@ class Game:
     logging_service: LoggingServiceInterface
     message_view: MessageView
     input_handler: PygameInputHandler
+    debug_actions: DebugActions
     intro_view: Optional[IntroView] = None
     new_char_view: Optional[NewCharView] = None
     rest_view: Optional[RestView] = None
@@ -197,6 +202,7 @@ class Game:
 
     def __init__(
         self,
+        screen: pygame.Surface,
         asset_service: AssetService,
         player_service: PlayerServiceInterface,
         player_id: PlayerId,
@@ -204,6 +210,7 @@ class Game:
         contract_service: ContractServiceInterface,
         crafting_service: CraftingServiceInterface,
         deck_service: DeckServiceInterface,
+        ds_file_service: DSFileServiceInterface,
         shop_service: ShopServiceInterface,
         node_service: NodeServiceInterface,
         settings_service: SettingsServiceInterface,
@@ -211,8 +218,7 @@ class Game:
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption(TITLE)
+        self.screen = screen
         self.clock = pygame.time.Clock()
         self.is_running = True
         self.all_sprites = pygame.sprite.Group[pygame.sprite.Sprite]()
@@ -224,13 +230,17 @@ class Game:
         self.crafting_service = crafting_service
         self.deck_service = deck_service
         self.shop_service = shop_service
+        self.ds_file_service = ds_file_service
         self.node_service = node_service
         self.settings_service = settings_service
         self.project_service = project_service
         self.character_id = character_id
         self.logging_service = logging_service
         self._modal_stack = []
-        self.input_handler = PygameInputHandler(self, logging_service)
+        self.debug_actions = DebugActions(self)
+        self.input_handler = PygameInputHandler(
+            self, logging_service, self.debug_actions
+        )
 
         self._load_assets()
         self.toggle_intro_view()

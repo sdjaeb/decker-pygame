@@ -32,6 +32,7 @@ from decker_pygame.ports.service_interfaces import (
     ContractServiceInterface,
     CraftingServiceInterface,
     DeckServiceInterface,
+    DSFileServiceInterface,
     LoggingServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
@@ -60,6 +61,7 @@ from decker_pygame.presentation.components.project_data_view import ProjectDataV
 from decker_pygame.presentation.components.rest_view import RestView
 from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
+from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.settings import FPS
@@ -84,6 +86,7 @@ class Mocks:
     contract_service: Mock
     crafting_service: Mock
     deck_service: Mock
+    ds_file_service: Mock
     shop_service: Mock
     node_service: Mock
     settings_service: Mock
@@ -94,12 +97,14 @@ class Mocks:
 @pytest.fixture
 def game_with_mocks() -> Generator[Mocks]:
     """Provides a fully mocked Game instance and its mocked dependencies."""
+    mock_screen = Mock(spec=pygame.Surface)
     mock_asset_service = Mock(spec=AssetService)
     mock_player_service = Mock(spec=PlayerServiceInterface)
     mock_character_service = Mock(spec=CharacterServiceInterface)
     mock_contract_service = Mock(spec=ContractServiceInterface)
     mock_crafting_service = Mock(spec=CraftingServiceInterface)
     mock_deck_service = Mock(spec=DeckServiceInterface)
+    mock_ds_file_service = Mock(spec=DSFileServiceInterface)
     mock_shop_service = Mock(spec=ShopServiceInterface)
     mock_node_service = Mock(spec=NodeServiceInterface)
     mock_settings_service = Mock(spec=SettingsServiceInterface)
@@ -113,8 +118,6 @@ def game_with_mocks() -> Generator[Mocks]:
 
     # Mock all external dependencies called in Game.__init__ and Game.run
     with (
-        patch("pygame.display.set_mode"),
-        patch("pygame.display.set_caption"),
         patch("pygame.display.flip"),
         patch("pygame.time.Clock"),
         patch(
@@ -125,6 +128,7 @@ def game_with_mocks() -> Generator[Mocks]:
     ):
         mock_scale_icons.return_value = [pygame.Surface((32, 32))]
         game = Game(
+            screen=mock_screen,
             asset_service=mock_asset_service,
             player_service=mock_player_service,
             player_id=dummy_player_id,
@@ -132,6 +136,7 @@ def game_with_mocks() -> Generator[Mocks]:
             contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
             deck_service=mock_deck_service,
+            ds_file_service=mock_ds_file_service,
             shop_service=mock_shop_service,
             node_service=mock_node_service,
             settings_service=mock_settings_service,
@@ -147,6 +152,7 @@ def game_with_mocks() -> Generator[Mocks]:
             contract_service=mock_contract_service,
             crafting_service=mock_crafting_service,
             deck_service=mock_deck_service,
+            ds_file_service=mock_ds_file_service,
             shop_service=mock_shop_service,
             node_service=mock_node_service,
             settings_service=mock_settings_service,
@@ -167,18 +173,17 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.contract_service is mocks.contract_service
     assert game.crafting_service is mocks.crafting_service
     assert game.deck_service is mocks.deck_service
+    assert game.ds_file_service is mocks.ds_file_service
     assert game.shop_service is mocks.shop_service
     assert game.node_service is mocks.node_service
     assert game.settings_service is mocks.settings_service
     assert game.project_service is mocks.project_service
     assert game.logging_service is mocks.logging_service
     assert isinstance(game.player_id, uuid.UUID)
+    assert isinstance(game.debug_actions, DebugActions)
     assert isinstance(game.character_id, uuid.UUID)
     assert isinstance(game.message_view, MessageView)
     assert isinstance(game.health_bar, HealthBar)
-
-    pygame.display.set_mode.assert_called_once()
-    pygame.display.set_caption.assert_called_once()
 
 
 def test_run_loop_calls_methods(game_with_mocks: Mocks):

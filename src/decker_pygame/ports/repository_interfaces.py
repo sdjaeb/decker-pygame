@@ -13,7 +13,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.domain.character import Character
     from decker_pygame.domain.contract import Contract
     from decker_pygame.domain.deck import Deck
-    from decker_pygame.domain.ids import CharacterId, ContractId, DeckId, PlayerId
+    from decker_pygame.domain.ds_file import DSFile
+    from decker_pygame.domain.ids import (
+        CharacterId,
+        ContractId,
+        DeckId,
+        DSFileId,
+        PlayerId,
+    )
     from decker_pygame.domain.player import Player
 
 
@@ -61,6 +68,20 @@ class DeckRepositoryInterface(ABC):  # pragma: no cover
     @abstractmethod
     def get(self, deck_id: "DeckId") -> Optional["Deck"]:
         """Retrieves a deck by its ID."""
+        raise NotImplementedError  # pragma: no cover
+
+
+class DSFileRepositoryInterface(ABC):  # pragma: no cover
+    """Interface for a repository that manages DSFile aggregates."""
+
+    @abstractmethod
+    def save(self, ds_file: "DSFile") -> None:
+        """Saves a DSFile."""
+        raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def get(self, ds_file_id: "DSFileId") -> Optional["DSFile"]:
+        """Retrieves a DSFile by its ID."""
         raise NotImplementedError  # pragma: no cover
 
 

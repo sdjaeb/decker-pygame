@@ -3,11 +3,12 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from decker_pygame.domain.ids import ContractId, DeckId
+from decker_pygame.domain.ids import ContractId, DeckId, DSFileId
 from decker_pygame.domain.shop import ShopItemType
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.domain.contract import Contract
+    from decker_pygame.domain.ds_file import DSFile
 
 
 @dataclass
@@ -359,3 +360,30 @@ class NewProjectViewDTO:
     chip_design_skill: int
     available_software: list[str] = field(default_factory=list)
     available_chips: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class DSFileDTO:
+    """Data for a single DSFile.
+
+    Attributes:
+        id (DSFileId): The unique identifier of the file.
+        name (str): The name of the file.
+        file_type (str): The type of the file (e.g., "data", "program").
+        size (int): The size of the file in some unit (e.g., KB).
+    """
+
+    id: DSFileId
+    name: str
+    file_type: str
+    size: int
+
+    @classmethod
+    def from_domain(cls, ds_file: "DSFile") -> "DSFileDTO":
+        """Create a DTO from a DSFile domain object."""
+        return cls(
+            id=DSFileId(ds_file.id),
+            name=ds_file.name,
+            file_type=ds_file.file_type.value,
+            size=ds_file.size,
+        )

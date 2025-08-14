@@ -270,3 +270,64 @@ This would more accurately replicate the original game's progression curve for r
 ### Affected Components
 -   `application/project_service.py`
 -   Data files created for R&D project availability.
+---
+
+# Issue: Lack of End-to-End / Integration Testing
+
+## Problem
+
+Our current test suite consists entirely of unit tests with mocked dependencies. While this is excellent for verifying the logic of individual components in isolation, it cannot answer critical questions about the application as a whole when it's actually running. We have no automated way to verify:
+-   **UI Layout:** Are UI elements placed correctly on the screen and do they overlap unexpectedly?
+-   **Modal Stack Integrity:** Do nested dialogs (e.g., `ShopView` -> `ShopItemView`) open and close correctly, always returning focus to the correct parent view?
+-   **Data Binding:** When a domain model changes, does the UI update correctly in a running game?
+-   **Full Gameplay Loops:**
+    -   Can a player accept a contract, complete it, receive payment, go to a shop, and successfully purchase an item? (The "Mercenary Loop")
+    -   Can a player start a research project, complete it, build the schematic, and transfer the new program to their deck? (The "Inventor Loop")
+-   **Game Lifecycle:** Does the application start and exit gracefully without errors?
+-   **Persistence Integrity:** Does saving and loading the game correctly restore the full character state (inventory, deck order, credits, etc.)?
+-   **Core Mechanics:** Do systems like combat, resting, and crafting function correctly from end to end?
+-   **Randomness & Balance:** Do random systems (like die rolls or loot drops) behave within expected parameters?
+-   **Error Resilience:** Does the UI respond gracefully with a message when an action fails (e.g., trying to buy an unaffordable item), or does it crash?
+
+Manually testing these scenarios is time-consuming and error-prone.
+
+## Proposed Solution
+
+Build a custom integration testing harness. While generic GUI automation tools like `pyautogui` exist, they are often brittle and slow. A custom harness that interacts directly with the Pygame event loop would be more robust and maintainable.
+
+The harness would involve:
+1.  **A Test Runner:** Continue using `pytest`.
+2.  **A Controlled Game Loop:** Tests would manually advance the game one frame at a time (`game.run_one_frame()`) instead of letting it run freely. This makes tests deterministic.
+3.  **An "Agent" or "Driver":** A test helper class that provides high-level methods to simulate user actions, such as:
+    -   `agent.press_key(pygame.K_h)`
+    -   `agent.click_view_button("HomeView", "Shop")`
+    -   `agent.type_in_active_view("password123")`
+4.  **Programmatic Event Injection:** The agent would simulate input by creating `pygame.event.Event` objects and posting them directly to Pygame's event queue.
+5.  **State Inspection:** The agent would hold a reference to the `Game` instance, allowing tests to make assertions directly against the state of the UI and domain (e.g., `assert agent.game.shop_view is not None`).
+
+A test case using this harness might look like this:
+
+```python
+# tests/integration/test_shop_flow.py
+def test_purchasing_an_unaffordable_item_shows_error_message(game_agent):
+    # 1. Setup: Navigate to the shop
+    game_agent.press_key(pygame.K_h)  # Open HomeView
+    game_agent.run_frames(10) # Let UI settle
+    game_agent.click_button_with_text("Shop")
+    game_agent.run_frames(10)
+
+    # 2. Action: Try to buy an item we can't afford
+    # (The test setup would ensure the character has low funds)
+    game_agent.click_button_with_text("Buy 'Expensive ICE'")
+
+    # 3. Assert: Check the game state
+    game = game_agent.game
+    assert "Insufficient credits" in game.message_view.text
+    assert game.shop_view is not None # The shop should still be open
+```
+
+This would provide a powerful safety net for catching visual regressions and bugs in complex user workflows that unit tests cannot detect.
+
+### Affected Components
+-   A new test harness, likely living in `tests/integration/harness.py`.
+-   A new test suite, likely in a `tests/integration/` directory.
