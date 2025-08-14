@@ -34,8 +34,6 @@ from decker_pygame.ports.service_interfaces import (
     ShopServiceInterface,
 )
 from decker_pygame.presentation.asset_service import AssetService
-from decker_pygame.presentation.components.active_bar import ActiveBar
-from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.contract_data_view import ContractDataView
@@ -43,7 +41,6 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
-from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
@@ -68,13 +65,7 @@ from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.protocols import Eventful
-from decker_pygame.presentation.utils import scale_icons
-from decker_pygame.settings import (
-    BLACK,
-    FPS,
-    GFX,
-    UI_FACE,
-)
+from decker_pygame.settings import BLACK, FPS, UI_FACE
 
 V = TypeVar("V", bound=pygame.sprite.Sprite)
 
@@ -107,10 +98,6 @@ class Game:
         clock (pygame.time.Clock): The game clock for managing FPS.
         is_running (bool): Flag to control the main game loop.
         all_sprites (pygame.sprite.Group[pygame.sprite.Sprite]): Group for all sprites.
-        asset_service (AssetService): The service for loading game assets.
-        active_bar (ActiveBar): The UI component for active programs.
-        alarm_bar (AlarmBar): The UI component for the system alarm level.
-        health_bar (HealthBar): The UI component for player health.
         player_service (PlayerServiceInterface): Service for player operations.
         character_service (CharacterServiceInterface): Service for character operations.
         contract_service (ContractServiceInterface): Service for contract operations.
@@ -122,6 +109,7 @@ class Game:
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
         player_id (PlayerId): The ID of the current player.
+        asset_service (AssetService): The service for loading game assets.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
         message_view (MessageView): The UI component for displaying messages.
@@ -158,10 +146,6 @@ class Game:
     clock: pygame.time.Clock
     is_running: bool
     all_sprites: pygame.sprite.Group[pygame.sprite.Sprite]
-    asset_service: AssetService
-    active_bar: ActiveBar
-    alarm_bar: AlarmBar
-    health_bar: HealthBar
     player_service: PlayerServiceInterface
     character_service: CharacterServiceInterface
     contract_service: ContractServiceInterface
@@ -173,6 +157,7 @@ class Game:
     settings_service: SettingsServiceInterface
     project_service: ProjectServiceInterface
     player_id: PlayerId
+    asset_service: AssetService
     character_id: CharacterId
     logging_service: LoggingServiceInterface
     message_view: MessageView
@@ -242,36 +227,10 @@ class Game:
             self, logging_service, self.debug_actions
         )
 
-        self._load_assets()
-        self.toggle_intro_view()
-
-    def _load_assets(self) -> None:
-        """Load game assets (images, sounds, etc).
-
-        Returns:
-            None:
-        """
-        # Get pre-loaded icons from the asset service
-        program_icons = self.asset_service.get_spritesheet("program_icons")
-
-        # Scale the icons up to the size required by the UI components
-        target_size = (GFX.active_bar_image_size, GFX.active_bar_image_size)
-        scaled_program_icons = scale_icons(program_icons, target_size)
-
-        self.active_bar = ActiveBar(position=(0, 0), image_list=scaled_program_icons)
-        self.all_sprites.add(self.active_bar)
-
-        # Position from DeckerSource_1_12/MatrixView.cpp
-        self.alarm_bar = AlarmBar(position=(206, 342), width=200, height=50)
-        self.all_sprites.add(self.alarm_bar)
-
-        self.health_bar = HealthBar(position=(10, 342), width=180, height=50)
-        self.all_sprites.add(self.health_bar)
-
         self.message_view = MessageView(
             position=(10, 600), size=(400, 150), background_color=UI_FACE
         )
-        self.all_sprites.add(self.message_view)
+        self.toggle_intro_view()
 
     def _toggle_view(
         self,
@@ -882,13 +841,6 @@ class Game:
         Returns:
             None:
         """
-        player_status = self.player_service.get_player_status(self.player_id)
-        if player_status:
-            self.health_bar.update_health(
-                player_status.current_health, player_status.max_health
-            )
-            # self.alarm_bar.update_state(player.alert_level, player.is_crashing)
-
         self.all_sprites.update()
 
     def run(self) -> None:

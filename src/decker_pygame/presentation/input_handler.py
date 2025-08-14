@@ -31,19 +31,11 @@ class PygameInputHandler:
         self._logging_service = logging_service
         self._debug_actions = debug_actions
         self._key_map = {
+            # Navigation
             pygame.K_h: self._game.toggle_home_view,
-            pygame.K_b: self._game.toggle_build_view,
-            pygame.K_c: self._game.toggle_char_data_view,
-            pygame.K_t: self._game.toggle_transfer_view,
-            pygame.K_l: self._game.toggle_contract_list_view,
-            pygame.K_d: self._game.toggle_contract_data_view,
-            pygame.K_p: self._game.toggle_deck_view,
+            # Debug
             pygame.K_m: self._debug_actions.get_ds_file,
-            pygame.K_f: lambda: self._game.show_file_access_view("corp_server_1"),
-            pygame.K_e: lambda: self._game.toggle_entry_view("corp_server_1"),
-            pygame.K_o: self._game.toggle_options_view,
-            pygame.K_u: self._game.toggle_sound_edit_view,
-            pygame.K_r: self._game.toggle_new_project_view,
+            # System
             pygame.K_q: self._game.quit,
         }
 

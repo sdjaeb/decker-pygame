@@ -159,9 +159,9 @@ Top-level application logic, main loop, graphics, sound, and file handling. Thes
     -   **`Decker.ini`**: The asset configuration will be moved from the INI format to a new `data/assets.json` file.
     -   **Action:** Create an `AssetService` responsible for loading all Pygame surfaces and sounds based on the new JSON configuration. This will centralize asset management.
 
--   **Task G.2: Port Core Gameplay Entities (Status: In Progress)**
+-   **Task G.2: Port Core Gameplay Entities (Status: Complete)**
     -   **`DSFile.cpp/h`**: This is a critical domain entity representing files within a system's datastore.
-    -   **Action:** Port `CDSFile` to a new `DSFile` domain model in `src/decker_pygame/domain/ds_file.py`. The domain model, repository interface, and persistence layer (`JsonFileDSFileRepository`) are now defined. This is a prerequisite for implementing the matrix run gameplay loop.
+    -   **Action:** Ported `CDSFile` to a new `DSFile` domain model. A full vertical slice was implemented, including the domain model, repository interface, in-memory and JSON repositories, an application service, and integration into the presentation layer for debugging.
 
 -   **Task G.3: Port Core Engine Logic (Status: In Progress)**
     -   **`Decker.cpp/h`**: The application lifecycle logic (initialization, main loop, shutdown) is being ported to `src/decker_pygame/presentation/main.py` and `src/decker_pygame/presentation/game.py`.

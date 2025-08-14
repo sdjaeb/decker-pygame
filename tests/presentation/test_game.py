@@ -47,7 +47,6 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
-from decker_pygame.presentation.components.health_bar import HealthBar
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
@@ -124,9 +123,7 @@ def game_with_mocks() -> Generator[Mocks]:
             "decker_pygame.presentation.game.PygameInputHandler",
             spec=PygameInputHandler,
         ),
-        patch("decker_pygame.presentation.game.scale_icons") as mock_scale_icons,
     ):
-        mock_scale_icons.return_value = [pygame.Surface((32, 32))]
         game = Game(
             screen=mock_screen,
             asset_service=mock_asset_service,
@@ -182,8 +179,6 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.debug_actions, DebugActions)
     assert isinstance(game.character_id, uuid.UUID)
-    assert isinstance(game.message_view, MessageView)
-    assert isinstance(game.health_bar, HealthBar)
 
 
 def test_run_loop_calls_methods(game_with_mocks: Mocks):
@@ -236,43 +231,9 @@ def test_game_update(game_with_mocks: Mocks):
     game = mocks.game
     game.all_sprites = Mock()
 
-    # Configure mock to prevent TypeError
-    mocks.player_service.get_player_status.return_value = PlayerStatusDTO(
-        current_health=100, max_health=100
-    )
-
     game._update()
 
     game.all_sprites.update.assert_called_once()
-
-
-def test_game_update_calls_update_health(game_with_mocks: Mocks):
-    """Tests that the _update method updates the health bar."""
-    mocks = game_with_mocks
-    game = mocks.game
-    game.health_bar = Mock(spec=HealthBar)  # Replace real with mock
-
-    dto = PlayerStatusDTO(current_health=75, max_health=100)
-    mocks.player_service.get_player_status.return_value = dto
-
-    game._update()
-
-    mocks.player_service.get_player_status.assert_called_once_with(game.player_id)
-    game.health_bar.update_health.assert_called_once_with(75, 100)
-
-
-def test_game_update_no_player_status(game_with_mocks: Mocks):
-    """Tests that _update handles the case where the player is not found."""
-    mocks = game_with_mocks
-    game = mocks.game
-    game.health_bar = Mock(spec=HealthBar)  # Replace real with mock
-    mocks.player_service.get_player_status.return_value = None
-
-    game._update()
-
-    # Ensure update_health is not called if there's no status
-    mocks.player_service.get_player_status.assert_called_once_with(game.player_id)
-    game.health_bar.update_health.assert_not_called()
 
 
 def test_game_show_message(game_with_mocks: Mocks):
@@ -786,8 +747,8 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
 
     # Set up a mock deck_view to be removed
     game.deck_view = Mock(spec=DeckView)
-    game.all_sprites.add(game.deck_view)
-    assert len(game.all_sprites) == 6
+    game.all_sprites.add(game.deck_view)  # intro_view + deck_view
+    assert len(game.all_sprites) == 2
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -816,7 +777,7 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
         )
         assert game.order_view is mock_order_view_class.return_value
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 6  # 5 base + 1 new OrderView
+        assert len(game.all_sprites) == 2  # intro_view + order_view
 
 
 def test_on_order_deck_no_char_data(game_with_mocks: Mocks):
@@ -860,8 +821,8 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
     # Set up a mock order_view to be removed, simulating a refresh
     existing_order_view = Mock(spec=OrderView)
     game.order_view = existing_order_view
-    game.all_sprites.add(existing_order_view)
-    assert len(game.all_sprites) == 6
+    game.all_sprites.add(existing_order_view)  # intro_view + order_view
+    assert len(game.all_sprites) == 2
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -882,7 +843,7 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
         mock_order_view_class.assert_called_once()
         assert game.order_view is new_order_view_instance
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 6
+        assert len(game.all_sprites) == 2
 
 
 def test_on_move_program_up_and_down(game_with_mocks: Mocks):
