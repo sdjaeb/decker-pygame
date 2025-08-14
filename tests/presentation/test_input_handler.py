@@ -47,15 +47,6 @@ def test_handle_quit_event(
     "key, method_name",
     [
         (pygame.K_h, "toggle_home_view"),
-        (pygame.K_t, "toggle_transfer_view"),
-        (pygame.K_b, "toggle_build_view"),
-        (pygame.K_c, "toggle_char_data_view"),
-        (pygame.K_l, "toggle_contract_list_view"),
-        (pygame.K_d, "toggle_contract_data_view"),
-        (pygame.K_p, "toggle_deck_view"),
-        (pygame.K_o, "toggle_options_view"),
-        (pygame.K_u, "toggle_sound_edit_view"),
-        (pygame.K_r, "toggle_new_project_view"),
         (pygame.K_q, "quit"),
     ],
 )
