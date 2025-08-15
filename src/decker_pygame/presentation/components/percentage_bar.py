@@ -2,6 +2,8 @@
 
 import pygame
 
+from decker_pygame.settings import RED
+
 
 class PercentageBar(pygame.sprite.Sprite):
     """A base class for UI components that display a value as a.
@@ -45,3 +47,6 @@ class PercentageBar(pygame.sprite.Sprite):
         if current_width > 0:
             bar_rect = pygame.Rect(0, 0, current_width, self.height)
             pygame.draw.rect(self.image, self._color, bar_rect)
+
+        # Add a border for development visibility
+        pygame.draw.rect(self.image, RED, self.image.get_rect(), 3)

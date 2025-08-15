@@ -1,7 +1,8 @@
-"""This module contains tests for the AssetService."""
+"""Tests for the AssetService."""
 
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pygame
@@ -14,58 +15,88 @@ from decker_pygame.presentation.asset_service import AssetService
 def pygame_init_fixture():
     """Fixture to initialize pygame for each test."""
     pygame.init()
+    pygame.display.set_mode((1, 1))
     yield
     pygame.quit()
 
 
 @pytest.fixture
-def mock_assets_json(tmp_path: Path) -> Path:
-    """Creates a mock assets.json file in a temporary directory."""
-    assets_dir = tmp_path / "data"
-    assets_dir.mkdir()
-    config_path = assets_dir / "assets.json"
+def temp_asset_dir() -> str:
+    """Create a temporary directory for test asset files."""
+    with TemporaryDirectory() as tmpdir:
+        yield tmpdir
 
+
+@pytest.fixture
+def assets_config_file(temp_asset_dir: str) -> Path:
+    """Create a temporary assets.json file and return its path."""
+    config_path = Path(temp_asset_dir) / "assets.json"
+    return config_path
+
+
+def test_asset_service_loads_images_and_spritesheets(
+    assets_config_file: Path, temp_asset_dir: str
+):
+    """Tests that the AssetService correctly loads all asset types."""
+    # Create dummy asset files
+    dummy_image_path = Path(temp_asset_dir) / "dummy.bmp"
+    pygame.image.save(pygame.Surface((10, 10)), str(dummy_image_path))
+
+    dummy_sheet_path = Path(temp_asset_dir) / "sheet.bmp"
+    pygame.image.save(pygame.Surface((32, 16)), str(dummy_sheet_path))
+
+    # Create the assets.json content
     config_data = {
+        "images": {"dummy_image": {"file": "dummy.bmp"}},
         "spritesheets": {
-            "test_sheet": {
-                "file": "test_sprites.bmp",
+            "dummy_sheet": {
+                "file": "sheet.bmp",
                 "sprite_width": 16,
                 "sprite_height": 16,
                 "colorkey": [255, 0, 255],
             }
-        }
+        },
     }
-
-    with open(config_path, "w") as f:
+    with open(assets_config_file, "w") as f:
         json.dump(config_data, f)
 
-    return config_path
-
-
-def test_asset_service_initialization_and_loading(mock_assets_json: Path):
-    """Tests that the AssetService correctly loads data from the config file."""
-    mock_surface = pygame.Surface((16, 16))
-
+    # Patch GFX.asset_folder to point to our temp directory
     with patch(
-        "decker_pygame.presentation.asset_service.load_spritesheet"
-    ) as mock_load:
-        mock_load.return_value = ([mock_surface], (16, 16))
-
-        service = AssetService(assets_config_path=mock_assets_json)
-
-        mock_load.assert_called_once()
-        retrieved_sheet = service.get_spritesheet("test_sheet")
-        assert retrieved_sheet == [mock_surface]
-
-
-def test_get_spritesheet_not_found(mock_assets_json: Path):
-    """Tests that get_spritesheet returns an empty list for a non-existent sheet."""
-    # The mock needs a valid return value to be unpacked in the service's __init__
-    with patch(
-        "decker_pygame.presentation.asset_service.load_spritesheet",
-        return_value=([pygame.Surface((16, 16))], (16, 16)),
+        "decker_pygame.presentation.asset_service.GFX.asset_folder",
+        Path(temp_asset_dir),
     ):
-        service = AssetService(assets_config_path=mock_assets_json)
+        service = AssetService(assets_config_path=assets_config_file)
 
-        retrieved_sheet = service.get_spritesheet("non_existent_sheet")
-        assert retrieved_sheet == []
+        # Test image loading
+        image = service.get_image("dummy_image")
+        assert image is not None
+        assert isinstance(image, pygame.Surface)
+        assert image.get_size() == (10, 10)
+
+        # Test spritesheet loading
+        sheet = service.get_spritesheet("dummy_sheet")
+        assert sheet is not None
+        assert len(sheet) == 2
+        assert all(isinstance(s, pygame.Surface) for s in sheet)
+
+
+def test_get_non_existent_image(assets_config_file: Path):
+    """Tests that getting a non-existent image returns None."""
+    with open(assets_config_file, "w") as f:
+        json.dump({"images": {}, "spritesheets": {}}, f)
+
+    service = AssetService(assets_config_path=assets_config_file)
+    image = service.get_image("non_existent")
+
+    assert image is None
+
+
+def test_get_non_existent_spritesheet(assets_config_file: Path):
+    """Tests that getting a non-existent spritesheet returns an empty list."""
+    with open(assets_config_file, "w") as f:
+        json.dump({"images": {}, "spritesheets": {}}, f)
+
+    service = AssetService(assets_config_path=assets_config_file)
+    sheet = service.get_spritesheet("non_existent")
+
+    assert sheet == []

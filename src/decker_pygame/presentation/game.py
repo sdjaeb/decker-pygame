@@ -44,6 +44,9 @@ from decker_pygame.presentation.components.file_access_view import FileAccessVie
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
+from decker_pygame.presentation.components.matrix_run_view import (
+    MatrixRunView,
+)
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
@@ -139,6 +142,8 @@ class Game:
         sound_edit_view (Optional[SoundEditView]): The sound edit view, if open.
         new_project_view (Optional[NewProjectView]): The new project view, if open.
         project_data_view (Optional[ProjectDataView]): The project data view, if open.
+        matrix_run_view (Optional[MatrixRunView]): The main matrix run view,
+            if open.
     """
 
     _modal_stack: list[Eventful]
@@ -184,6 +189,7 @@ class Game:
     sound_edit_view: Optional[SoundEditView] = None
     new_project_view: Optional[NewProjectView] = None
     project_data_view: Optional[ProjectDataView] = None
+    matrix_run_view: Optional[MatrixRunView] = None
 
     def __init__(
         self,
@@ -312,6 +318,14 @@ class Game:
             )
 
         self._toggle_view("home_view", factory)
+
+    def toggle_matrix_run_view(self) -> None:
+        """Opens or closes the main matrix run view."""
+
+        def factory() -> MatrixRunView:
+            return MatrixRunView(asset_service=self.asset_service)
+
+        self._toggle_view("matrix_run_view", factory)
 
     def _on_purchase(self, item_name: str) -> None:
         """Callback to handle purchasing an item from the shop."""

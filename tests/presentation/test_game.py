@@ -50,6 +50,9 @@ from decker_pygame.presentation.components.file_access_view import FileAccessVie
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
+from decker_pygame.presentation.components.matrix_run_view import (
+    MatrixRunView,
+)
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
@@ -1858,3 +1861,21 @@ def test_toggle_project_data_view_no_data(game_with_mocks: Mocks):
         mock_show_message.assert_called_once_with(
             "Error: Could not retrieve project data."
         )
+
+
+def test_game_toggles_matrix_run_view(game_with_mocks: Mocks):
+    """Tests that the toggle_matrix_run_view method opens and closes the view."""
+    game = game_with_mocks.game
+    assert game.matrix_run_view is None
+
+    # Toggle to open
+    with patch(
+        "decker_pygame.presentation.game.MatrixRunView", spec=MatrixRunView
+    ) as mock_view_class:
+        game.toggle_matrix_run_view()
+        mock_view_class.assert_called_once_with(asset_service=game.asset_service)
+        assert game.matrix_run_view is not None
+
+    # Toggle to close
+    game.toggle_matrix_run_view()
+    assert game.matrix_run_view is None

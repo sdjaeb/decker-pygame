@@ -51,9 +51,30 @@ Reusable interface elements that are used across multiple screens or dialogs. Po
 - **ImageDisplay.cpp/h** (`Ported`)
 - **MapView.cpp/h** (`Ported`)
 - **MatrixView.cpp/h** (`Ported`)
+  -   **UI Layout Plan:** Based on the original C++ code, the target layout for the main UI elements within the `MatrixRunView` is as follows:
+      -   **Main Background**: The `matrix_main` graphic. **(Done)**
+      -   **Node View**: The central grid where the player and ICE are shown.
+          -   Position: `(194, 49)` **(Placeholder Added)**
+          -   Size: `(240, 240)`
+      -   **Map View**: The system map display.
+          -   Position: `(451, 12)` **(Placeholder Added)**
+          -   Size: `(177, 166)`
+      -   **Message View**: The text output area.
+          -   Position: `(194, 367)` **(Placeholder Added)**
+          -   Size: `(434, 101)`
+      -   **Software List**: The list of loaded programs.
+          -   Position: `(12, 42)` **(Placeholder Added)**
+          -   Size: `(165, 399)`
+      -   **Alarm Bar**: The system alert level display.
+          -   Position: `(206, 342)`
+          -   Size: `(84, 8)` **(Placeholder Added)**
+      -   **Health & Status Bars**:
+          -   Deck Health: `(548, 195)` **(Placeholder Added)**
+          -   Mental Health: `(548, 220)` **(Placeholder Added)**
+          -   Physical Health: `(548, 234)` **(Placeholder Added)**
 - **MessageView.cpp/h** (`Ported`)
 - **NameBar.cpp/h** (`Ported`)
-- **NodeView.cpp/h** (`Ported`)
+- **NodeView.cpp/h** (`Ported as NodeView for individual nodes`)
 
 **Porting Priority:** 2
 
