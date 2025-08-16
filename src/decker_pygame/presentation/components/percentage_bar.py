@@ -38,6 +38,14 @@ class PercentageBar(pygame.sprite.Sprite):
         self._percentage = 100.0
         self._color = initial_color
 
+    def set_percentage(self, value: float) -> None:
+        """Set the percentage value of the bar.
+
+        Args:
+            value (float): The new percentage (0.0 to 100.0).
+        """
+        self._percentage = max(0.0, min(100.0, value))
+
     def update(self) -> None:
         """Redraws the bar surface based on the current percentage and color."""
         self.image.fill((0, 0, 0, 0))  # Fill with a transparent color

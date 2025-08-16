@@ -14,6 +14,7 @@ from decker_pygame.application.dtos import (
     EntryViewDTO,
     FileAccessViewDTO,
     IceDataViewDTO,
+    MatrixRunViewDTO,
     MissionResultsDTO,
     NewProjectViewDTO,
     RestViewDTO,
@@ -864,14 +865,18 @@ class Game:
             top_view = self._modal_stack[-1]
             if hasattr(top_view, "update"):
                 if isinstance(top_view, MatrixRunView):
-                    top_view.update(total_seconds)
+                    # TODO: Replace with real data from a service
+                    dummy_data = MatrixRunViewDTO(run_time_in_seconds=total_seconds)
+                    top_view.update(dummy_data)
                 else:
                     top_view.update(dt)  # Other views might still need dt
         else:
             # Update all sprites, but only pass dt if they don't need total_seconds
             for sprite in self.all_sprites:
                 if isinstance(sprite, MatrixRunView):
-                    sprite.update(total_seconds)
+                    # TODO: Replace with real data from a service
+                    dummy_data = MatrixRunViewDTO(run_time_in_seconds=total_seconds)
+                    sprite.update(dummy_data)
                 else:
                     sprite.update(dt)
 

@@ -2,6 +2,7 @@
 
 import pygame
 
+from decker_pygame.application.dtos import MatrixRunViewDTO
 from decker_pygame.presentation.asset_service import AssetService
 from decker_pygame.presentation.components.alarm_bar import AlarmBar
 from decker_pygame.presentation.components.clock_view import ClockView
@@ -127,16 +128,27 @@ class MatrixRunView(pygame.sprite.Sprite):
         self.clock_view = ClockView(position=(132, 13), size=(44, 11))
         self.components.add(self.clock_view)
 
-    def update(self, total_seconds: int) -> None:
+    def update(self, data: MatrixRunViewDTO) -> None:
         """Update all components and redraw them on this view's surface.
 
         Args:
-            total_seconds (int): The total number of seconds elapsed in the game.
+            data (MatrixRunViewDTO): The data to update the view with.
         """
         assert self._background is not None, (
             "MatrixRunView background has not been loaded."
         )
-        self.clock_view.update_time(total_seconds)
+        self.clock_view.update_time(data.run_time_in_seconds)
+        self.alarm_bar.set_percentage(data.alarm_level)
+        self.physical_health_bar.set_percentage(data.physical_health)
+        self.mental_health_bar.set_percentage(data.mental_health)
+        self.deck_health_bar.set_percentage(data.deck_health)
+        self.shield_status_bar.set_percentage(data.shield_status)
+        self.transfer_progress_bar.set_percentage(data.transfer_progress)
+        self.trace_progress_bar.set_percentage(data.trace_progress)
+        self.ice_health_bar.set_percentage(data.ice_health)
+        # self.message_view.set_text(...) # TODO: Needs more complex logic
+        # self.map_view.update(...) # TODO: Needs implementation
+
         self.components.update()
         self.image.blit(self._background, (0, 0))
         self.components.draw(self.image)

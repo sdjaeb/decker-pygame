@@ -239,10 +239,11 @@ def test_game_update_no_modal(game_with_mocks: Mocks):
     game.all_sprites.empty()  # clear the default intro view
     game.all_sprites.add(mock_sprite1, mock_sprite2)
 
-    game._update(dt=16, total_seconds=123)
-
-    mock_sprite1.update.assert_called_once()
-    mock_sprite2.update.assert_called_once()
+    with patch("decker_pygame.presentation.game.MatrixRunViewDTO") as mock_dto_class:
+        game._update(dt=16, total_seconds=123)
+        mock_dto_class.assert_called_once_with(run_time_in_seconds=123)
+        mock_sprite1.update.assert_called_once_with(16)
+        mock_sprite2.update.assert_called_once_with(mock_dto_class.return_value)
 
 
 def test_game_update_with_modal(game_with_mocks: Mocks):
@@ -254,10 +255,11 @@ def test_game_update_with_modal(game_with_mocks: Mocks):
     modal_view2 = Mock(spec=MatrixRunView)
     game._modal_stack = [modal_view1, modal_view2]
 
-    game._update(dt=16, total_seconds=123)
-
-    modal_view1.update.assert_not_called()
-    modal_view2.update.assert_called_once_with(123)
+    with patch("decker_pygame.presentation.game.MatrixRunViewDTO") as mock_dto_class:
+        game._update(dt=16, total_seconds=123)
+        mock_dto_class.assert_called_once_with(run_time_in_seconds=123)
+        modal_view1.update.assert_not_called()
+        modal_view2.update.assert_called_once_with(mock_dto_class.return_value)
 
 
 def test_game_update_with_non_matrix_modal(game_with_mocks: Mocks):
