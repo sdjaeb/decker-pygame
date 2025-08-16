@@ -10,7 +10,7 @@ from decker_pygame.presentation.components.map_view import MapView
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.node_grid_view import NodeGridView
 from decker_pygame.presentation.components.software_list_view import SoftwareListView
-from decker_pygame.settings import GREEN, RED, UI_FACE
+from decker_pygame.settings import UI_FACE
 
 
 class MatrixRunView(pygame.sprite.Sprite):
@@ -81,9 +81,6 @@ class MatrixRunView(pygame.sprite.Sprite):
         self.components = pygame.sprite.Group[pygame.sprite.Sprite]()
 
         self.node_grid_view = NodeGridView(position=(194, 49), size=(240, 240))
-        pygame.draw.rect(
-            self.node_grid_view.image, GREEN, self.node_grid_view.image.get_rect(), 3
-        )
         self.components.add(self.node_grid_view)
 
         # TODO: Replace with real data from a service
@@ -95,76 +92,27 @@ class MatrixRunView(pygame.sprite.Sprite):
             nodes=dummy_nodes,
             connections=dummy_connections,
         )
-        pygame.draw.rect(self.map_view.image, GREEN, self.map_view.image.get_rect(), 3)
         self.components.add(self.map_view)
 
         self.message_view = MessageView(
             position=(194, 367), size=(434, 101), background_color=UI_FACE
         )
         self.message_view.set_text("Welcome to the Matrix.")
-        pygame.draw.rect(
-            self.message_view.image, GREEN, self.message_view.image.get_rect(), 3
-        )
         self.components.add(self.message_view)
 
         self.software_list_view = SoftwareListView(position=(12, 42), size=(165, 399))
-        pygame.draw.rect(
-            self.software_list_view.image,
-            GREEN,
-            self.software_list_view.image.get_rect(),
-            3,
-        )
         self.components.add(self.software_list_view)
 
         self.alarm_bar = AlarmBar(position=(206, 342), width=84, height=8)
-        pygame.draw.rect(
-            self.alarm_bar.image, GREEN, self.alarm_bar.image.get_rect(), 3
-        )
         self.components.add(self.alarm_bar)
 
         self.deck_health_bar = HealthBar(position=(548, 195), width=80, height=8)
-        pygame.draw.rect(
-            self.deck_health_bar.image, GREEN, self.deck_health_bar.image.get_rect(), 3
-        )
         self.mental_health_bar = HealthBar(position=(548, 220), width=80, height=8)
-        pygame.draw.rect(
-            self.mental_health_bar.image,
-            GREEN,
-            self.mental_health_bar.image.get_rect(),
-            3,
-        )
         self.physical_health_bar = HealthBar(position=(548, 234), width=80, height=8)
-        pygame.draw.rect(
-            self.physical_health_bar.image,
-            GREEN,
-            self.physical_health_bar.image.get_rect(),
-            3,
-        )
         self.shield_status_bar = HealthBar(position=(548, 259), width=80, height=8)
-        pygame.draw.rect(
-            self.shield_status_bar.image,
-            GREEN,
-            self.shield_status_bar.image.get_rect(),
-            3,
-        )
         self.transfer_progress_bar = HealthBar(position=(548, 284), width=80, height=8)
-        pygame.draw.rect(
-            self.transfer_progress_bar.image,
-            GREEN,
-            self.transfer_progress_bar.image.get_rect(),
-            3,
-        )
         self.trace_progress_bar = HealthBar(position=(548, 309), width=80, height=8)
-        pygame.draw.rect(
-            self.trace_progress_bar.image,
-            GREEN,
-            self.trace_progress_bar.image.get_rect(),
-            3,
-        )
         self.ice_health_bar = HealthBar(position=(354, 342), width=84, height=8)
-        pygame.draw.rect(
-            self.ice_health_bar.image, GREEN, self.ice_health_bar.image.get_rect(), 3
-        )
 
         self.components.add(
             self.deck_health_bar,
@@ -177,9 +125,6 @@ class MatrixRunView(pygame.sprite.Sprite):
         )
 
         self.clock_view = ClockView(position=(132, 13), size=(44, 11))
-        pygame.draw.rect(
-            self.clock_view.image, RED, self.clock_view.image.get_rect(), 3
-        )
         self.components.add(self.clock_view)
 
     def update(self, total_seconds: int) -> None:
