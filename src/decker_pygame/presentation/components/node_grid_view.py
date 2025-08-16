@@ -2,7 +2,7 @@
 
 import pygame
 
-from decker_pygame.settings import BLACK, RED
+from decker_pygame.settings import BLACK, GREEN
 
 
 class NodeGridView(pygame.sprite.Sprite):
@@ -27,5 +27,5 @@ class NodeGridView(pygame.sprite.Sprite):
         self.image = pygame.Surface(size)
         self.image.fill(BLACK)
         self.image.set_colorkey(BLACK)
-        pygame.draw.rect(self.image, RED, self.image.get_rect(), 3)
+        pygame.draw.rect(self.image, GREEN, self.image.get_rect(), 3)
         self.rect = self.image.get_rect(topleft=position)

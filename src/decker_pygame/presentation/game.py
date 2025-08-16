@@ -849,13 +849,31 @@ class Game:
         """Displays a message in the message view."""
         self.message_view.set_text(text)
 
-    def _update(self) -> None:
+    def _update(self, dt: int, total_seconds: int) -> None:
         """Update game state.
+
+        Args:
+            dt (int): Time since last frame in milliseconds.
+            total_seconds (int): Total seconds elapsed since game start.
 
         Returns:
             None:
         """
-        self.all_sprites.update()
+        # Update the top-most modal view, or all sprites if no modal is active.
+        if self._modal_stack:
+            top_view = self._modal_stack[-1]
+            if hasattr(top_view, "update"):
+                if isinstance(top_view, MatrixRunView):
+                    top_view.update(total_seconds)
+                else:
+                    top_view.update(dt)  # Other views might still need dt
+        else:
+            # Update all sprites, but only pass dt if they don't need total_seconds
+            for sprite in self.all_sprites:
+                if isinstance(sprite, MatrixRunView):
+                    sprite.update(total_seconds)
+                else:
+                    sprite.update(dt)
 
     def run(self) -> None:
         """Run the main game loop.
@@ -864,14 +882,16 @@ class Game:
             None:
         """
         while self.is_running:
+            dt = self.clock.tick(FPS)  # dt in milliseconds
+            total_seconds = pygame.time.get_ticks() // 1000
+
             self.input_handler.handle_events()
-            self._update()
+            self._update(dt, total_seconds)
 
             self.screen.fill(BLACK)
             self.all_sprites.draw(self.screen)
 
             pygame.display.flip()
-            self.clock.tick(FPS)
 
         pygame.quit()
 

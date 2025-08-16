@@ -2,15 +2,19 @@
 
 import pygame
 
-from decker_pygame.settings import UI_FONT
+from decker_pygame.settings import RED, UI_FONT
 
 
 class ClockView(pygame.sprite.Sprite):
     """A sprite component that displays text, intended for the game clock.
 
+    This is a placeholder implementation that renders text. The original used
+    a custom digit spritesheet. It takes a total number of seconds and formats
+    it as HH:MM:SS.
+
     Args:
         position (tuple[int, int]): The (x, y) position of the top-left corner.
-        initial_text (str): The text to display initially.
+        size (tuple[int, int]): The (width, height) of the view.
 
     Attributes:
         image (pygame.Surface): The surface that represents the text.
@@ -20,20 +24,31 @@ class ClockView(pygame.sprite.Sprite):
     image: pygame.Surface
     rect: pygame.Rect
 
-    def __init__(self, position: tuple[int, int], initial_text: str = "00:00:00"):
+    def __init__(self, position: tuple[int, int], size: tuple[int, int]):
         super().__init__()
+        self.image = pygame.Surface(size)
+        self.rect = self.image.get_rect(topleft=position)
         self.font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
         )
         self.color = UI_FONT.default_font_color
-        self.pos = position
-        self.set_text(initial_text)
+        self.update_time(0)  # Initialize with zero time
 
-    def set_text(self, text: str) -> None:
-        """Update the displayed text. This redraws the sprite's image.
+    def update_time(self, total_seconds: int) -> None:
+        """Update the displayed time from a total number of seconds.
+
+        This formats the seconds into HH:MM:SS and redraws the sprite's image.
 
         Args:
-            text (str): The new text to display.
+            total_seconds (int): The total time in seconds to display.
         """
-        self.image = self.font.render(text, True, self.color)
-        self.rect = self.image.get_rect(topleft=self.pos)
+        # Add a background for development visibility
+        self.image.fill(RED)
+
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        time_string = f"{hours:02}:{minutes:02}:{seconds:02}"
+        text_surface = self.font.render(time_string, True, self.color)
+        text_rect = text_surface.get_rect(center=self.image.get_rect().center)
+        self.image.blit(text_surface, text_rect)

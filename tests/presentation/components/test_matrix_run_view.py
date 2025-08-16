@@ -53,19 +53,22 @@ def test_matrix_run_view_initialization(mock_asset_service: Mock):
     assert view.transfer_progress_bar is not None
     assert view.trace_progress_bar is not None
     assert view.ice_health_bar is not None
-    assert len(view.components) == 12
+    assert view.clock_view is not None
+    assert len(view.components) == 13
     mock_asset_service.get_image.assert_called_once_with("matrix_main")
 
 
 def test_matrix_run_view_update(mock_asset_service: Mock):
     """Tests that the update method calls update on its children."""
     view = MatrixRunView(asset_service=mock_asset_service)
-    # Spy on the components group
+    # Spy on the components group and clock view
     with patch.object(view.components, "update") as mock_update:
         with patch.object(view.components, "draw") as mock_draw:
-            view.update()
-            mock_update.assert_called_once()
-            mock_draw.assert_called_once()
+            with patch.object(view.clock_view, "update_time") as mock_clock_update:
+                view.update(total_seconds=123)
+                mock_update.assert_called_once()
+                mock_draw.assert_called_once()
+                mock_clock_update.assert_called_once_with(123)
 
 
 def test_matrix_run_view_raises_error_if_background_missing(mock_asset_service: Mock):
