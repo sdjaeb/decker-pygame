@@ -304,7 +304,7 @@ class MatrixRunServiceInterface(ABC):  # pragma: no cover
 
     @abstractmethod
     def get_matrix_run_view_data(
-        self, character_id: "CharacterId"
+        self, character_id: "CharacterId", player_id: "PlayerId"
     ) -> "MatrixRunViewDTO":
         """Retrieves a DTO with all data needed for the matrix run view."""
         raise NotImplementedError  # pragma: no cover

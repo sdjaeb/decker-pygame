@@ -113,7 +113,9 @@ def main() -> None:
         character_repo=character_repo,
         event_dispatcher=event_dispatcher,
     )
-    matrix_run_service = MatrixRunService()
+    matrix_run_service = MatrixRunService(
+        character_repo=character_repo, deck_repo=deck_repo, player_repo=player_repo
+    )
 
     # 3. Set up generic event handlers
     event_logger = create_event_logging_handler(logging_service)

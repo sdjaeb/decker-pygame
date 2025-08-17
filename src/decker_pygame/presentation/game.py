@@ -872,7 +872,7 @@ class Game:
             if isinstance(top_view, pygame.sprite.Sprite):
                 if isinstance(top_view, MatrixRunView):
                     data = self.matrix_run_service.get_matrix_run_view_data(
-                        self.character_id
+                        self.character_id, self.player_id
                     )
                     data.run_time_in_seconds = total_seconds
                     top_view.update(data)
@@ -883,7 +883,7 @@ class Game:
             for sprite in self.all_sprites:
                 if isinstance(sprite, MatrixRunView):
                     data = self.matrix_run_service.get_matrix_run_view_data(
-                        self.character_id
+                        self.character_id, self.player_id
                     )
                     data.run_time_in_seconds = total_seconds
                     sprite.update(data)

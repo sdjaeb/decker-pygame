@@ -253,7 +253,7 @@ def test_game_update_no_modal(game_with_mocks: Mocks):
 
     # Assert that the service was called
     mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
-        game.character_id
+        game.character_id, game.player_id
     )
     # Assert that the DTO was updated
     assert mock_dto.run_time_in_seconds == 123
@@ -281,7 +281,7 @@ def test_game_update_with_modal(game_with_mocks: Mocks):
 
     # Assert that the service was called
     mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
-        game.character_id
+        game.character_id, game.player_id
     )
     # Assert that the DTO was updated
     assert mock_dto.run_time_in_seconds == 123

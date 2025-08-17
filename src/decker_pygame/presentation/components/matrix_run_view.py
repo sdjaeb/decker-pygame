@@ -151,6 +151,7 @@ class MatrixRunView(pygame.sprite.Sprite):
         self.trace_progress_bar.set_percentage(data.trace_progress)
         self.ice_health_bar.set_percentage(data.ice_health)
         self.message_view.set_text(f"Run Time: {formatted_time}")
+        self.software_list_view.set_software(data.software)
         # self.map_view.update(...) # TODO: Needs implementation
 
         self.components.update()

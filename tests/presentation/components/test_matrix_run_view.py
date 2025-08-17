@@ -74,6 +74,7 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         transfer_progress=10.0,
         trace_progress=5.0,
         ice_health=60.0,
+        software=["TestProgram1", "TestProgram2"],
     )
 
     # Spy on the child components' update methods
@@ -87,6 +88,7 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         patch.object(view.transfer_progress_bar, "set_percentage") as mock_trans_update,
         patch.object(view.trace_progress_bar, "set_percentage") as mock_trace_update,
         patch.object(view.ice_health_bar, "set_percentage") as mock_ice_update,
+        patch.object(view.software_list_view, "set_software") as mock_software_update,
         patch.object(view.components, "update") as mock_group_update,
         patch.object(view.components, "draw") as mock_draw,
     ):
@@ -102,6 +104,7 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         mock_trans_update.assert_called_once_with(10.0)
         mock_trace_update.assert_called_once_with(5.0)
         mock_ice_update.assert_called_once_with(60.0)
+        mock_software_update.assert_called_once_with(["TestProgram1", "TestProgram2"])
 
         # Assert that the main sprite group methods were called
         mock_group_update.assert_called_once()

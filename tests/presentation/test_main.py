@@ -152,7 +152,11 @@ def test_main_function(mocker: MockerFixture) -> None:
         character_repo=mock_char_repo_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
     )
-    mock_matrix_run_service_class.assert_called_once_with()
+    mock_matrix_run_service_class.assert_called_once_with(
+        character_repo=mock_char_repo_class.return_value,
+        deck_repo=mock_deck_repo_class.return_value,
+        player_repo=mock_repo_class.return_value,
+    )
 
     create_calls = [call(name="Deckard"), call(name="Rynn")]
     mock_player_service_instance.create_new_player.assert_has_calls(
