@@ -27,6 +27,7 @@ from decker_pygame.ports.service_interfaces import (
     DeckServiceInterface,
     DSFileServiceInterface,
     LoggingServiceInterface,
+    MatrixRunServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
     ProjectServiceInterface,
@@ -44,6 +45,9 @@ from decker_pygame.presentation.components.file_access_view import FileAccessVie
 from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
 from decker_pygame.presentation.components.intro_view import IntroView
+from decker_pygame.presentation.components.matrix_run_view import (
+    MatrixRunView,
+)
 from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
@@ -90,6 +94,7 @@ class Game:
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
+        matrix_run_service (MatrixRunServiceInterface): Service for matrix run ops.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -108,6 +113,7 @@ class Game:
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
+        matrix_run_service (MatrixRunServiceInterface): Service for matrix run ops.
         player_id (PlayerId): The ID of the current player.
         asset_service (AssetService): The service for loading game assets.
         character_id (CharacterId): The ID of the current character.
@@ -139,6 +145,8 @@ class Game:
         sound_edit_view (Optional[SoundEditView]): The sound edit view, if open.
         new_project_view (Optional[NewProjectView]): The new project view, if open.
         project_data_view (Optional[ProjectDataView]): The project data view, if open.
+        matrix_run_view (Optional[MatrixRunView]): The main matrix run view,
+            if open.
     """
 
     _modal_stack: list[Eventful]
@@ -156,6 +164,7 @@ class Game:
     node_service: NodeServiceInterface
     settings_service: SettingsServiceInterface
     project_service: ProjectServiceInterface
+    matrix_run_service: MatrixRunServiceInterface
     player_id: PlayerId
     asset_service: AssetService
     character_id: CharacterId
@@ -184,6 +193,7 @@ class Game:
     sound_edit_view: Optional[SoundEditView] = None
     new_project_view: Optional[NewProjectView] = None
     project_data_view: Optional[ProjectDataView] = None
+    matrix_run_view: Optional[MatrixRunView] = None
 
     def __init__(
         self,
@@ -200,6 +210,7 @@ class Game:
         node_service: NodeServiceInterface,
         settings_service: SettingsServiceInterface,
         project_service: ProjectServiceInterface,
+        matrix_run_service: MatrixRunServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -219,6 +230,7 @@ class Game:
         self.node_service = node_service
         self.settings_service = settings_service
         self.project_service = project_service
+        self.matrix_run_service = matrix_run_service
         self.character_id = character_id
         self.logging_service = logging_service
         self._modal_stack = []
@@ -259,6 +271,7 @@ class Game:
             if new_view:
                 setattr(self, view_attr, new_view)
                 self.all_sprites.add(new_view)
+
                 if hasattr(new_view, "handle_event"):
                     self._modal_stack.append(cast(Eventful, new_view))
 
@@ -312,6 +325,14 @@ class Game:
             )
 
         self._toggle_view("home_view", factory)
+
+    def toggle_matrix_run_view(self) -> None:
+        """Opens or closes the main matrix run view."""
+
+        def factory() -> MatrixRunView:
+            return MatrixRunView(asset_service=self.asset_service)
+
+        self._toggle_view("matrix_run_view", factory)
 
     def _on_purchase(self, item_name: str) -> None:
         """Callback to handle purchasing an item from the shop."""
@@ -835,13 +856,39 @@ class Game:
         """Displays a message in the message view."""
         self.message_view.set_text(text)
 
-    def _update(self) -> None:
+    def _update(self, dt: int, total_seconds: int) -> None:
         """Update game state.
+
+        Args:
+            dt (int): Time since last frame in milliseconds.
+            total_seconds (int): Total seconds elapsed since game start.
 
         Returns:
             None:
         """
-        self.all_sprites.update()
+        # Update the top-most modal view, or all sprites if no modal is active.
+        if self._modal_stack:
+            top_view = self._modal_stack[-1]
+            if isinstance(top_view, pygame.sprite.Sprite):
+                if isinstance(top_view, MatrixRunView):
+                    data = self.matrix_run_service.get_matrix_run_view_data(
+                        self.character_id
+                    )
+                    data.run_time_in_seconds = total_seconds
+                    top_view.update(data)
+                else:
+                    top_view.update(dt)  # Other views might still need dt
+        else:
+            # Update all sprites, but only pass dt if they don't need total_seconds
+            for sprite in self.all_sprites:
+                if isinstance(sprite, MatrixRunView):
+                    data = self.matrix_run_service.get_matrix_run_view_data(
+                        self.character_id
+                    )
+                    data.run_time_in_seconds = total_seconds
+                    sprite.update(data)
+                else:
+                    sprite.update(dt)
 
     def run(self) -> None:
         """Run the main game loop.
@@ -850,14 +897,16 @@ class Game:
             None:
         """
         while self.is_running:
+            dt = self.clock.tick(FPS)  # dt in milliseconds
+            total_seconds = pygame.time.get_ticks() // 1000
+
             self.input_handler.handle_events()
-            self._update()
+            self._update(dt, total_seconds)
 
             self.screen.fill(BLACK)
             self.all_sprites.draw(self.screen)
 
             pygame.display.flip()
-            self.clock.tick(FPS)
 
         pygame.quit()
 

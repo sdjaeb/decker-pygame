@@ -16,6 +16,7 @@ class AssetService:
     def __init__(self, assets_config_path: Path):
         self._config_path = assets_config_path
         self._spritesheets: dict[str, list[pygame.Surface]] = {}
+        self._images: dict[str, pygame.Surface] = {}
         self._load_assets()
 
     def _load_assets(self) -> None:
@@ -24,6 +25,7 @@ class AssetService:
             config = json.load(f)
 
         self._load_spritesheets(config.get("spritesheets", {}))
+        self._load_images(config.get("images", {}))
 
     def _load_spritesheets(self, spritesheet_configs: dict[str, Any]) -> None:
         """Loads all spritesheets from the provided configuration."""
@@ -38,6 +40,17 @@ class AssetService:
             )
             self._spritesheets[name] = surfaces
 
+    def _load_images(self, image_configs: dict[str, Any]) -> None:
+        """Loads all single images from the provided configuration."""
+        for name, image_data in image_configs.items():
+            file_path = GFX.asset_folder / image_data["file"]
+            image = pygame.image.load(str(file_path)).convert()
+            self._images[name] = image
+
     def get_spritesheet(self, name: str) -> list[pygame.Surface]:
         """Retrieves a loaded spritesheet by name."""
         return self._spritesheets.get(name, [])
+
+    def get_image(self, name: str) -> pygame.Surface | None:
+        """Retrieves a loaded image by name."""
+        return self._images.get(name)

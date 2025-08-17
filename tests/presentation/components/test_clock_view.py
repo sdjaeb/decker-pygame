@@ -26,16 +26,20 @@ def mock_font() -> Generator[Mock]:
 
 
 def test_initialization(mock_font: Mock):
-    """Tests that the ClockView initializes and renders its initial text."""
-    view = ClockView(position=(10, 10), initial_text="INIT")
+    """Tests that the ClockView initializes and renders a zero time."""
+    view = ClockView(position=(10, 10), size=(44, 11))
     assert view.rect.topleft == (10, 10)
-    mock_font.render.assert_called_once_with("INIT", True, view.color)
+    mock_font.render.assert_called_once_with("00:00:00", True, view.color)
 
 
-def test_set_text(mock_font: Mock):
-    """Tests that the set_text method re-renders the text."""
-    view = ClockView(position=(10, 10))
+def test_update_time(mock_font: Mock):
+    """Tests that the update_time method correctly formats and renders the time."""
+    view = ClockView(position=(10, 10), size=(44, 11))
     mock_font.render.reset_mock()  # Reset mock from the __init__ call
 
-    view.set_text("NEW TEXT")
-    mock_font.render.assert_called_once_with("NEW TEXT", True, view.color)
+    view.update_time(3661)  # 1 hour, 1 minute, 1 second
+    mock_font.render.assert_called_once_with("01:01:01", True, view.color)
+
+    mock_font.render.reset_mock()
+    view.update_time(59)  # 59 seconds
+    mock_font.render.assert_called_once_with("00:00:59", True, view.color)

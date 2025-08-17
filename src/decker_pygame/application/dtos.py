@@ -131,6 +131,25 @@ class DeckViewDTO:
 
 
 @dataclass
+class MatrixRunViewDTO:
+    """Data Transfer Object for the main matrix run view."""
+
+    run_time_in_seconds: int = 0
+    alarm_level: float = 0.0
+    physical_health: float = 100.0
+    mental_health: float = 100.0
+    deck_health: float = 100.0
+    shield_status: float = 0.0
+    transfer_progress: float = 0.0
+    trace_progress: float = 0.0
+    ice_health: float = 0.0
+    messages: list[str] = field(default_factory=list)
+    software: list[str] = field(default_factory=list)
+    nodes: dict[str, tuple[int, int]] = field(default_factory=dict)
+    connections: list[tuple[str, str]] = field(default_factory=list)
+
+
+@dataclass
 class ShopItemDTO:
     """Data for a single item available in a shop.
 

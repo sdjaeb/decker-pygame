@@ -6,5 +6,9 @@
       "sprite_height": 16,
       "colorkey": [255, 0, 255]
     }
-  }
+  },
+  "images": {
+    "matrix_main": { "file": "ui_bmps/matrix_main.bmp" }
+  },
+  "sounds": {}
 }

@@ -21,6 +21,8 @@ SCREEN_HEIGHT = 768
 # --- Colors ---
 BLACK = Color(0, 0, 0)
 WHITE = Color(255, 255, 255)
+GREEN = Color(0, 255, 0)
+RED = Color(255, 0, 0)
 TRANSPARENT_COLOR = Color(255, 0, 255)  # A common magenta colorkey
 UI_FACE = Color(192, 192, 192)  # A standard grey
 UI_FACE_PRESSED = Color(20, 20, 20)  # A dark grey for pressed states

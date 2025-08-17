@@ -47,6 +47,7 @@ def test_handle_quit_event(
     "key, method_name",
     [
         (pygame.K_h, "toggle_home_view"),
+        (pygame.K_r, "toggle_matrix_run_view"),
         (pygame.K_q, "quit"),
     ],
 )
@@ -66,19 +67,6 @@ def test_handle_keydown_events(
 
     method_to_check = getattr(mock_game, method_name)
     method_to_check.assert_called_once()
-
-
-def test_handle_keydown_debug_action(
-    mock_game: Mock, mock_logging_service: Mock, mock_debug_actions: Mock
-):
-    """Tests that a debug keydown event calls the correct method on debug_actions."""
-    handler = PygameInputHandler(mock_game, mock_logging_service, mock_debug_actions)
-    key_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_m})
-
-    with patch("pygame.event.get", return_value=[key_event]):
-        handler.handle_events()
-
-    mock_debug_actions.get_ds_file.assert_called_once()
 
 
 def test_handle_unmapped_keydown(

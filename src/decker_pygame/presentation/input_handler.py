@@ -33,8 +33,7 @@ class PygameInputHandler:
         self._key_map = {
             # Navigation
             pygame.K_h: self._game.toggle_home_view,
-            # Debug
-            pygame.K_m: self._debug_actions.get_ds_file,
+            pygame.K_r: self._game.toggle_matrix_run_view,
             # System
             pygame.K_q: self._game.quit,
         }

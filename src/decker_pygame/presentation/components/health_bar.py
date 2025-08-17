@@ -20,13 +20,10 @@ class HealthBar(PercentageBar):
             height=height,
             initial_color=HEALTH.colors[0][1],
         )
-        self.update()
 
-    def update_health(self, current: int, maximum: int) -> None:
-        """Update the health bar's state based on current and max health values."""
-        self._percentage = (current / maximum) * 100 if maximum > 0 else 0
-        self._percentage = max(0, min(self._percentage, 100))
-
+    def set_percentage(self, value: float) -> None:
+        """Set the percentage and update the color accordingly."""
+        super().set_percentage(value)
         # Default to the last color in the list (lowest health color) and then
         # find the first threshold that the health is greater than.
         if HEALTH.colors:
@@ -35,4 +32,3 @@ class HealthBar(PercentageBar):
                 if self._percentage > threshold:
                     self._color = color
                     break
-        self.update()

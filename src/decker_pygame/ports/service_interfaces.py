@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DSFileDTO,
         FileAccessViewDTO,
         IceDataViewDTO,
+        MatrixRunViewDTO,
         NewProjectViewDTO,
         OptionsViewDTO,
         PlayerStatusDTO,
@@ -296,3 +297,14 @@ class ProjectServiceInterface(ABC):
         If so, performs a skill check and awards a schematic on success.
         """
         ...  # pragma: no cover
+
+
+class MatrixRunServiceInterface(ABC):  # pragma: no cover
+    """Defines the input port for matrix run-related use cases."""
+
+    @abstractmethod
+    def get_matrix_run_view_data(
+        self, character_id: "CharacterId"
+    ) -> "MatrixRunViewDTO":
+        """Retrieves a DTO with all data needed for the matrix run view."""
+        raise NotImplementedError  # pragma: no cover
