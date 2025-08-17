@@ -138,6 +138,10 @@ class MatrixRunView(pygame.sprite.Sprite):
             "MatrixRunView background has not been loaded."
         )
         self.clock_view.update_time(data.run_time_in_seconds)
+        hours = data.run_time_in_seconds // 3600
+        minutes = (data.run_time_in_seconds % 3600) // 60
+        seconds = data.run_time_in_seconds % 60
+        formatted_time = f"{hours:02}:{minutes:02}:{seconds:02}"
         self.alarm_bar.set_percentage(data.alarm_level)
         self.physical_health_bar.set_percentage(data.physical_health)
         self.mental_health_bar.set_percentage(data.mental_health)
@@ -146,7 +150,7 @@ class MatrixRunView(pygame.sprite.Sprite):
         self.transfer_progress_bar.set_percentage(data.transfer_progress)
         self.trace_progress_bar.set_percentage(data.trace_progress)
         self.ice_health_bar.set_percentage(data.ice_health)
-        # self.message_view.set_text(...) # TODO: Needs more complex logic
+        self.message_view.set_text(f"Run Time: {formatted_time}")
         # self.map_view.update(...) # TODO: Needs implementation
 
         self.components.update()

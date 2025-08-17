@@ -22,24 +22,16 @@ class AlarmBar(PercentageBar):
             height=height,
             initial_color=ALARM.colors[0],
         )
-        self._percentage = 0.0  # Alarm starts at 0
-        self.update()  # Initial draw
+        self._percentage = 0.0  # Alarm starts at 0, overriding parent
 
-    def update_state(self, alert_level: int, is_crashing: bool) -> None:
-        """Update the alarm bar's state and color based on the alert level.
+    def set_percentage(self, value: float) -> None:
+        """Set the percentage and update the color accordingly."""
+        super().set_percentage(value)
 
-        Args:
-            alert_level (int): The new alarm level (0-100).
-            is_crashing (bool): Whether the system is crashing.
-        """
-        self._percentage = float(max(0, min(alert_level, 100)))
-
-        if is_crashing:
-            self._color = ALARM.crash_color
-        else:
-            num_colors = len(ALARM.colors)
-            if num_colors > 0:
-                index = int((self._percentage / 100) * (num_colors - 1))
-                self._color = ALARM.colors[index]
-
-        self.update()
+        # TODO: Add logic for is_crashing state when it's available in the DTO
+        num_colors = len(ALARM.colors)
+        if num_colors > 0:
+            # Ensure index is within bounds
+            index = int((self._percentage / 100) * (num_colors - 1))
+            index = max(0, min(index, num_colors - 1))
+            self._color = ALARM.colors[index]

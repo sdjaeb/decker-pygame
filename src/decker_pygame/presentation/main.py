@@ -24,6 +24,7 @@ from decker_pygame.application.domain_event_handlers import (
 from decker_pygame.application.ds_file_service import DSFileService
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.logging_service import ConsoleLogWriter, LoggingService
+from decker_pygame.application.matrix_run_service import MatrixRunService
 from decker_pygame.application.node_service import NodeService
 from decker_pygame.application.player_service import PlayerService
 from decker_pygame.application.project_service import ProjectService
@@ -112,6 +113,7 @@ def main() -> None:
         character_repo=character_repo,
         event_dispatcher=event_dispatcher,
     )
+    matrix_run_service = MatrixRunService()
 
     # 3. Set up generic event handlers
     event_logger = create_event_logging_handler(logging_service)
@@ -188,6 +190,7 @@ def main() -> None:
         settings_service=settings_service,
         project_service=project_service,
         logging_service=logging_service,
+        matrix_run_service=matrix_run_service,
     )
 
     # 6. Wire up event handlers that depend on the presentation layer

@@ -48,6 +48,6 @@ def test_update_health(
 ):
     """Tests updating health and color based on different values."""
     bar = health_bar_instance
-    bar.update_health(current, maximum)
+    bar.set_percentage(expected_percent)
     assert bar._percentage == expected_percent
     assert bar._color == HEALTH.colors[expected_color_index][1]

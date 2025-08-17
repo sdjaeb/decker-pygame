@@ -14,7 +14,6 @@ from decker_pygame.application.dtos import (
     EntryViewDTO,
     FileAccessViewDTO,
     IceDataViewDTO,
-    MatrixRunViewDTO,
     MissionResultsDTO,
     NewProjectViewDTO,
     RestViewDTO,
@@ -28,6 +27,7 @@ from decker_pygame.ports.service_interfaces import (
     DeckServiceInterface,
     DSFileServiceInterface,
     LoggingServiceInterface,
+    MatrixRunServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
     ProjectServiceInterface,
@@ -94,6 +94,7 @@ class Game:
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
+        matrix_run_service (MatrixRunServiceInterface): Service for matrix run ops.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -112,6 +113,7 @@ class Game:
         node_service (NodeServiceInterface): The service for node operations.
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
+        matrix_run_service (MatrixRunServiceInterface): Service for matrix run ops.
         player_id (PlayerId): The ID of the current player.
         asset_service (AssetService): The service for loading game assets.
         character_id (CharacterId): The ID of the current character.
@@ -162,6 +164,7 @@ class Game:
     node_service: NodeServiceInterface
     settings_service: SettingsServiceInterface
     project_service: ProjectServiceInterface
+    matrix_run_service: MatrixRunServiceInterface
     player_id: PlayerId
     asset_service: AssetService
     character_id: CharacterId
@@ -207,6 +210,7 @@ class Game:
         node_service: NodeServiceInterface,
         settings_service: SettingsServiceInterface,
         project_service: ProjectServiceInterface,
+        matrix_run_service: MatrixRunServiceInterface,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -226,6 +230,7 @@ class Game:
         self.node_service = node_service
         self.settings_service = settings_service
         self.project_service = project_service
+        self.matrix_run_service = matrix_run_service
         self.character_id = character_id
         self.logging_service = logging_service
         self._modal_stack = []
@@ -266,6 +271,7 @@ class Game:
             if new_view:
                 setattr(self, view_attr, new_view)
                 self.all_sprites.add(new_view)
+
                 if hasattr(new_view, "handle_event"):
                     self._modal_stack.append(cast(Eventful, new_view))
 
@@ -863,20 +869,24 @@ class Game:
         # Update the top-most modal view, or all sprites if no modal is active.
         if self._modal_stack:
             top_view = self._modal_stack[-1]
-            if hasattr(top_view, "update"):
+            if isinstance(top_view, pygame.sprite.Sprite):
                 if isinstance(top_view, MatrixRunView):
-                    # TODO: Replace with real data from a service
-                    dummy_data = MatrixRunViewDTO(run_time_in_seconds=total_seconds)
-                    top_view.update(dummy_data)
+                    data = self.matrix_run_service.get_matrix_run_view_data(
+                        self.character_id
+                    )
+                    data.run_time_in_seconds = total_seconds
+                    top_view.update(data)
                 else:
                     top_view.update(dt)  # Other views might still need dt
         else:
             # Update all sprites, but only pass dt if they don't need total_seconds
             for sprite in self.all_sprites:
                 if isinstance(sprite, MatrixRunView):
-                    # TODO: Replace with real data from a service
-                    dummy_data = MatrixRunViewDTO(run_time_in_seconds=total_seconds)
-                    sprite.update(dummy_data)
+                    data = self.matrix_run_service.get_matrix_run_view_data(
+                        self.character_id
+                    )
+                    data.run_time_in_seconds = total_seconds
+                    sprite.update(data)
                 else:
                     sprite.update(dt)
 

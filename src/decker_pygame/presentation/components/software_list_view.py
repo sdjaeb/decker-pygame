@@ -2,7 +2,7 @@
 
 import pygame
 
-from decker_pygame.settings import BLACK, GREEN
+from decker_pygame.settings import BLACK
 
 
 class SoftwareListView(pygame.sprite.Sprite):
@@ -27,5 +27,4 @@ class SoftwareListView(pygame.sprite.Sprite):
         self.image = pygame.Surface(size)
         self.image.fill(BLACK)
         self.image.set_colorkey(BLACK)
-        pygame.draw.rect(self.image, GREEN, self.image.get_rect(), 3)
         self.rect = self.image.get_rect(topleft=position)

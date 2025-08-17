@@ -34,6 +34,7 @@ from decker_pygame.ports.service_interfaces import (
     DeckServiceInterface,
     DSFileServiceInterface,
     LoggingServiceInterface,
+    MatrixRunServiceInterface,
     NodeServiceInterface,
     PlayerServiceInterface,
     ProjectServiceInterface,
@@ -93,6 +94,7 @@ class Mocks:
     node_service: Mock
     settings_service: Mock
     project_service: Mock
+    matrix_run_service: Mock
     logging_service: Mock
 
 
@@ -111,6 +113,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_node_service = Mock(spec=NodeServiceInterface)
     mock_settings_service = Mock(spec=SettingsServiceInterface)
     mock_project_service = Mock(spec=ProjectServiceInterface)
+    mock_matrix_run_service = Mock(spec=MatrixRunServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
@@ -141,6 +144,7 @@ def game_with_mocks() -> Generator[Mocks]:
             node_service=mock_node_service,
             settings_service=mock_settings_service,
             project_service=mock_project_service,
+            matrix_run_service=mock_matrix_run_service,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -157,6 +161,7 @@ def game_with_mocks() -> Generator[Mocks]:
             node_service=mock_node_service,
             settings_service=mock_settings_service,
             project_service=mock_project_service,
+            matrix_run_service=mock_matrix_run_service,
             logging_service=mock_logging_service,
         )
 
@@ -230,44 +235,68 @@ def test_game_quit_method(game_with_mocks: Mocks):
 
 def test_game_update_no_modal(game_with_mocks: Mocks):
     """Tests that _update calls update on all sprites when no modal is active."""
-    game = game_with_mocks.game
+    mocks = game_with_mocks
+    game = mocks.game
     game._modal_stack = []  # Ensure no modal is active
 
     # Create some mock sprites to iterate over
     mock_sprite1 = Mock(spec=pygame.sprite.Sprite)
     mock_sprite2 = Mock(spec=MatrixRunView)  # One of them is a MatrixRunView
-    game.all_sprites.empty()  # clear the default intro view
+    game.all_sprites.empty()
     game.all_sprites.add(mock_sprite1, mock_sprite2)
 
-    with patch("decker_pygame.presentation.game.MatrixRunViewDTO") as mock_dto_class:
-        game._update(dt=16, total_seconds=123)
-        mock_dto_class.assert_called_once_with(run_time_in_seconds=123)
-        mock_sprite1.update.assert_called_once_with(16)
-        mock_sprite2.update.assert_called_once_with(mock_dto_class.return_value)
+    # Configure the mock service to return a mock DTO
+    mock_dto = Mock()
+    mocks.matrix_run_service.get_matrix_run_view_data.return_value = mock_dto
+
+    game._update(dt=16, total_seconds=123)
+
+    # Assert that the service was called
+    mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
+        game.character_id
+    )
+    # Assert that the DTO was updated
+    assert mock_dto.run_time_in_seconds == 123
+
+    # Assert that the update methods were called correctly
+    mock_sprite1.update.assert_called_once_with(16)
+    mock_sprite2.update.assert_called_once_with(mock_dto)
 
 
 def test_game_update_with_modal(game_with_mocks: Mocks):
     """Tests that _update calls update only on the top modal view."""
-    game = game_with_mocks.game
+    mocks = game_with_mocks
+    game = mocks.game
 
     # Create mock views for the modal stack
-    modal_view1 = Mock()
+    modal_view1 = Mock(spec=pygame.sprite.Sprite)
     modal_view2 = Mock(spec=MatrixRunView)
     game._modal_stack = [modal_view1, modal_view2]
 
-    with patch("decker_pygame.presentation.game.MatrixRunViewDTO") as mock_dto_class:
-        game._update(dt=16, total_seconds=123)
-        mock_dto_class.assert_called_once_with(run_time_in_seconds=123)
-        modal_view1.update.assert_not_called()
-        modal_view2.update.assert_called_once_with(mock_dto_class.return_value)
+    # Configure the mock service to return a mock DTO
+    mock_dto = Mock()
+    mocks.matrix_run_service.get_matrix_run_view_data.return_value = mock_dto
+
+    game._update(dt=16, total_seconds=123)
+
+    # Assert that the service was called
+    mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
+        game.character_id
+    )
+    # Assert that the DTO was updated
+    assert mock_dto.run_time_in_seconds == 123
+
+    # Assert that the update methods were called correctly
+    modal_view1.update.assert_not_called()
+    modal_view2.update.assert_called_once_with(mock_dto)
 
 
 def test_game_update_with_non_matrix_modal(game_with_mocks: Mocks):
     """Tests that _update calls update with dt on a non-MatrixRunView modal."""
     game = game_with_mocks.game
 
-    modal_view1 = Mock()
-    modal_view2 = Mock()  # Not a MatrixRunView
+    modal_view1 = Mock(spec=pygame.sprite.Sprite)
+    modal_view2 = Mock(spec=pygame.sprite.Sprite)  # Not a MatrixRunView
     game._modal_stack = [modal_view1, modal_view2]
 
     game._update(dt=16, total_seconds=123)
