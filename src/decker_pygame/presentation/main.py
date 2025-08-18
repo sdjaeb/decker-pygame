@@ -32,7 +32,11 @@ from decker_pygame.application.settings_service import SettingsService
 from decker_pygame.application.shop_service import ShopService
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
-from decker_pygame.domain.events import ItemCrafted, PlayerCreated
+from decker_pygame.domain.events import (
+    ItemCrafted,
+    MatrixLogEntryCreated,
+    PlayerCreated,
+)
 from decker_pygame.domain.ids import CharacterId, SchematicId
 from decker_pygame.domain.project import ProjectType
 from decker_pygame.infrastructure.json_character_repository import (
@@ -126,6 +130,9 @@ def main() -> None:
         log_special_player_created,
         condition=is_special_player,
     )
+    event_dispatcher.subscribe(
+        MatrixLogEntryCreated, matrix_run_service.on_matrix_log_entry
+    )
 
     # 4. Create game entities for the session (example use case)
     player_id = player_service.create_new_player(name="Deckard")
@@ -193,6 +200,7 @@ def main() -> None:
         project_service=project_service,
         logging_service=logging_service,
         matrix_run_service=matrix_run_service,
+        event_dispatcher=event_dispatcher,
     )
 
     # 6. Wire up event handlers that depend on the presentation layer

@@ -24,6 +24,7 @@ from decker_pygame.application.dtos import (
     ShopViewDTO,
     TransferViewDTO,
 )
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.shop_service import ShopServiceError
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.domain.shop import ShopItemType
@@ -96,6 +97,7 @@ class Mocks:
     project_service: Mock
     matrix_run_service: Mock
     logging_service: Mock
+    event_dispatcher: Mock
 
 
 @pytest.fixture
@@ -115,6 +117,7 @@ def game_with_mocks() -> Generator[Mocks]:
     mock_project_service = Mock(spec=ProjectServiceInterface)
     mock_matrix_run_service = Mock(spec=MatrixRunServiceInterface)
     mock_logging_service = Mock(spec=LoggingServiceInterface)
+    mock_event_dispatcher = Mock(spec=EventDispatcher)
     dummy_player_id = PlayerId(uuid.uuid4())
     dummy_character_id = CharacterId(uuid.uuid4())
 
@@ -145,6 +148,7 @@ def game_with_mocks() -> Generator[Mocks]:
             settings_service=mock_settings_service,
             project_service=mock_project_service,
             matrix_run_service=mock_matrix_run_service,
+            event_dispatcher=mock_event_dispatcher,
             character_id=dummy_character_id,
             logging_service=mock_logging_service,
         )
@@ -163,6 +167,7 @@ def game_with_mocks() -> Generator[Mocks]:
             project_service=mock_project_service,
             matrix_run_service=mock_matrix_run_service,
             logging_service=mock_logging_service,
+            event_dispatcher=mock_event_dispatcher,
         )
 
 
@@ -184,6 +189,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.settings_service is mocks.settings_service
     assert game.project_service is mocks.project_service
     assert game.logging_service is mocks.logging_service
+    assert game.event_dispatcher is mocks.event_dispatcher
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.debug_actions, DebugActions)
     assert isinstance(game.character_id, uuid.UUID)

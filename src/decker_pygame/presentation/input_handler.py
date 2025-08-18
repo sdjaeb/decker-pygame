@@ -32,8 +32,9 @@ class PygameInputHandler:
         self._debug_actions = debug_actions
         self._key_map = {
             # Navigation
-            pygame.K_h: self._game.toggle_home_view,
+            pygame.K_h: self._debug_actions.toggle_home_view,
             pygame.K_r: self._game.toggle_matrix_run_view,
+            pygame.K_m: self._debug_actions.log_matrix_event,
             # System
             pygame.K_q: self._game.quit,
         }

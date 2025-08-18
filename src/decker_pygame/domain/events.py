@@ -73,3 +73,10 @@ class SkillDecreased(BaseEvent):
     character_id: CharacterId
     skill_name: str
     new_level: int
+
+
+@dataclass(frozen=True)
+class MatrixLogEntryCreated(BaseEvent):
+    """Event raised when a new log entry should be displayed in the matrix view."""
+
+    message: str

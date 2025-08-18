@@ -8,6 +8,7 @@ import pytest
 from decker_pygame.application.matrix_run_service import MatrixRunService
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.deck import Deck, Program
+from decker_pygame.domain.events import MatrixLogEntryCreated
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId, ProgramId
 from decker_pygame.domain.player import Player
 
@@ -46,6 +47,7 @@ def test_get_matrix_run_view_data(mock_repos: dict[str, Mock]):
     mock_repos["character_repo"].get.return_value = mock_character
 
     service = MatrixRunService(**mock_repos)
+    service._messages = ["Test Message"]  # Manually set for test
 
     # Act
     dto = service.get_matrix_run_view_data(character_id, player_id)
@@ -54,6 +56,9 @@ def test_get_matrix_run_view_data(mock_repos: dict[str, Mock]):
     assert dto.physical_health == 80.0
     assert dto.deck_health == 90.0
     assert dto.software == ["TestProgram"]
+    assert dto.nodes == {"cpu": (50, 50), "data_store_1": (100, 100)}
+    assert dto.connections == [("cpu", "data_store_1")]
+    assert dto.messages == ["Test Message"]
 
 
 def test_get_matrix_run_view_data_with_missing_aggregates(mock_repos: dict[str, Mock]):
@@ -64,3 +69,31 @@ def test_get_matrix_run_view_data_with_missing_aggregates(mock_repos: dict[str, 
         CharacterId(uuid.uuid4()), PlayerId(uuid.uuid4())
     )
     assert dto.physical_health == 100.0
+
+
+def test_on_matrix_log_entry(mock_repos: dict[str, Mock]):
+    """Tests that the service correctly handles and stores matrix log events."""
+    # Arrange
+    service = MatrixRunService(**mock_repos)
+    event1 = MatrixLogEntryCreated(message="Message 1")
+    event2 = MatrixLogEntryCreated(message="Message 2")
+
+    # Act
+    service.on_matrix_log_entry(event1)
+    service.on_matrix_log_entry(event2)
+
+    # Assert
+    assert service._messages == ["Message 1", "Message 2"]
+
+
+def test_on_matrix_log_entry_respects_max_messages(mock_repos: dict[str, Mock]):
+    """Tests that the message list is trimmed to the max size."""
+    # Arrange
+    service = MatrixRunService(**mock_repos)
+    service._max_messages = 2
+
+    service.on_matrix_log_entry(MatrixLogEntryCreated(message="A"))
+    service.on_matrix_log_entry(MatrixLogEntryCreated(message="B"))
+    service.on_matrix_log_entry(MatrixLogEntryCreated(message="C"))
+
+    assert service._messages == ["B", "C"]

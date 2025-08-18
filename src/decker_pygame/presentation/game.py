@@ -19,6 +19,7 @@ from decker_pygame.application.dtos import (
     RestViewDTO,
     ShopItemViewDTO,
 )
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -95,6 +96,7 @@ class Game:
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
         matrix_run_service (MatrixRunServiceInterface): Service for matrix run ops.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -211,6 +213,7 @@ class Game:
         settings_service: SettingsServiceInterface,
         project_service: ProjectServiceInterface,
         matrix_run_service: MatrixRunServiceInterface,
+        event_dispatcher: EventDispatcher,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -232,9 +235,10 @@ class Game:
         self.project_service = project_service
         self.matrix_run_service = matrix_run_service
         self.character_id = character_id
+        self.event_dispatcher = event_dispatcher
         self.logging_service = logging_service
         self._modal_stack = []
-        self.debug_actions = DebugActions(self)
+        self.debug_actions = DebugActions(self, self.event_dispatcher)
         self.input_handler = PygameInputHandler(
             self, logging_service, self.debug_actions
         )

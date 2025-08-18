@@ -4,7 +4,11 @@ from unittest.mock import ANY, call
 from pytest_mock import MockerFixture
 
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.events import ItemCrafted, PlayerCreated
+from decker_pygame.domain.events import (
+    ItemCrafted,
+    MatrixLogEntryCreated,
+    PlayerCreated,
+)
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.presentation.main import main
 from decker_pygame.settings import PATHS
@@ -186,6 +190,10 @@ def test_main_function(mocker: MockerFixture) -> None:
             mock_special_log_handler,
             condition=mock_condition,
         ),
+        call(
+            MatrixLogEntryCreated,
+            mock_matrix_run_service_class.return_value.on_matrix_log_entry,
+        ),
         call(ItemCrafted, ANY),
     ]
     mock_dispatcher_class.return_value.subscribe.assert_has_calls(
@@ -210,6 +218,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         project_service=mock_project_service_class.return_value,
         matrix_run_service=mock_matrix_run_service_class.return_value,
         logging_service=mock_logging_service_class.return_value,
+        event_dispatcher=mock_dispatcher_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
     mock_pygame_init.assert_called_once()

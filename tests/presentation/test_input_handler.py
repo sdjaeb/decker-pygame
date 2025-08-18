@@ -44,16 +44,18 @@ def test_handle_quit_event(
 
 
 @pytest.mark.parametrize(
-    "key, method_name",
+    "key, method_name, is_debug_action",
     [
-        (pygame.K_h, "toggle_home_view"),
-        (pygame.K_r, "toggle_matrix_run_view"),
-        (pygame.K_q, "quit"),
+        (pygame.K_h, "toggle_home_view", True),
+        (pygame.K_r, "toggle_matrix_run_view", False),
+        (pygame.K_m, "log_matrix_event", True),
+        (pygame.K_q, "quit", False),
     ],
 )
 def test_handle_keydown_events(
     key: int,
     method_name: str,
+    is_debug_action: bool,
     mock_game: Mock,
     mock_logging_service: Mock,
     mock_debug_actions: Mock,
@@ -65,7 +67,12 @@ def test_handle_keydown_events(
     with patch("pygame.event.get", return_value=[key_event]):
         handler.handle_events()
 
-    method_to_check = getattr(mock_game, method_name)
+    if is_debug_action:
+        target_mock = mock_debug_actions
+    else:
+        target_mock = mock_game
+
+    method_to_check = getattr(target_mock, method_name)
     method_to_check.assert_called_once()
 
 

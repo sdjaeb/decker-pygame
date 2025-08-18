@@ -84,14 +84,11 @@ class MatrixRunView(pygame.sprite.Sprite):
         self.node_grid_view = NodeGridView(position=(194, 49), size=(240, 240))
         self.components.add(self.node_grid_view)
 
-        # TODO: Replace with real data from a service
-        dummy_nodes = {"cpu": (50, 50), "data_store_1": (100, 100)}
-        dummy_connections = [("cpu", "data_store_1")]
         self.map_view = MapView(
             position=(451, 12),
             size=(177, 166),
-            nodes=dummy_nodes,
-            connections=dummy_connections,
+            nodes={},
+            connections=[],
         )
         self.components.add(self.map_view)
 
@@ -150,9 +147,14 @@ class MatrixRunView(pygame.sprite.Sprite):
         self.transfer_progress_bar.set_percentage(data.transfer_progress)
         self.trace_progress_bar.set_percentage(data.trace_progress)
         self.ice_health_bar.set_percentage(data.ice_health)
-        self.message_view.set_text(f"Run Time: {formatted_time}")
+
+        # Display messages from the DTO, or fall back to the run timer.
+        if data.messages:
+            self.message_view.set_text("\n".join(data.messages))
+        else:
+            self.message_view.set_text(f"Run Time: {formatted_time}")
         self.software_list_view.set_software(data.software)
-        # self.map_view.update(...) # TODO: Needs implementation
+        self.map_view.update(data.nodes, data.connections)
 
         self.components.update()
         self.image.blit(self._background, (0, 0))
