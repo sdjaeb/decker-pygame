@@ -154,7 +154,7 @@ class MatrixRunView(pygame.sprite.Sprite):
         else:
             self.message_view.set_text(f"Run Time: {formatted_time}")
         self.software_list_view.set_software(data.software)
-        self.map_view.update(data.nodes, data.connections)
+        self.map_view.update_map(data.nodes, data.connections)
 
         self.components.update()
         self.image.blit(self._background, (0, 0))

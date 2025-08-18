@@ -93,7 +93,7 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         patch.object(view.ice_health_bar, "set_percentage") as mock_ice_update,
         patch.object(view.software_list_view, "set_software") as mock_software_update,
         patch.object(view.message_view, "set_text") as mock_message_update,
-        patch.object(view.map_view, "update") as mock_map_update,
+        patch.object(view.map_view, "update_map") as mock_map_update,
         patch.object(view.components, "update") as mock_group_update,
         patch.object(view.components, "draw") as mock_draw,
     ):

@@ -101,12 +101,14 @@ class FileAccessView(pygame.sprite.Sprite):
                 size=(BUTTON_WIDTH // 2, BUTTON_HEIGHT),
                 text="Download",
                 on_click=functools.partial(self.on_download, file_dto["name"]),
+                name=f"download_{file_dto['name']}",
             )
             delete_button = Button(
                 position=(x_positions[3] + BUTTON_WIDTH // 2 + PADDING, y_offset),
                 size=(BUTTON_WIDTH // 2, BUTTON_HEIGHT),
                 text="Delete",
                 on_click=functools.partial(self.on_delete, file_dto["name"]),
+                name=f"delete_{file_dto['name']}",
             )
             self._components.add(download_button, delete_button)
 
@@ -123,6 +125,7 @@ class FileAccessView(pygame.sprite.Sprite):
             size=close_button_rect.size,
             text="Close",
             on_click=self.on_close,
+            name="close",
         )
         self._components.add(close_button)
 

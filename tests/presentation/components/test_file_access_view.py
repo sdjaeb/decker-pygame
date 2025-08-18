@@ -70,12 +70,10 @@ def test_close_button_callback(
     file_access_view: FileAccessView, mock_callbacks: dict[str, Mock]
 ):
     """Tests that clicking the close button triggers the on_close callback."""
-    # Use next() with a generator and isinstance to find the specific button.
-    # This is more efficient and provides better type hints than a list comprehension.
     close_button = next(
         c
         for c in file_access_view._components
-        if isinstance(c, Button) and c.text == "Close"
+        if isinstance(c, Button) and hasattr(c, "name") and c.name == "close"
     )
 
     close_button._on_click()
@@ -86,19 +84,18 @@ def test_download_button_callbacks(
     file_access_view: FileAccessView, mock_callbacks: dict[str, Mock]
 ):
     """Tests that clicking download buttons triggers the on_download callback."""
-    download_buttons = [
-        c
+    buttons = {
+        c.name: c
         for c in file_access_view._components
-        if isinstance(c, Button) and c.text == "Download"
-    ]
-    assert len(download_buttons) == 2
+        if isinstance(c, Button) and hasattr(c, "name")
+    }
 
     # Click first download button
-    download_buttons[0]._on_click()
+    buttons["download_file1.dat"]._on_click()
     mock_callbacks["on_download"].assert_called_once_with("file1.dat")
 
     # Click second download button
-    download_buttons[1]._on_click()
+    buttons["download_file2.prg"]._on_click()
     mock_callbacks["on_download"].assert_called_with("file2.prg")
     assert mock_callbacks["on_download"].call_count == 2
 
@@ -107,19 +104,18 @@ def test_delete_button_callbacks(
     file_access_view: FileAccessView, mock_callbacks: dict[str, Mock]
 ):
     """Tests that clicking delete buttons triggers the on_delete callback."""
-    delete_buttons = [
-        c
+    buttons = {
+        c.name: c
         for c in file_access_view._components
-        if isinstance(c, Button) and c.text == "Delete"
-    ]
-    assert len(delete_buttons) == 2
+        if isinstance(c, Button) and hasattr(c, "name")
+    }
 
     # Click first delete button
-    delete_buttons[0]._on_click()
+    buttons["delete_file1.dat"]._on_click()
     mock_callbacks["on_delete"].assert_called_once_with("file1.dat")
 
     # Click second delete button
-    delete_buttons[1]._on_click()
+    buttons["delete_file2.prg"]._on_click()
     mock_callbacks["on_delete"].assert_called_with("file2.prg")
     assert mock_callbacks["on_delete"].call_count == 2
 

@@ -1,3 +1,53 @@
+# Issue: Inconsistent `noqa` Requirements for Type-Only Imports
+
+## Problem
+
+In `ports/repository_interfaces.py`, we use `# noqa: F401` to prevent `ruff` from removing certain imports that are only used for type hinting. However, this is applied inconsistently, which can be confusing.
+
+-   `from decker_pygame.domain.character import Character` **requires** `# noqa: F401`.
+-   `from decker_pygame.domain.player import Player` **does not** require it.
+
+This happens because `ruff`'s unused-import rule (`F401`) is smart enough to see when a type is used in a method signature (e.g., `def get_by_name(...) -> Optional["Player"]:`), but it fails to see the usage when the type is *only* used as a string forward reference in a generic base class list (e.g., `class CharacterRepositoryInterface(Repository[CharacterId, "Character"], ...)`).
+
+This forces us to manually suppress the linter error for some imports but not others, creating an inconsistent and potentially fragile pattern that relies on developer knowledge of this specific linter quirk.
+
+## Proposed Solution
+
+The current solution is to apply `# noqa: F401` where needed. This is a form of technical debt because we are working around a limitation in our tooling.
+
+A long-term solution would be to monitor `ruff`'s development. If a future version of `ruff` correctly handles this type of usage, or if a configuration option becomes available to change this behavior, we should adopt it and remove the `noqa` comments.
+
+This item serves as documentation for the current workaround and a reminder to investigate better solutions in the future.
+
+### Affected Components
+
+-   `ports/repository_interfaces.py`
+-   `pyproject.toml` (if a `ruff` configuration option becomes available)
+
+---
+# Issue: Monolithic `MatrixRunView` Component
+
+## Problem
+
+The `MatrixRunView` class in `presentation/components/matrix_run_view.py` is becoming a large, monolithic component. It manually initializes and manages over a dozen child components (health bars, map view, message view, etc.) with hardcoded positions and sizes. This tight coupling makes the view difficult to test, maintain, and reason about. Any change to the matrix run UI requires modifying this single, large file.
+
+## Proposed Solution
+
+Refactor the `MatrixRunView` to use a more data-driven or declarative approach for its layout.
+
+1.  **Externalize Layout Configuration:** Move the positions and sizes of child components from hardcoded values in the `__init__` method to a configuration file (e.g., a dedicated section in `assets.json` or a new `ui_layouts.json`).
+2.  **Component Factory:** Create a factory function or class that reads this configuration and dynamically creates and positions the child components.
+3.  **Data-Driven Updates:** The `MatrixRunView.update` method would then iterate through its managed components and update them, but the creation and layout logic would be separated.
+
+This will decouple the `MatrixRunView` from the specific layout of its children, making the UI more flexible and the component itself simpler.
+
+### Affected Components
+
+-   `presentation/components/matrix_run_view.py`
+-   `tests/presentation/components/test_matrix_run_view.py`
+-   Potentially a new UI layout configuration file.
+
+---
 # Issue: Monolithic `Game` Class and Brittle View Management
 
 ## Problem
@@ -23,6 +73,30 @@ Refactor the `Game` class to use a formal **State Machine**.
 -   `presentation/game.py`
 -   `tests/presentation/test_game.py`
 -   `presentation/input_handler.py`
+
+---
+
+# Issue: Generic Naming for Matrix-related Domain Models
+
+## Problem
+
+The domain models for computer systems in the matrix, `System` and `Node`, use generic names that could be confused with other concepts (e.g., the operating system, or graph nodes in general). The code would be more self-documenting and flavorful if it used more thematic, cyberpunk-inspired terminology.
+
+## Proposed Solution
+
+Refactor the domain models and all related components to use more evocative names:
+-   Rename `System` to `Host`.
+-   Rename `Node` to `Subsystem`.
+-   Rename `SystemId` to `HostId`.
+-   Rename `NodeId` to `SubsystemId`.
+-   Rename `SystemRepositoryInterface` to `HostRepositoryInterface`.
+-   Update all services, DTOs, views, and tests that currently reference `System` or `Node`.
+
+This change will improve the clarity of the Ubiquitous Language within the codebase, making it easier for developers to understand the purpose of these components at a glance.
+
+### Affected Components
+
+-   All files related to the `System` and `Node` domain models.
 
 ---
 # Issue: Hardcoded Shop Inventory
