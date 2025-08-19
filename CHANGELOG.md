@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.10.0 (2025-08-18)
+
+### Feat
+
+- **ui**: Make ContractListView dynamic and interactive
+- **matrix**: Populate MatrixRunView with live domain data
+
+### Fix
+
+- **testing**: Resolve test failures and coverage gaps
+
+### Refactor
+
+- **domain, tests**: Complete refactor from Host to System and harden UI tests
+
 ## v0.9.0 (2025-08-17)
 
 ### Feat
