@@ -12,6 +12,7 @@ from decker_pygame.application.deck_service import DeckServiceError
 from decker_pygame.application.dtos import (
     CharacterDataDTO,
     CharacterViewDTO,
+    ContractSummaryDTO,
     DeckViewDTO,
     FileAccessViewDTO,
     IceDataViewDTO,
@@ -26,7 +27,7 @@ from decker_pygame.application.dtos import (
 )
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.application.shop_service import ShopServiceError
-from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
+from decker_pygame.domain.ids import CharacterId, ContractId, DeckId, PlayerId
 from decker_pygame.domain.shop import ShopItemType
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -526,9 +527,14 @@ def test_game_on_decrease_skill(game_with_mocks: Mocks):
         assert mock_toggle.call_count == 2
 
 
-def test_game_toggles_contract_list_view(game_with_mocks: Mocks):
-    """Tests that the toggle_contract_list_view method opens and closes the view."""
-    game = game_with_mocks.game
+def test_game_toggles_contract_list_view_success(game_with_mocks: Mocks):
+    """Tests that the toggle_contract_list_view method opens the view with data."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Mock the DTO from the service
+    mock_contracts = [Mock(spec=ContractSummaryDTO)]
+    mocks.contract_service.get_available_contracts.return_value = mock_contracts
 
     assert game.contract_list_view is None
 
@@ -536,13 +542,39 @@ def test_game_toggles_contract_list_view(game_with_mocks: Mocks):
     with patch(
         "decker_pygame.presentation.game.ContractListView", spec=ContractListView
     ) as mock_view_class:
+        mock_view_instance = mock_view_class.return_value
         game.toggle_contract_list_view()
-        mock_view_class.assert_called_once()
-        assert game.contract_list_view is not None
+
+        # Assert that the service was called
+        mocks.contract_service.get_available_contracts.assert_called_once()
+
+        # Assert that the view was created and populated
+        mock_view_class.assert_called_once_with(
+            position=(200, 150),
+            size=(450, 300),
+            on_contract_selected=game._on_contract_selected,
+        )
+        mock_view_instance.set_contracts.assert_called_once_with(mock_contracts)
+        assert game.contract_list_view is mock_view_instance
 
     # Call again to close the view
     game.toggle_contract_list_view()
     assert game.contract_list_view is None
+
+
+def test_toggle_contract_list_view_no_contracts(game_with_mocks: Mocks):
+    """Tests that the contract list view is not opened if no contracts are available."""
+    mocks = game_with_mocks
+    game = mocks.game
+
+    # Simulate the service returning no contracts
+    mocks.contract_service.get_available_contracts.return_value = []
+    assert game.contract_list_view is None
+
+    with patch.object(game, "show_message") as mock_show_message:
+        game.toggle_contract_list_view()
+        assert game.contract_list_view is None
+        mock_show_message.assert_called_once_with("No contracts available.")
 
 
 def test_game_toggles_contract_data_view(game_with_mocks: Mocks):
@@ -963,6 +995,48 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
         assert game.order_view is new_order_view_instance
         assert game.order_view in game.all_sprites
         assert len(game.all_sprites) == 2
+
+
+def test_on_contract_selected_opens_data_view(game_with_mocks: Mocks):
+    """Tests that selecting a contract opens the contract data view."""
+    game = game_with_mocks.game
+    contract_dto = ContractSummaryDTO(
+        id=ContractId(uuid.uuid4()),
+        title="Test Contract",
+        client="Test Corp",
+        reward=1000,
+    )
+
+    with patch.object(game, "_toggle_view") as mock_toggle:
+        game._on_contract_selected(contract_dto)
+
+        mock_toggle.assert_called_once()
+        # Check the view attribute name
+        assert mock_toggle.call_args.args[0] == "contract_data_view"
+
+        # Check the factory function
+        factory = mock_toggle.call_args.args[1]
+        created_view = factory()
+
+        assert isinstance(created_view, ContractDataView)
+        assert created_view._contract_name == "Test Contract"
+
+
+def test_on_contract_selected_with_none_closes_data_view(game_with_mocks: Mocks):
+    """Tests that selecting None closes the contract data view."""
+    game = game_with_mocks.game
+
+    with patch.object(game, "_toggle_view") as mock_toggle:
+        game._on_contract_selected(None)
+
+        mock_toggle.assert_called_once()
+        assert mock_toggle.call_args.args[0] == "contract_data_view"
+
+        # Check that the factory returns None, which signals a close
+        factory = mock_toggle.call_args.args[1]
+        result = factory()
+
+        assert result is None
 
 
 def test_on_move_program_up_and_down(game_with_mocks: Mocks):

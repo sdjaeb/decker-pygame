@@ -1,11 +1,15 @@
+import uuid
 from unittest.mock import Mock, patch
 
 import pygame
 import pytest
 
+from decker_pygame.application.dtos import ContractSummaryDTO
+from decker_pygame.domain.ids import ContractId
 from decker_pygame.presentation.components.contract_list_view import (
     ContractListView,
 )
+from decker_pygame.presentation.components.list_view import ListView
 
 
 @pytest.fixture(autouse=True)
@@ -16,30 +20,116 @@ def pygame_context():
     pygame.quit()
 
 
-def test_contract_list_view_initialization():
-    """Tests that the ContractListView initializes and renders its data."""
-    with patch("pygame.font.Font") as mock_font_class:
-        mock_font_instance = Mock()
-        mock_font_instance.render.return_value = pygame.Surface((100, 20))
-        mock_font_class.return_value = mock_font_instance
-
-        view = ContractListView(
-            position=(10, 20),
-            size=(300, 200),
-        )
-
-        assert view.rect.topleft == (10, 20)
-        mock_font_instance.render.assert_called_once_with(
-            "Contract List (Placeholder)", True, view._font_color
-        )
+@pytest.fixture
+def mock_on_contract_selected() -> Mock:
+    """Provides a mock callback for selection changes."""
+    return Mock()
 
 
-def test_contract_list_view_handles_event():
-    """Tests that the view's handle_event method runs without error."""
+@pytest.fixture
+def contract_list() -> list[ContractSummaryDTO]:
+    """Provides a sample list of contracts."""
+    return [
+        ContractSummaryDTO(
+            id=ContractId(uuid.uuid4()),
+            title="Data Heist",
+            client="Ares",
+            reward=5000,
+        ),
+        ContractSummaryDTO(
+            id=ContractId(uuid.uuid4()),
+            title="Extraction",
+            client="Aztechnology",
+            reward=10000,
+        ),
+    ]
+
+
+@patch(
+    "decker_pygame.presentation.components.contract_list_view.ListView", spec=ListView
+)
+def test_contract_list_view_initialization(
+    mock_list_view_class: Mock, mock_on_contract_selected: Mock
+):
+    """Tests that the ContractListView initializes and creates its child ListView."""
+    pos = (10, 20)
+    size = (400, 300)
     view = ContractListView(
-        position=(10, 20),
-        size=(300, 200),
+        position=pos,
+        size=size,
+        on_contract_selected=mock_on_contract_selected,
     )
-    # The handle_event method is a no-op, so we just call it to ensure it's covered.
-    view.handle_event(pygame.event.Event(pygame.USEREVENT))
-    # No assertion is needed, the test passes if no error is raised.
+
+    assert view.rect.topleft == pos
+    mock_list_view_class.assert_called_once()
+    call_args = mock_list_view_class.call_args
+    assert call_args.kwargs["position"] == (0, 0)
+    assert call_args.kwargs["size"] == size
+    assert call_args.kwargs["on_selection_change"] == mock_on_contract_selected
+
+
+@patch(
+    "decker_pygame.presentation.components.contract_list_view.ListView", spec=ListView
+)
+def test_set_contracts(
+    mock_list_view_class: Mock,
+    mock_on_contract_selected: Mock,
+    contract_list: list[ContractSummaryDTO],
+):
+    """Tests that set_contracts calls the underlying ListView's set_items."""
+    mock_list_view_instance = mock_list_view_class.return_value
+    view = ContractListView((0, 0), (1, 1), mock_on_contract_selected)
+
+    view.set_contracts(contract_list)
+
+    mock_list_view_instance.set_items.assert_called_once_with(
+        contract_list, view._contract_renderer
+    )
+
+
+@patch(
+    "decker_pygame.presentation.components.contract_list_view.ListView", spec=ListView
+)
+def test_handle_event_delegation(
+    mock_list_view_class: Mock, mock_on_contract_selected: Mock
+):
+    """Tests that handle_event delegates to the child ListView."""
+    mock_list_view_instance = mock_list_view_class.return_value
+    view = ContractListView((0, 0), (1, 1), mock_on_contract_selected)
+    event = pygame.event.Event(pygame.USEREVENT)
+
+    view.handle_event(event)
+
+    mock_list_view_instance.handle_event.assert_called_once_with(event)
+
+
+def test_contract_renderer_formats_correctly(contract_list: list[ContractSummaryDTO]):
+    """Tests that the internal contract renderer formats data as expected."""
+    # We need a real view to access its private renderer method
+    view = ContractListView((0, 0), (1, 1), on_contract_selected=Mock())
+    contract_to_render = contract_list[0]  # "Data Heist"
+
+    rendered_strings = view._contract_renderer(contract_to_render)
+
+    assert rendered_strings == ["Ares", "Data Heist", "$5000"]
+
+
+@patch(
+    "decker_pygame.presentation.components.contract_list_view.ListView", spec=ListView
+)
+def test_update_delegation(mock_list_view_class: Mock, mock_on_contract_selected: Mock):
+    """Tests that the update method delegates to its child components."""
+    view = ContractListView(
+        (0, 0), (1, 1), on_contract_selected=mock_on_contract_selected
+    )
+
+    # The view's _components group contains the ListView instance.
+    # We can patch the group's methods.
+    with (
+        patch.object(view._components, "update") as mock_update,
+        patch.object(view._components, "draw") as mock_draw,
+    ):
+        view.update()
+
+        mock_update.assert_called_once()
+        mock_draw.assert_called_once_with(view.image)
