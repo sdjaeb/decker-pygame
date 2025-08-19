@@ -76,6 +76,29 @@ Refactor the `Game` class to use a formal **State Machine**.
 
 ---
 
+# Issue: Duplicated View Factory Logic in `Game` Class
+
+## Problem
+
+The `Game` class contains over 20 `toggle_..._view` methods. Many of these methods implement a nested `factory` function that contains duplicated logic: fetching data from a service, checking for `None`, showing an error message, and finally creating a view instance. This pattern bloats the `Game` class and tightly couples the view creation process with the data-fetching logic for that specific view.
+
+## Proposed Solution
+
+Decouple the data-fetching and view-instantiation logic from the `Game` class's toggling mechanism.
+
+1.  **Create View Providers:** For each view that requires data, create a dedicated "Provider" or "Factory" class (e.g., `ShopViewProvider`, `DeckViewProvider`).
+2.  **Centralize Logic:** Each provider would be responsible for calling the necessary services, handling the data validation, and creating the view instance.
+3.  **Simplify `Game` Class:** The `toggle_..._view` methods in the `Game` class would then be simplified to just call the appropriate provider to get a fully-formed view instance, which it can then add to the modal stack.
+
+This will make the `Game` class much leaner, improve separation of concerns, and make the view creation process more modular and testable.
+
+### Affected Components
+
+-   `presentation/game.py`
+-   `tests/presentation/test_game.py`
+-   A new `presentation/view_providers.py` module or similar.
+---
+
 # Issue: Generic Naming for Matrix-related Domain Models
 
 ## Problem
