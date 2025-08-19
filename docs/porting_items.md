@@ -50,7 +50,7 @@ Reusable interface elements that are used across multiple screens or dialogs. Po
 - **ImageArray.cpp/h** (`Ported`)
 - **ImageDisplay.cpp/h** (`Ported`)
 - **MapView.cpp/h** (`Ported`)
-- **MatrixView.cpp/h** (`Ported`)
+- **MatrixView.cpp/h** (`Ported` - Display logic complete, interaction pending)
   -   **UI Layout Plan:** Based on the original C++ code, the target layout for the main UI elements within the `MatrixRunView` is as follows:
       -   **Main Background**: The `matrix_main` graphic. **(Done)**
       -   **Node View**: The central grid where the player and ICE are shown.
