@@ -60,15 +60,20 @@ def test_options_view_initialization(options_view: OptionsView):
     # 1 title, 2 checkboxes, 4 buttons
     assert len(options_view._components) == 7
 
+    # Find components by their stable 'name' attribute, not their display text/label.
+    # This assumes the Checkbox in OptionsView was given a name like 'sound_enabled'.
     sound_checkbox = next(
         c
         for c in options_view._components
-        if isinstance(c, Checkbox) and c._label == "Sound Enabled"
+        if isinstance(c, Checkbox) and hasattr(c, "name") and c.name == "sound_enabled"
     )
+    # This assumes the Checkbox in OptionsView was given a name like 'tooltips_enabled'.
     tooltips_checkbox = next(
         c
         for c in options_view._components
-        if isinstance(c, Checkbox) and c._label == "Tooltips Enabled"
+        if isinstance(c, Checkbox)
+        and hasattr(c, "name")
+        and c.name == "tooltips_enabled"
     )
 
     assert sound_checkbox.is_checked is True
@@ -77,32 +82,41 @@ def test_options_view_initialization(options_view: OptionsView):
 
 def test_button_callbacks(options_view: OptionsView, mock_callbacks: dict[str, Mock]):
     """Tests that clicking the buttons triggers the correct callbacks."""
-    buttons = {c.text: c for c in options_view._components if isinstance(c, Button)}
+    # Find buttons by their stable 'name' attribute, not their display text.
+    buttons = {
+        c.name: c
+        for c in options_view._components
+        if isinstance(c, Button) and hasattr(c, "name")
+    }
 
-    buttons["Save Game"]._on_click()
+    # Assuming the buttons in OptionsView were given names like 'save_game', etc.
+    buttons["save_game"]._on_click()
     mock_callbacks["on_save"].assert_called_once()
 
-    buttons["Load Game"]._on_click()
+    buttons["load_game"]._on_click()
     mock_callbacks["on_load"].assert_called_once()
 
-    buttons["Quit to Main Menu"]._on_click()
+    buttons["quit_to_main_menu"]._on_click()
     mock_callbacks["on_quit"].assert_called_once()
 
-    buttons["Close"]._on_click()
+    buttons["close"]._on_click()
     mock_callbacks["on_close"].assert_called_once()
 
 
 def test_checkbox_callbacks(options_view: OptionsView, mock_callbacks: dict[str, Mock]):
     """Tests that toggling the checkboxes triggers the correct callbacks."""
+    # Find components by their stable 'name' attribute, not their display text/label.
     sound_checkbox = next(
         c
         for c in options_view._components
-        if isinstance(c, Checkbox) and c._label == "Sound Enabled"
+        if isinstance(c, Checkbox) and hasattr(c, "name") and c.name == "sound_enabled"
     )
     tooltips_checkbox = next(
         c
         for c in options_view._components
-        if isinstance(c, Checkbox) and c._label == "Tooltips Enabled"
+        if isinstance(c, Checkbox)
+        and hasattr(c, "name")
+        and c.name == "tooltips_enabled"
     )
 
     # Toggle sound (was True, becomes False)

@@ -4,7 +4,11 @@ from unittest.mock import ANY, call
 from pytest_mock import MockerFixture
 
 from decker_pygame.domain.character import Character
-from decker_pygame.domain.events import ItemCrafted, PlayerCreated
+from decker_pygame.domain.events import (
+    ItemCrafted,
+    MatrixLogEntryCreated,
+    PlayerCreated,
+)
 from decker_pygame.domain.ids import CharacterId, DeckId, PlayerId
 from decker_pygame.presentation.main import main
 from decker_pygame.settings import PATHS
@@ -34,6 +38,9 @@ def test_main_function(mocker: MockerFixture) -> None:
     )
     mock_ds_file_repo_class = mocker.patch(
         "decker_pygame.presentation.main.JsonFileDSFileRepository"
+    )
+    mock_system_repo_class = mocker.patch(
+        "decker_pygame.presentation.main.InMemorySystemRepository"
     )
     mock_deck_service_class = mocker.patch(
         "decker_pygame.presentation.main.DeckService"
@@ -91,6 +98,8 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_character_create = mocker.patch(
         "decker_pygame.presentation.main.Character.create"
     )
+    mock_system_create = mocker.patch("decker_pygame.presentation.main.System")
+    mocker.patch("decker_pygame.presentation.main.Node")
 
     # Configure the mock service's return values to be predictable
     mock_player_service_instance = mock_player_service_class.return_value
@@ -121,6 +130,7 @@ def test_main_function(mocker: MockerFixture) -> None:
     mock_contract_repo_class.assert_called_once_with(base_path=PATHS.contracts_data)
     mock_deck_repo_class.assert_called_once_with(base_path=PATHS.decks_data)
     mock_ds_file_repo_class.assert_called_once_with(file_path=PATHS.ds_files_data)
+    mock_system_repo_class.assert_called_once_with()
 
     mock_player_service_class.assert_called_once_with(
         player_repo=mock_repo_class.return_value,
@@ -152,7 +162,12 @@ def test_main_function(mocker: MockerFixture) -> None:
         character_repo=mock_char_repo_class.return_value,
         event_dispatcher=mock_dispatcher_class.return_value,
     )
-    mock_matrix_run_service_class.assert_called_once_with()
+    mock_matrix_run_service_class.assert_called_once_with(
+        character_repo=mock_char_repo_class.return_value,
+        deck_repo=mock_deck_repo_class.return_value,
+        player_repo=mock_repo_class.return_value,
+        system_repo=mock_system_repo_class.return_value,
+    )
 
     create_calls = [call(name="Deckard"), call(name="Rynn")]
     mock_player_service_instance.create_new_player.assert_has_calls(
@@ -170,6 +185,9 @@ def test_main_function(mocker: MockerFixture) -> None:
         initial_reputation=0,
     )
     mock_char_repo_class.return_value.save.assert_called_once_with(mock_character)
+    mock_system_repo_class.return_value.save.assert_called_once_with(
+        mock_system_create.return_value
+    )
 
     mock_event_handler_factory.assert_called_once_with(
         mock_logging_service_class.return_value
@@ -181,6 +199,10 @@ def test_main_function(mocker: MockerFixture) -> None:
             PlayerCreated,
             mock_special_log_handler,
             condition=mock_condition,
+        ),
+        call(
+            MatrixLogEntryCreated,
+            mock_matrix_run_service_class.return_value.on_matrix_log_entry,
         ),
         call(ItemCrafted, ANY),
     ]
@@ -206,6 +228,7 @@ def test_main_function(mocker: MockerFixture) -> None:
         project_service=mock_project_service_class.return_value,
         matrix_run_service=mock_matrix_run_service_class.return_value,
         logging_service=mock_logging_service_class.return_value,
+        event_dispatcher=mock_dispatcher_class.return_value,
     )
     mock_game_class.return_value.run.assert_called_once()
     mock_pygame_init.assert_called_once()

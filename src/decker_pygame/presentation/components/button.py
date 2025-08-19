@@ -24,6 +24,8 @@ class Button(Clickable):
         size (tuple[int, int]): The (width, height) of the button.
         text (str): The text to display on the button.
         on_click (Callable[[], None]): The function to call when clicked.
+        name (str | None, optional): A stable identifier for testing. Defaults to the
+            button's text.
         is_transparent (bool): If True, the button will have no visible background
             or border. Defaults to False.
     """
@@ -34,12 +36,15 @@ class Button(Clickable):
         size: tuple[int, int],
         text: str,
         on_click: Callable[[], None],
+        *,
+        name: str | None = None,
         is_transparent: bool = False,
     ):
         super().__init__(on_click)
         self.image = pygame.Surface(size, pygame.SRCALPHA)
         self.rect = self.image.get_rect(topleft=position)
         self.text = text
+        self.name = name if name is not None else text
         self._is_pressed = False
         self._is_enabled = True
         self._font = pygame.font.Font(

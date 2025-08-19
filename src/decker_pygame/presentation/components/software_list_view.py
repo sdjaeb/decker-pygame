@@ -2,13 +2,11 @@
 
 import pygame
 
-from decker_pygame.settings import BLACK
+from decker_pygame.settings import UI_FACE, UI_FONT
 
 
 class SoftwareListView(pygame.sprite.Sprite):
     """A view that displays the list of loaded software.
-
-    This is a placeholder container for now.
 
     Args:
         position (tuple[int, int]): The top-left corner of the view.
@@ -22,9 +20,24 @@ class SoftwareListView(pygame.sprite.Sprite):
     image: pygame.Surface
     rect: pygame.Rect
 
-    def __init__(self, position: tuple[int, int], size: tuple[int, int]):
+    def __init__(self, position: tuple[int, int], size: tuple[int, int]) -> None:
         super().__init__()
-        self.image = pygame.Surface(size)
-        self.image.fill(BLACK)
-        self.image.set_colorkey(BLACK)
+        self.image = pygame.Surface(size, pygame.SRCALPHA)
         self.rect = self.image.get_rect(topleft=position)
+        self._font = pygame.font.Font(
+            UI_FONT.default_font_name, UI_FONT.default_font_size
+        )
+        self._software_list: list[str] = []
+
+    def set_software(self, software: list[str]) -> None:
+        """Sets the list of software to display."""
+        self._software_list = software
+
+    def update(self) -> None:
+        """Redraws the list of software onto the component's surface."""
+        self.image.fill((0, 0, 0, 0))  # Clear with transparent
+        y_offset = 5
+        for item in self._software_list:
+            text_surface = self._font.render(item, True, UI_FACE)
+            self.image.blit(text_surface, (5, y_offset))
+            y_offset += self._font.get_height() + 2

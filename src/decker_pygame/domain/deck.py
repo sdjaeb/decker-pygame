@@ -14,11 +14,13 @@ class Deck(AggregateRoot):
     Args:
         id (DeckId): The unique identifier for the deck.
         programs (list[Program]): The list of programs in the deck.
+        health (int): The current health of the deck.
     """
 
-    def __init__(self, id: DeckId, programs: list[Program]) -> None:
+    def __init__(self, id: DeckId, programs: list[Program], health: int = 100) -> None:
         super().__init__(id=AggregateId(id))
-        self.programs = programs
+        self.programs: list[Program] = programs
+        self.health: int = health
 
     def add_program(self, program: Program) -> None:
         """Adds a program to the deck."""
@@ -72,6 +74,7 @@ class Deck(AggregateRoot):
         return {
             "id": str(self.id),
             "programs": [prog.to_dict() for prog in self.programs],
+            "health": self.health,
         }
 
     @classmethod
@@ -80,4 +83,5 @@ class Deck(AggregateRoot):
         return cls(
             id=DeckId(uuid.UUID(data["id"])),
             programs=[Program.from_dict(p_data) for p_data in data["programs"]],
+            health=data.get("health", 100),
         )

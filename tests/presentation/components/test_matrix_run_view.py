@@ -74,6 +74,10 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         transfer_progress=10.0,
         trace_progress=5.0,
         ice_health=60.0,
+        messages=["Message 1", "Message 2"],
+        software=["TestProgram1", "TestProgram2"],
+        nodes={"a": (1, 1)},
+        connections=[("a", "b")],
     )
 
     # Spy on the child components' update methods
@@ -87,6 +91,9 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         patch.object(view.transfer_progress_bar, "set_percentage") as mock_trans_update,
         patch.object(view.trace_progress_bar, "set_percentage") as mock_trace_update,
         patch.object(view.ice_health_bar, "set_percentage") as mock_ice_update,
+        patch.object(view.software_list_view, "set_software") as mock_software_update,
+        patch.object(view.message_view, "set_text") as mock_message_update,
+        patch.object(view.map_view, "update_map") as mock_map_update,
         patch.object(view.components, "update") as mock_group_update,
         patch.object(view.components, "draw") as mock_draw,
     ):
@@ -102,10 +109,31 @@ def test_matrix_run_view_update(mock_asset_service: Mock):
         mock_trans_update.assert_called_once_with(10.0)
         mock_trace_update.assert_called_once_with(5.0)
         mock_ice_update.assert_called_once_with(60.0)
+        mock_software_update.assert_called_once_with(["TestProgram1", "TestProgram2"])
+        mock_message_update.assert_called_once_with("Message 1\nMessage 2")
+        mock_map_update.assert_called_once_with({"a": (1, 1)}, [("a", "b")])
 
         # Assert that the main sprite group methods were called
         mock_group_update.assert_called_once()
         mock_draw.assert_called_once()
+
+
+def test_matrix_run_view_update_no_messages(mock_asset_service: Mock):
+    """Tests that the message view falls back to the run time if no messages."""
+    view = MatrixRunView(asset_service=mock_asset_service)
+
+    # DTO with no messages
+    test_data = MatrixRunViewDTO(
+        run_time_in_seconds=65,  # 00:01:05
+        messages=[],
+    )
+
+    with patch.object(view.message_view, "set_text") as mock_message_update:
+        view.update(test_data)
+
+        # 65 seconds = 0 hours, 1 minute, 5 seconds
+        expected_time_string = "Run Time: 00:01:05"
+        mock_message_update.assert_called_once_with(expected_time_string)
 
 
 def test_matrix_run_view_raises_error_if_background_missing(mock_asset_service: Mock):

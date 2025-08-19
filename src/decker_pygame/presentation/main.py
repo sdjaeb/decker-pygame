@@ -32,9 +32,17 @@ from decker_pygame.application.settings_service import SettingsService
 from decker_pygame.application.shop_service import ShopService
 from decker_pygame.domain.character import Character
 from decker_pygame.domain.crafting import RequiredResource, Schematic
-from decker_pygame.domain.events import ItemCrafted, PlayerCreated
+from decker_pygame.domain.events import (
+    ItemCrafted,
+    MatrixLogEntryCreated,
+    PlayerCreated,
+)
 from decker_pygame.domain.ids import CharacterId, SchematicId
 from decker_pygame.domain.project import ProjectType
+from decker_pygame.domain.system import Node, System
+from decker_pygame.infrastructure.in_memory_system_repository import (
+    InMemorySystemRepository,
+)
 from decker_pygame.infrastructure.json_character_repository import (
     JsonFileCharacterRepository,
 )
@@ -76,6 +84,7 @@ def main() -> None:
     player_repo = JsonFilePlayerRepository(base_path=PATHS.players_data)
     contract_repo = JsonFileContractRepository(base_path=PATHS.contracts_data)
     deck_repo = JsonFileDeckRepository(base_path=PATHS.decks_data)
+    system_repo = InMemorySystemRepository()
     ds_file_repo = JsonFileDSFileRepository(file_path=PATHS.ds_files_data)
     event_dispatcher = EventDispatcher()
     logging_service = LoggingService(writers=[ConsoleLogWriter()])
@@ -113,7 +122,12 @@ def main() -> None:
         character_repo=character_repo,
         event_dispatcher=event_dispatcher,
     )
-    matrix_run_service = MatrixRunService()
+    matrix_run_service = MatrixRunService(
+        character_repo=character_repo,
+        deck_repo=deck_repo,
+        player_repo=player_repo,
+        system_repo=system_repo,
+    )
 
     # 3. Set up generic event handlers
     event_logger = create_event_logging_handler(logging_service)
@@ -124,12 +138,31 @@ def main() -> None:
         log_special_player_created,
         condition=is_special_player,
     )
+    event_dispatcher.subscribe(
+        MatrixLogEntryCreated, matrix_run_service.on_matrix_log_entry
+    )
 
     # 4. Create game entities for the session (example use case)
     player_id = player_service.create_new_player(name="Deckard")
     print(f"Initialized player {player_id} in {storage_path}")
     # Create a second player that will trigger the conditional handler
     player_service.create_new_player(name="Rynn")
+
+    # Create a dummy system for the matrix run
+    from decker_pygame.domain.ids import NodeId, SystemId
+
+    cpu_id = NodeId(uuid.uuid4())
+    data_store_id = NodeId(uuid.uuid4())
+    dummy_system = System(
+        id=SystemId(uuid.UUID("a5a5a5a5-a5a5-a5a5-a5a5-a5a5a5a5a5a5")),
+        name="Ares Mainframe",
+        nodes=[
+            Node(id=cpu_id, name="CPU", position=(50, 50)),
+            Node(id=data_store_id, name="Data Store 1", position=(100, 100)),
+        ],
+        connections=[(cpu_id, data_store_id)],
+    )
+    system_repo.save(dummy_system)
 
     # Create a character and give them a schematic to test with
     character_id = CharacterId(uuid.uuid4())
@@ -191,6 +224,7 @@ def main() -> None:
         project_service=project_service,
         logging_service=logging_service,
         matrix_run_service=matrix_run_service,
+        event_dispatcher=event_dispatcher,
     )
 
     # 6. Wire up event handlers that depend on the presentation layer

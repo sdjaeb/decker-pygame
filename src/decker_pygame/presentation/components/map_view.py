@@ -36,7 +36,14 @@ class MapView(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)
+        self.update_map(nodes, connections)
 
+    def update_map(
+        self,
+        nodes: dict[str, tuple[int, int]],
+        connections: list[tuple[str, str]],
+    ) -> None:
+        """Redraws the map with new node and connection data."""
         self.image.fill(MAP_VIEW.background_color)
 
         for start_node, end_node in connections:

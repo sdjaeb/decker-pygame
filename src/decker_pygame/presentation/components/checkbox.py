@@ -16,6 +16,8 @@ class Checkbox(Clickable):
         position (tuple[int, int]): The top-left corner of the checkbox.
         label (str): The text label to display next to the checkbox.
         on_toggle (Callable[[bool], None]): Callback when the state changes.
+        name (str | None, optional): A stable identifier for testing. Defaults to the
+            checkbox's label.
         initial_state (bool, optional): The initial checked state. Defaults to False.
         size (int, optional): The size of the checkbox square. Defaults to 16.
     """
@@ -25,6 +27,8 @@ class Checkbox(Clickable):
         position: tuple[int, int],
         label: str,
         on_toggle: Callable[[bool], None],
+        *,
+        name: str | None = None,
         initial_state: bool = False,
         size: int = 16,
     ):
@@ -33,6 +37,7 @@ class Checkbox(Clickable):
         self.is_checked = initial_state
         self.on_toggle = on_toggle
         self._label = label
+        self.name = name if name is not None else self._label
         self._size = size
 
         self._font = pygame.font.Font(None, UI_FONT.default_font_size)

@@ -11,6 +11,7 @@ import pygame
 
 from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.application.dtos import (
+    ContractSummaryDTO,
     EntryViewDTO,
     FileAccessViewDTO,
     IceDataViewDTO,
@@ -19,6 +20,7 @@ from decker_pygame.application.dtos import (
     RestViewDTO,
     ShopItemViewDTO,
 )
+from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import CharacterId, PlayerId
 from decker_pygame.ports.service_interfaces import (
     CharacterServiceInterface,
@@ -95,6 +97,7 @@ class Game:
         settings_service (SettingsServiceInterface): The service for game settings.
         project_service (ProjectServiceInterface): The service for R&D projects.
         matrix_run_service (MatrixRunServiceInterface): Service for matrix run ops.
+        event_dispatcher (EventDispatcher): The dispatcher for domain events.
         character_id (CharacterId): The ID of the current character.
         logging_service (LoggingServiceInterface): Service for logging.
 
@@ -211,6 +214,7 @@ class Game:
         settings_service: SettingsServiceInterface,
         project_service: ProjectServiceInterface,
         matrix_run_service: MatrixRunServiceInterface,
+        event_dispatcher: EventDispatcher,
         character_id: CharacterId,
         logging_service: LoggingServiceInterface,
     ) -> None:
@@ -232,9 +236,10 @@ class Game:
         self.project_service = project_service
         self.matrix_run_service = matrix_run_service
         self.character_id = character_id
+        self.event_dispatcher = event_dispatcher
         self.logging_service = logging_service
         self._modal_stack = []
-        self.debug_actions = DebugActions(self)
+        self.debug_actions = DebugActions(self, self.event_dispatcher)
         self.input_handler = PygameInputHandler(
             self, logging_service, self.debug_actions
         )
@@ -669,8 +674,19 @@ class Game:
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
 
-        def factory() -> ContractListView:
-            return ContractListView(position=(200, 150), size=(400, 300))
+        def factory() -> Optional[ContractListView]:
+            contracts = self.contract_service.get_available_contracts()
+            if not contracts:
+                self.show_message("No contracts available.")
+                return None
+
+            view = ContractListView(
+                position=(200, 150),
+                size=(450, 300),
+                on_contract_selected=self._on_contract_selected,
+            )
+            view.set_contracts(contracts)
+            return view
 
         self._toggle_view("contract_list_view", factory)
 
@@ -681,6 +697,22 @@ class Game:
             return ContractDataView(
                 position=(200, 150), size=(400, 300), contract_name="Placeholder"
             )
+
+        self._toggle_view("contract_data_view", factory)
+
+    def _on_contract_selected(self, contract_dto: Optional[ContractSummaryDTO]) -> None:
+        """Callback for when a contract is selected in the list."""
+
+        def factory() -> Optional[ContractDataView]:
+            # If a contract is selected, pass its details to the ContractDataView
+            if contract_dto:
+                return ContractDataView(
+                    position=(200, 150),
+                    size=(400, 300),
+                    contract_name=contract_dto.title,
+                )
+            # Otherwise, return None to close the view if it's open
+            return None  # This is intentional for closing the view
 
         self._toggle_view("contract_data_view", factory)
 
@@ -872,7 +904,7 @@ class Game:
             if isinstance(top_view, pygame.sprite.Sprite):
                 if isinstance(top_view, MatrixRunView):
                     data = self.matrix_run_service.get_matrix_run_view_data(
-                        self.character_id
+                        self.character_id, self.player_id
                     )
                     data.run_time_in_seconds = total_seconds
                     top_view.update(data)
@@ -883,7 +915,7 @@ class Game:
             for sprite in self.all_sprites:
                 if isinstance(sprite, MatrixRunView):
                     data = self.matrix_run_service.get_matrix_run_view_data(
-                        self.character_id
+                        self.character_id, self.player_id
                     )
                     data.run_time_in_seconds = total_seconds
                     sprite.update(data)

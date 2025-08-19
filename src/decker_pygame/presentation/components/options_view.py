@@ -103,6 +103,7 @@ class OptionsView(pygame.sprite.Sprite):
             (PADDING, y_offset),
             "Sound Enabled",
             on_toggle_sound,
+            name="sound_enabled",
             initial_state=data.sound_enabled,
         )
         self._components.add(sound_checkbox)
@@ -112,6 +113,7 @@ class OptionsView(pygame.sprite.Sprite):
             (PADDING, y_offset),
             "Tooltips Enabled",
             on_toggle_tooltips,
+            name="tooltips_enabled",
             initial_state=data.tooltips_enabled,
         )
         self._components.add(tooltips_checkbox)
@@ -122,16 +124,24 @@ class OptionsView(pygame.sprite.Sprite):
         button_y = y_offset
         button_size = (BUTTON_WIDTH, BUTTON_HEIGHT)
 
-        save_button = Button((button_x, button_y), button_size, "Save Game", on_save)
+        save_button = Button(
+            (button_x, button_y), button_size, "Save Game", on_save, name="save_game"
+        )
         self._components.add(save_button)
         button_y += BUTTON_HEIGHT + PADDING
 
-        load_button = Button((button_x, button_y), button_size, "Load Game", on_load)
+        load_button = Button(
+            (button_x, button_y), button_size, "Load Game", on_load, name="load_game"
+        )
         self._components.add(load_button)
         button_y += BUTTON_HEIGHT + PADDING
 
         quit_button = Button(
-            (button_x, button_y), button_size, "Quit to Main Menu", on_quit
+            (button_x, button_y),
+            button_size,
+            "Quit to Main Menu",
+            on_quit,
+            name="quit_to_main_menu",
         )
         self._components.add(quit_button)
 
@@ -144,6 +154,7 @@ class OptionsView(pygame.sprite.Sprite):
             button_size,
             "Close",
             on_close,
+            name="close",
         )
         self._components.add(close_button)
 
