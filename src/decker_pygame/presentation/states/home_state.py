@@ -27,11 +27,11 @@ class HomeState(BaseState):
         self.deck_view: View = None
         self.order_view: View = None
         self.ice_data_view: View = None
-        self.contract_list_view: "View" = None
-        self.contract_data_view: "View" = None
-        self.build_view: "View" = None
-        self.transfer_view: "View" = None
-        self.project_data_view: "View" = None
+        self.contract_list_view: View = None
+        self.contract_data_view: View = None
+        self.build_view: View = None
+        self.transfer_view: View = None
+        self.project_data_view: View = None
 
     def _on_shop(self) -> None:
         """Callback to transition to the shop state."""
@@ -191,7 +191,9 @@ class HomeState(BaseState):
             )
             if build_data:
                 return BuildView(
-                    data=build_data, on_close=self._on_build, on_build=self._on_build_program
+                    data=build_data,
+                    on_close=self._on_build,
+                    on_build=self._on_build_program,
                 )
             return None
 

@@ -5,21 +5,20 @@ from unittest.mock import Mock, patch
 import pygame
 import pytest
 
-from decker_pygame.domain.ids import ContractId
-from decker_pygame.domain.project import Schematic, WorkUnit
 from decker_pygame.application.dtos import (
+    BuildViewDTO,
     CharDataViewDTO,
     ContractDataViewDTO,
     ContractListViewDTO,
-    BuildViewDTO,
     DeckViewDTO,
     IceDataViewDTO,
+    OrderViewDTO,
     ProjectDataViewDTO,
     TransferViewDTO,
-    OrderViewDTO,
 )
+from decker_pygame.domain.ids import ContractId
+from decker_pygame.domain.project import Schematic, WorkUnit
 from decker_pygame.presentation.game import Game
-from decker_pygame.presentation.states.shop_state import ShopState
 from decker_pygame.presentation.states.home_state import HomeState
 
 
@@ -83,21 +82,15 @@ def test_exit_closes_views(home_state: HomeState, mock_game: Mock):
     )
     mock_game.view_manager.toggle_view.assert_any_call("deck_view", None, mock_game)
     mock_game.view_manager.toggle_view.assert_any_call("order_view", None, mock_game)
-    mock_game.view_manager.toggle_view.assert_any_call(
-        "ice_data_view", None, mock_game
-    )
+    mock_game.view_manager.toggle_view.assert_any_call("ice_data_view", None, mock_game)
     mock_game.view_manager.toggle_view.assert_any_call(
         "contract_list_view", None, mock_game
     )
     mock_game.view_manager.toggle_view.assert_any_call(
         "contract_data_view", None, mock_game
     )
-    mock_game.view_manager.toggle_view.assert_any_call(
-        "build_view", None, mock_game
-    )
-    mock_game.view_manager.toggle_view.assert_any_call(
-        "transfer_view", None, mock_game
-    )
+    mock_game.view_manager.toggle_view.assert_any_call("build_view", None, mock_game)
+    mock_game.view_manager.toggle_view.assert_any_call("transfer_view", None, mock_game)
     mock_game.view_manager.toggle_view.assert_any_call(
         "project_data_view", None, mock_game
     )
@@ -214,9 +207,10 @@ def test_toggle_order_view_toggles_view(home_state: HomeState, mock_game: Mock):
 def test_on_order_deck_saves_and_refreshes(home_state: HomeState, mock_game: Mock):
     """Tests that _on_order_deck saves the new order and refreshes views."""
     new_order = ["prog1", "prog2"]
-    with patch.object(home_state, "_toggle_order_view") as mock_toggle_order, patch.object(
-        home_state, "_on_deck"
-    ) as mock_on_deck:
+    with (
+        patch.object(home_state, "_toggle_order_view") as mock_toggle_order,
+        patch.object(home_state, "_on_deck") as mock_on_deck,
+    ):
         home_state._on_order_deck(new_order)
 
         mock_game.deck_service.reorder_deck.assert_called_once_with(
@@ -231,9 +225,7 @@ def test_on_program_click_toggles_ice_data_view(home_state: HomeState, mock_game
     mock_ice_data = Mock(spec=IceDataViewDTO)
     mock_game.deck_service.get_ice_data_view_data.return_value = mock_ice_data
 
-    with patch.object(
-        home_state, "_toggle_ice_data_view"
-    ) as mock_toggle_ice_data_view:
+    with patch.object(home_state, "_toggle_ice_data_view") as mock_toggle_ice_data_view:
         home_state._on_program_click("TestProgram")
 
         mock_game.deck_service.get_ice_data_view_data.assert_called_once_with(
@@ -248,12 +240,12 @@ def test_on_program_click_handles_no_data(home_state: HomeState, mock_game: Mock
 
     home_state._on_program_click("TestProgram")
 
-    mock_game.show_message.assert_called_once_with(
-        "Could not get data for TestProgram"
-    )
+    mock_game.show_message.assert_called_once_with("Could not get data for TestProgram")
 
 
-def test_on_contracts_toggles_contract_list_view(home_state: HomeState, mock_game: Mock):
+def test_on_contracts_toggles_contract_list_view(
+    home_state: HomeState, mock_game: Mock
+):
     """Tests that _on_contracts toggles the ContractListView when data is available."""
     mock_contract_list_data = Mock(spec=ContractListViewDTO)
     mock_game.contract_service.get_contract_list_view_data.return_value = (
@@ -308,9 +300,7 @@ def test_on_view_contract_toggles_contract_data_view(
         mock_contract_data
     )
 
-    with patch.object(
-        home_state, "_toggle_contract_data_view"
-    ) as mock_toggle_view:
+    with patch.object(home_state, "_toggle_contract_data_view") as mock_toggle_view:
         home_state._on_view_contract(contract_id)
 
         mock_game.contract_service.get_contract_data_view_data.assert_called_once_with(
@@ -394,17 +384,13 @@ def test_on_build_program_handles_error(home_state: HomeState, mock_game: Mock):
 
     home_state._on_build_program(schematic)
 
-    mock_game.show_message.assert_called_once_with(
-        f"Error building program: {error}"
-    )
+    mock_game.show_message.assert_called_once_with(f"Error building program: {error}")
 
 
 def test_on_transfer_toggles_transfer_view(home_state: HomeState, mock_game: Mock):
     """Tests that _on_transfer toggles the TransferView when data is available."""
     mock_transfer_data = Mock(spec=TransferViewDTO)
-    mock_game.character_service.get_transfer_view_data.return_value = (
-        mock_transfer_data
-    )
+    mock_game.character_service.get_transfer_view_data.return_value = mock_transfer_data
 
     with patch(
         "decker_pygame.presentation.states.home_state.TransferView"
@@ -451,9 +437,7 @@ def test_on_transfer_funds_handles_error(home_state: HomeState, mock_game: Mock)
 
     home_state._on_transfer_funds("recipient", 100)
 
-    mock_game.show_message.assert_called_once_with(
-        f"Error transferring funds: {error}"
-    )
+    mock_game.show_message.assert_called_once_with(f"Error transferring funds: {error}")
 
 
 def test_on_projects_toggles_project_data_view(home_state: HomeState, mock_game: Mock):
@@ -518,7 +502,9 @@ def test_on_build_from_schematic_builds_and_refreshes(
 
 def test_on_shop_transitions_to_shop_state(home_state: HomeState, mock_game: Mock):
     """Tests that the _on_shop callback transitions to the ShopState."""
-    with patch("decker_pygame.presentation.states.home_state.ShopState") as MockShopState:
+    with patch(
+        "decker_pygame.presentation.states.home_state.ShopState"
+    ) as MockShopState:
         # Call the method under test
         home_state._on_shop()
 
