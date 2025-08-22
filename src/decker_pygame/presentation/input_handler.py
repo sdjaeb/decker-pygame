@@ -57,6 +57,5 @@ class PygameInputHandler:
 
             # If a modal view is open, it gets exclusive event handling.
             # This prevents underlying views from receiving events.
-            if self._game._modal_stack:
-                # Send event to the top-most modal view
-                self._game._modal_stack[-1].handle_event(event)
+            if top_view := self._game.view_manager.top_modal_view:
+                top_view.handle_event(event)
