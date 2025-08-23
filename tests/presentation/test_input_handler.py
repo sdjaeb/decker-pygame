@@ -13,8 +13,9 @@ from decker_pygame.presentation.input_handler import PygameInputHandler
 def mock_game() -> Mock:
     """Provides a mock Game object with mock views."""
     game = Mock(spec=Game)
-    # The input handler now depends on the _modal_stack attribute.
-    game._modal_stack = []
+    # The input handler now depends on the view_manager.modal_stack attribute.
+    game.view_manager = Mock()
+    game.view_manager.modal_stack = []
     return game
 
 
@@ -103,7 +104,7 @@ def test_handle_events_delegates_to_top_modal_view(
     # Create mock views that conform to the Eventful protocol
     view1 = Mock(spec=["handle_event"])
     view2 = Mock(spec=["handle_event"])
-    mock_game._modal_stack = [view1, view2]
+    mock_game.view_manager.modal_stack = [view1, view2]
 
     with patch("pygame.event.get", return_value=[mouse_event]):
         handler.handle_events()

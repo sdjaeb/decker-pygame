@@ -212,7 +212,7 @@ This group focuses on improving the core architecture of the presentation layer 
 -   **Task H.2.5** remove _update  (Status: Complete)
 -   **Task H.2.6** Relocate `toggle_*` functions to appropriate states or a dedicated view manager. (Status: To Do)
     -   **Task H.2.6.A:** Create a `ViewManager` class to encapsulate the `_toggle_view` logic and the `_modal_stack`. (Status: To Do)
-    -   **Task H.2.6.B:** Refactor `Game` to use the `ViewManager` for all view toggling. (Status: To Do)
+    -   **Task H.2.6.B:** Refactor `Game` to use the `ViewManager` for all view toggling. (Status: Complete)
     -   **Task H.2.6.C:** Migrate `toggle_intro_view` logic from `Game` to `IntroState`. (Status: To Do)
     -   **Task H.2.6.D:** Migrate `toggle_new_char_view` logic from `Game` to `NewCharState`. (Status: To Do)
 -   **Task H.2.6.E:** Migrate `toggle_home_view` logic from `Game` to `HomeState`. (Status: To Do)

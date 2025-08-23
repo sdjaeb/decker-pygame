@@ -5,7 +5,7 @@ It handles the main game loop, event processing, and the display of all UI compo
 
 from collections.abc import Callable
 from functools import partial
-from typing import Optional, TypeVar, cast
+from typing import Optional, TypeVar
 
 import pygame
 
@@ -70,7 +70,6 @@ from decker_pygame.presentation.components.sound_edit_view import (
 from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.input_handler import PygameInputHandler
-from decker_pygame.presentation.protocols import Eventful
 from decker_pygame.presentation.states.game_states import BaseState, GameState
 from decker_pygame.presentation.states.states import (
     HomeState,
@@ -78,6 +77,7 @@ from decker_pygame.presentation.states.states import (
     MatrixRunState,
     NewCharState,
 )
+from decker_pygame.presentation.view_manager import ViewManager
 from decker_pygame.settings import BLACK, FPS, UI_FACE
 
 V = TypeVar("V", bound=pygame.sprite.Sprite)
@@ -133,6 +133,7 @@ class Game:
         logging_service (LoggingServiceInterface): Service for logging.
         message_view (MessageView): The UI component for displaying messages.
         input_handler (PygameInputHandler): The handler for user input.
+        view_manager (ViewManager): The manager for UI views.
         debug_actions (DebugActions): A container for debugging actions.
         intro_view (Optional[IntroView]): The introduction view, if open.
         new_char_view (Optional[NewCharView]): The new character view, if open.
@@ -162,7 +163,6 @@ class Game:
             if open.
     """
 
-    _modal_stack: list[Eventful]
     screen: pygame.Surface
     clock: pygame.time.Clock
     is_running: bool
@@ -186,6 +186,7 @@ class Game:
     logging_service: LoggingServiceInterface
     message_view: MessageView
     input_handler: PygameInputHandler
+    view_manager: ViewManager
     debug_actions: DebugActions
     intro_view: Optional[IntroView] = None
     new_char_view: Optional[NewCharView] = None
@@ -257,7 +258,7 @@ class Game:
             GameState.MATRIX_RUN: MatrixRunState,
         }
         self.current_state = None
-        self._modal_stack = []
+        self.view_manager = ViewManager(self)
         self.debug_actions = DebugActions(self, self.event_dispatcher)
         self.input_handler = PygameInputHandler(
             self, logging_service, self.debug_actions
@@ -267,37 +268,6 @@ class Game:
         )
         self.all_sprites.add(self.message_view)
         self.set_state(GameState.INTRO)
-
-    def _toggle_view(
-        self,
-        view_attr: str,
-        view_factory: Callable[[], Optional[V]],
-    ) -> None:
-        """Generic method to open or close a view.
-
-        Args:
-            view_attr (str): The name of the attribute on `self` that holds the
-                view instance.
-            view_factory (Callable[[], Optional[V]]): A function that creates and
-                returns a view instance, or None on failure.
-        """
-        current_view = getattr(self, view_attr)
-        if current_view:
-            self.all_sprites.remove(current_view)
-            setattr(self, view_attr, None)
-            if hasattr(current_view, "handle_event"):
-                eventful_view = cast(Eventful, current_view)
-                if eventful_view in self._modal_stack:
-                    self._modal_stack.remove(eventful_view)
-
-        else:
-            new_view = view_factory()
-            if new_view:
-                setattr(self, view_attr, new_view)
-                self.all_sprites.add(new_view)
-
-                if hasattr(new_view, "handle_event"):
-                    self._modal_stack.append(cast(Eventful, new_view))
 
     def quit(self) -> None:
         """Signals the game to exit the main loop."""
@@ -340,8 +310,8 @@ class Game:
         dt_ms = int(dt * 1000)
 
         # Update the top-most modal view, or all sprites if no modal is active.
-        if self._modal_stack:
-            top_view = self._modal_stack[-1]
+        if self.view_manager.modal_stack:
+            top_view = self.view_manager.modal_stack[-1]
             if isinstance(top_view, pygame.sprite.Sprite):
                 # The modal stack can contain non-sprite objects that are eventful.
                 # We only care about updating sprites.
@@ -387,7 +357,7 @@ class Game:
         def factory() -> NewCharView:
             return NewCharView(on_create=self._handle_character_creation)
 
-        self._toggle_view("new_char_view", factory)
+        self.view_manager.toggle_view("new_char_view", factory)
 
     def toggle_intro_view(self) -> None:
         """Opens or closes the intro view."""
@@ -395,7 +365,7 @@ class Game:
         def factory() -> IntroView:
             return IntroView(on_continue=self._continue_from_intro)
 
-        self._toggle_view("intro_view", factory)
+        self.view_manager.toggle_view("intro_view", factory)
 
     def toggle_home_view(self) -> None:
         """Opens or closes the home view."""
@@ -411,7 +381,7 @@ class Game:
                 on_projects=self.toggle_project_data_view,
             )
 
-        self._toggle_view("home_view", factory)
+        self.view_manager.toggle_view("home_view", factory)
 
     def toggle_matrix_run_view(self) -> None:
         """Opens or closes the main matrix run view."""
@@ -419,7 +389,7 @@ class Game:
         def factory() -> MatrixRunView:
             return MatrixRunView(asset_service=self.asset_service)
 
-        self._toggle_view("matrix_run_view", factory)
+        self.view_manager.toggle_view("matrix_run_view", factory)
 
     def _on_purchase(self, item_name: str) -> None:
         """Callback to handle purchasing an item from the shop."""
@@ -446,7 +416,7 @@ class Game:
                 on_view_details=self._on_show_item_details,
             )
 
-        self._toggle_view("shop_view", factory)
+        self.view_manager.toggle_view("shop_view", factory)
 
     def toggle_shop_item_view(self, data: Optional["ShopItemViewDTO"] = None) -> None:
         """Opens or closes the Shop Item details view."""
@@ -459,7 +429,7 @@ class Game:
                 )
             return None
 
-        self._toggle_view("shop_item_view", factory)
+        self.view_manager.toggle_view("shop_item_view", factory)
 
     def _on_new_project(self) -> None:
         """Closes the project data view and opens the new project view."""
@@ -530,7 +500,7 @@ class Game:
                 on_trash=self._on_trash_schematic,
             )
 
-        self._toggle_view("project_data_view", factory)
+        self.view_manager.toggle_view("project_data_view", factory)
 
     def _on_rest(self) -> None:
         """Callback for when the player chooses to rest."""
@@ -553,7 +523,7 @@ class Game:
                 )
             return None
 
-        self._toggle_view("rest_view", factory)
+        self.view_manager.toggle_view("rest_view", factory)
 
     def toggle_mission_results_view(
         self, data: Optional[MissionResultsDTO] = None
@@ -568,7 +538,7 @@ class Game:
             # This view should not be opened without data.
             return None
 
-        self._toggle_view("mission_results_view", factory)
+        self.view_manager.toggle_view("mission_results_view", factory)
 
     def toggle_build_view(self) -> None:
         """Opens or closes the build view."""
@@ -587,7 +557,7 @@ class Game:
                 on_build_click=self._handle_build_click,
             )
 
-        self._toggle_view("build_view", factory)
+        self.view_manager.toggle_view("build_view", factory)
 
     def _handle_build_click(self, schematic_name: str) -> None:
         """Callback for when a build button is clicked in the BuildView."""
@@ -643,7 +613,7 @@ class Game:
                 on_decrease_skill=self._on_decrease_skill,
             )
 
-        self._toggle_view("char_data_view", factory)
+        self.view_manager.toggle_view("char_data_view", factory)
 
     def toggle_deck_view(self) -> None:
         """Opens or closes the deck view."""
@@ -668,7 +638,7 @@ class Game:
                 on_program_click=self._on_program_click,
             )
 
-        self._toggle_view("deck_view", factory)
+        self.view_manager.toggle_view("deck_view", factory)
 
     def _move_program_and_refresh(self, move_action: Callable[..., None]) -> None:
         """Generic helper to move a program and refresh the order view."""
@@ -733,7 +703,7 @@ class Game:
                 on_move_to_storage=self._on_move_program_to_storage,
             )
 
-        self._toggle_view("transfer_view", factory)
+        self.view_manager.toggle_view("transfer_view", factory)
 
     def _on_program_click(self, program_name: str) -> None:
         """Callback for when a program is clicked, to show its details."""
@@ -751,7 +721,7 @@ class Game:
                 return IceDataView(data=data, on_close=self.toggle_ice_data_view)
             return None
 
-        self._toggle_view("ice_data_view", factory)
+        self.view_manager.toggle_view("ice_data_view", factory)
 
     def toggle_contract_list_view(self) -> None:
         """Opens or closes the contract list view."""
@@ -770,7 +740,7 @@ class Game:
             view.set_contracts(contracts)
             return view
 
-        self._toggle_view("contract_list_view", factory)
+        self.view_manager.toggle_view("contract_list_view", factory)
 
     def toggle_contract_data_view(self) -> None:
         """Opens or closes the contract data view."""
@@ -780,7 +750,7 @@ class Game:
                 position=(200, 150), size=(400, 300), contract_name="Placeholder"
             )
 
-        self._toggle_view("contract_data_view", factory)
+        self.view_manager.toggle_view("contract_data_view", factory)
 
     def _on_contract_selected(self, contract_dto: Optional[ContractSummaryDTO]) -> None:
         """Callback for when a contract is selected in the list."""
@@ -796,7 +766,7 @@ class Game:
             # Otherwise, return None to close the view if it's open
             return None  # This is intentional for closing the view
 
-        self._toggle_view("contract_data_view", factory)
+        self.view_manager.toggle_view("contract_data_view", factory)
 
     def _on_download_file(self, file_name: str) -> None:
         """Callback to handle downloading a file."""
@@ -821,7 +791,7 @@ class Game:
                 )
             return None
 
-        self._toggle_view("file_access_view", factory)
+        self.view_manager.toggle_view("file_access_view", factory)
 
     def show_file_access_view(self, node_id: str) -> None:
         """Fetches node data and shows the file access view."""
@@ -875,7 +845,7 @@ class Game:
                 on_toggle_tooltips=self._on_toggle_tooltips,
             )
 
-        self._toggle_view("options_view", factory)
+        self.view_manager.toggle_view("options_view", factory)
 
     def _on_master_volume_change(self, volume: float) -> None:
         """Callback for master volume slider."""
@@ -902,7 +872,7 @@ class Game:
                 on_sfx_volume_change=self._on_sfx_volume_change,
             )
 
-        self._toggle_view("sound_edit_view", factory)
+        self.view_manager.toggle_view("sound_edit_view", factory)
 
     def _on_start_project(self, item_type: str, item_class: str, rating: int) -> None:
         """Callback to handle starting a new research project."""
@@ -925,7 +895,7 @@ class Game:
                 return None
             return self._create_new_project_view(data)
 
-        self._toggle_view("new_project_view", factory)
+        self.view_manager.toggle_view("new_project_view", factory)
 
     def _create_new_project_view(
         self, data: NewProjectViewDTO
@@ -964,7 +934,7 @@ class Game:
                 )
             return None
 
-        self._toggle_view("entry_view", factory)
+        self.view_manager.toggle_view("entry_view", factory)
 
     def show_message(self, text: str) -> None:
         """Displays a message in the message view."""

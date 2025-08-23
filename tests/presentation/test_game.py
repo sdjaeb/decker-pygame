@@ -73,6 +73,7 @@ from decker_pygame.presentation.states.game_states import BaseState, GameState
 from decker_pygame.presentation.states.states import (
     IntroState,
 )
+from decker_pygame.presentation.view_manager import ViewManager
 from decker_pygame.settings import FPS
 
 
@@ -187,6 +188,7 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.project_service is mocks.project_service
     assert game.logging_service is mocks.logging_service
     assert game.event_dispatcher is mocks.event_dispatcher
+    assert isinstance(game.view_manager, ViewManager)
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.debug_actions, DebugActions)
     assert isinstance(game.character_id, uuid.UUID)
@@ -298,7 +300,7 @@ def test_game_update_sprites_no_modal(game_with_mocks: Mocks):
     """Tests that update_sprites calls update on all sprites when no modal is active."""
     mocks = game_with_mocks
     game = mocks.game
-    game._modal_stack = []  # Ensure no modal is active
+    game.view_manager.modal_stack.clear()
 
     # Create some mock sprites to iterate over
     mock_sprite1 = Mock(spec=pygame.sprite.Sprite)
@@ -335,7 +337,7 @@ def test_game_update_sprites_with_modal(game_with_mocks: Mocks):
     # Create mock views for the modal stack
     modal_view1 = Mock(spec=pygame.sprite.Sprite)
     modal_view2 = Mock(spec=MatrixRunView)
-    game._modal_stack = [modal_view1, modal_view2]
+    game.view_manager.modal_stack.extend([modal_view1, modal_view2])
 
     # Configure the mock service and time to return mock data
     mock_dto = Mock()
@@ -363,7 +365,7 @@ def test_game_update_sprites_with_non_matrix_modal(game_with_mocks: Mocks):
 
     modal_view1 = Mock(spec=pygame.sprite.Sprite)
     modal_view2 = Mock(spec=pygame.sprite.Sprite)  # Not a MatrixRunView
-    game._modal_stack = [modal_view1, modal_view2]
+    game.view_manager.modal_stack.extend([modal_view1, modal_view2])
 
     game.update_sprites(dt=0.016)
 
@@ -378,7 +380,7 @@ def test_game_update_sprites_with_modal_without_update_method(game_with_mocks: M
     # Create a mock view that does NOT have an update method
     # by using a spec of an object without one.
     modal_view = Mock(spec=object())
-    game._modal_stack = [modal_view]
+    game.view_manager.modal_stack.append(modal_view)
 
     # This should execute without raising an AttributeError
     try:
@@ -396,25 +398,29 @@ def test_toggle_view_manages_modal_stack(game_with_mocks: Mocks):
     mocks = game_with_mocks
     game = mocks.game
 
-    # Clear the stack from the default IntroView added in Game.__init__
-    game._modal_stack.clear()
-
     # Mock the DTO from the service
     shop_data = ShopViewDTO(shop_name="Test Shop", items=[])
     mocks.shop_service.get_shop_view_data.return_value = shop_data
 
-    assert not game._modal_stack, "Modal stack should be empty initially"
+    # The stack starts with the IntroView.
+    assert len(game.view_manager.modal_stack) == 1
 
     # --- Test Opening ---
     game.toggle_shop_view()
     assert game.shop_view is not None, "Shop view should be open"
-    assert len(game._modal_stack) == 1, "View should be added to modal stack"
-    assert game._modal_stack[0] is game.shop_view, "Correct view should be on stack"
+    assert len(game.view_manager.modal_stack) == 2, (
+        "ShopView should be added to modal stack"
+    )
+    assert isinstance(game.view_manager.modal_stack[1], ShopView), (
+        "ShopView should be on top of the stack"
+    )
 
     # --- Test Closing ---
     game.toggle_shop_view()
     assert game.shop_view is None, "Shop view should be closed"
-    assert not game._modal_stack, "View should be removed from modal stack"
+    assert len(game.view_manager.modal_stack) == 1, (
+        "ShopView should be removed from modal stack"
+    )
 
 
 def test_game_show_message(game_with_mocks: Mocks):
@@ -1068,7 +1074,7 @@ def test_on_contract_selected_opens_data_view(game_with_mocks: Mocks):
         reward=1000,
     )
 
-    with patch.object(game, "_toggle_view") as mock_toggle:
+    with patch.object(game.view_manager, "toggle_view") as mock_toggle:
         game._on_contract_selected(contract_dto)
 
         mock_toggle.assert_called_once()
@@ -1087,7 +1093,7 @@ def test_on_contract_selected_with_none_closes_data_view(game_with_mocks: Mocks)
     """Tests that selecting None closes the contract data view."""
     game = game_with_mocks.game
 
-    with patch.object(game, "_toggle_view") as mock_toggle:
+    with patch.object(game.view_manager, "toggle_view") as mock_toggle:
         game._on_contract_selected(None)
 
         mock_toggle.assert_called_once()
@@ -1369,9 +1375,6 @@ def test_game_toggles_shop_view(game_with_mocks: Mocks):
     """Tests that the toggle_shop_view method opens and closes the view."""
     mocks = game_with_mocks
     game = mocks.game
-
-    # Clear the stack from the default IntroView added in Game.__init__
-    game._modal_stack.clear()
 
     # Mock the DTO from the service
     shop_data = ShopViewDTO(shop_name="Test Shop", items=[])
