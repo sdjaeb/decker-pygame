@@ -95,6 +95,14 @@ def test_concrete_states(
     mock_toggle_method.assert_not_called()
 
     # --- Test empty methods for coverage ---
+    # handle_event is still empty
     state.handle_event(pygame.event.Event(pygame.USEREVENT))
-    state.update(0.16)
-    state.draw(Mock(spec=pygame.Surface))
+
+    # Test update delegation
+    state.update(0.016)
+    mock_game.update_sprites.assert_called_once_with(0.016)
+
+    # Test draw delegation
+    mock_screen = Mock(spec=pygame.Surface)
+    state.draw(mock_screen)
+    mock_game.all_sprites.draw.assert_called_once_with(mock_screen)

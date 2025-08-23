@@ -265,6 +265,7 @@ class Game:
         self.message_view = MessageView(
             position=(10, 600), size=(400, 150), background_color=UI_FACE
         )
+        self.all_sprites.add(self.message_view)
         self.set_state(GameState.INTRO)
 
     def _toggle_view(
@@ -324,6 +325,46 @@ class Game:
                 {"message": f"State {new_state_enum} not found."},
             )
             self.quit()
+
+    def update_sprites(self, dt: float) -> None:
+        """Update sprites based on modal focus.
+
+        This method contains the core sprite update logic, which is called by the
+        currently active game state. It updates only the top-most modal view if
+        one is active, otherwise it updates all sprites.
+
+        Args:
+            dt (float): Time since last frame in seconds.
+        """
+        total_seconds = pygame.time.get_ticks() // 1000
+        dt_ms = int(dt * 1000)
+
+        # Update the top-most modal view, or all sprites if no modal is active.
+        if self._modal_stack:
+            top_view = self._modal_stack[-1]
+            if isinstance(top_view, pygame.sprite.Sprite):
+                # The modal stack can contain non-sprite objects that are eventful.
+                # We only care about updating sprites.
+                if isinstance(top_view, MatrixRunView):
+                    data = self.matrix_run_service.get_matrix_run_view_data(
+                        self.character_id, self.player_id
+                    )
+                    data.run_time_in_seconds = total_seconds
+                    top_view.update(data)
+                else:
+                    # Other views might still need dt in milliseconds
+                    top_view.update(dt_ms)
+        else:
+            # Update all sprites, but only pass dt if they don't need total_seconds
+            for sprite in self.all_sprites:
+                if isinstance(sprite, MatrixRunView):
+                    data = self.matrix_run_service.get_matrix_run_view_data(
+                        self.character_id, self.player_id
+                    )
+                    data.run_time_in_seconds = total_seconds
+                    sprite.update(data)
+                else:
+                    sprite.update(dt_ms)
 
     def _continue_from_intro(self) -> None:
         """Closes the intro view and opens the new character view."""
@@ -929,55 +970,21 @@ class Game:
         """Displays a message in the message view."""
         self.message_view.set_text(text)
 
-    def _update(self, dt: int, total_seconds: int) -> None:
-        """Update game state.
-
-        Args:
-            dt (int): Time since last frame in milliseconds.
-            total_seconds (int): Total seconds elapsed since game start.
-
-        Returns:
-            None:
-        """
-        # Update the top-most modal view, or all sprites if no modal is active.
-        if self._modal_stack:
-            top_view = self._modal_stack[-1]
-            if isinstance(top_view, pygame.sprite.Sprite):
-                if isinstance(top_view, MatrixRunView):
-                    data = self.matrix_run_service.get_matrix_run_view_data(
-                        self.character_id, self.player_id
-                    )
-                    data.run_time_in_seconds = total_seconds
-                    top_view.update(data)
-                else:
-                    top_view.update(dt)  # Other views might still need dt
-        else:
-            # Update all sprites, but only pass dt if they don't need total_seconds
-            for sprite in self.all_sprites:
-                if isinstance(sprite, MatrixRunView):
-                    data = self.matrix_run_service.get_matrix_run_view_data(
-                        self.character_id, self.player_id
-                    )
-                    data.run_time_in_seconds = total_seconds
-                    sprite.update(data)
-                else:
-                    sprite.update(dt)
-
     def run(self) -> None:
-        """Run the main game loop.
-
-        Returns:
-            None:
-        """
+        """Run the main game loop."""
         while self.is_running:
-            dt = self.clock.tick(FPS)  # dt in milliseconds
-            total_seconds = pygame.time.get_ticks() // 1000
+            dt_ms = self.clock.tick(FPS)
+            dt_s = dt_ms / 1000.0
 
             self.input_handler.handle_events()
-            self._update(dt, total_seconds)
+
+            if self.current_state:
+                self.current_state.update(dt_s)
 
             self.screen.fill(BLACK)
-            self.all_sprites.draw(self.screen)
+
+            if self.current_state:
+                self.current_state.draw(self.screen)
 
             pygame.display.flip()
 

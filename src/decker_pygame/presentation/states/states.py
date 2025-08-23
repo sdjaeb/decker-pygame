@@ -26,13 +26,15 @@ class IntroState(BaseState):
             self.game.toggle_intro_view()
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """Events are handled by the modal view."""
+        """Events are handled by the global input handler."""
 
     def update(self, dt: float) -> None:
-        """State logic is handled by the modal view."""
+        """Update game logic by delegating to the main game object."""
+        self.game.update_sprites(dt)
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Drawing is handled by the main game loop's sprite group."""
+        """Draw the current state by delegating to the main game object."""
+        self.game.all_sprites.draw(screen)
 
 
 class NewCharState(BaseState):
@@ -51,13 +53,15 @@ class NewCharState(BaseState):
             self.game.toggle_new_char_view()
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """Events are handled by the modal view."""
+        """Events are handled by the global input handler."""
 
     def update(self, dt: float) -> None:
-        """State logic is handled by the modal view."""
+        """Update game logic by delegating to the main game object."""
+        self.game.update_sprites(dt)
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Drawing is handled by the main game loop's sprite group."""
+        """Draw the current state by delegating to the main game object."""
+        self.game.all_sprites.draw(screen)
 
 
 class HomeState(BaseState):
@@ -76,13 +80,15 @@ class HomeState(BaseState):
             self.game.toggle_home_view()
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """Events are handled by the modal view."""
+        """Events are handled by the global input handler."""
 
     def update(self, dt: float) -> None:
-        """State logic is handled by the modal view."""
+        """Update game logic by delegating to the main game object."""
+        self.game.update_sprites(dt)
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Drawing is handled by the main game loop's sprite group."""
+        """Draw the current state by delegating to the main game object."""
+        self.game.all_sprites.draw(screen)
 
 
 class MatrixRunState(BaseState):
@@ -101,10 +107,12 @@ class MatrixRunState(BaseState):
             self.game.toggle_matrix_run_view()
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """Events are handled by the modal view."""
+        """Events are handled by the global input handler."""
 
     def update(self, dt: float) -> None:
-        """State logic is handled by the modal view."""
+        """Update game logic by delegating to the main game object."""
+        self.game.update_sprites(dt)
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Drawing is handled by the main game loop's sprite group."""
+        """Draw the current state by delegating to the main game object."""
+        self.game.all_sprites.draw(screen)

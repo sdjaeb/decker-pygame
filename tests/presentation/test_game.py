@@ -19,7 +19,6 @@ from decker_pygame.application.dtos import (
     IceDataViewDTO,
     MissionResultsDTO,
     NewProjectViewDTO,
-    PlayerStatusDTO,
     ProjectDataViewDTO,
     RestViewDTO,
     ShopItemViewDTO,
@@ -203,22 +202,19 @@ def test_run_loop_calls_methods(game_with_mocks: Mocks):
     """Tests that the main loop calls its core methods."""
     game = game_with_mocks.game
 
-    # Configure mocks
-    # Configure the mock input handler to quit the game on the first call.
-    # We use `type: ignore` because Pylance cannot statically determine that
-    # the mock objects will have these attributes at runtime.
+    # Configure mock input handler to quit the game on the first call.
     game.input_handler.handle_events.side_effect = game.quit  # type: ignore[attr-defined]
-    game.player_service.get_player_status.return_value = PlayerStatusDTO(  # type: ignore[attr-defined]
-        current_health=100, max_health=100
-    )
+    game.clock.tick.return_value = 16  # type: ignore[attr-defined]
 
-    with patch.object(game, "_update", wraps=game._update) as spy_update:
-        with patch.object(game.all_sprites, "draw") as mock_draw:
-            game.run()
+    # Mock the current state to check for calls
+    mock_state = Mock(spec=BaseState)
+    game.current_state = mock_state
+
+    game.run()
 
     game.input_handler.handle_events.assert_called_once()  # type: ignore[attr-defined]
-    spy_update.assert_called_once()
-    mock_draw.assert_called_once_with(game.screen)
+    mock_state.update.assert_called_once_with(0.016)  # dt in seconds
+    mock_state.draw.assert_called_once_with(game.screen)
     game.clock.tick.assert_called_once_with(FPS)  # type: ignore[attr-defined]
 
 
@@ -298,8 +294,8 @@ def test_set_state_to_unregistered_state_quits(game_with_mocks: Mocks):
         mock_quit.assert_called_once()
 
 
-def test_game_update_no_modal(game_with_mocks: Mocks):
-    """Tests that _update calls update on all sprites when no modal is active."""
+def test_game_update_sprites_no_modal(game_with_mocks: Mocks):
+    """Tests that update_sprites calls update on all sprites when no modal is active."""
     mocks = game_with_mocks
     game = mocks.game
     game._modal_stack = []  # Ensure no modal is active
@@ -314,22 +310,25 @@ def test_game_update_no_modal(game_with_mocks: Mocks):
     mock_dto = Mock()
     mocks.matrix_run_service.get_matrix_run_view_data.return_value = mock_dto
 
-    game._update(dt=16, total_seconds=123)
+    with patch(
+        "decker_pygame.presentation.game.pygame.time.get_ticks", return_value=123000
+    ):
+        game.update_sprites(dt=0.016)
 
     # Assert that the service was called
     mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
         game.character_id, game.player_id
     )
     # Assert that the DTO was updated
-    assert mock_dto.run_time_in_seconds == 123
+    assert mock_dto.run_time_in_seconds == 123  # 123000 ms / 1000
 
     # Assert that the update methods were called correctly
     mock_sprite1.update.assert_called_once_with(16)
     mock_sprite2.update.assert_called_once_with(mock_dto)
 
 
-def test_game_update_with_modal(game_with_mocks: Mocks):
-    """Tests that _update calls update only on the top modal view."""
+def test_game_update_sprites_with_modal(game_with_mocks: Mocks):
+    """Tests that update_sprites calls update only on the top modal view."""
     mocks = game_with_mocks
     game = mocks.game
 
@@ -338,11 +337,13 @@ def test_game_update_with_modal(game_with_mocks: Mocks):
     modal_view2 = Mock(spec=MatrixRunView)
     game._modal_stack = [modal_view1, modal_view2]
 
-    # Configure the mock service to return a mock DTO
+    # Configure the mock service and time to return mock data
     mock_dto = Mock()
     mocks.matrix_run_service.get_matrix_run_view_data.return_value = mock_dto
-
-    game._update(dt=16, total_seconds=123)
+    with patch(
+        "decker_pygame.presentation.game.pygame.time.get_ticks", return_value=123000
+    ):
+        game.update_sprites(dt=0.016)
 
     # Assert that the service was called
     mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
@@ -356,22 +357,22 @@ def test_game_update_with_modal(game_with_mocks: Mocks):
     modal_view2.update.assert_called_once_with(mock_dto)
 
 
-def test_game_update_with_non_matrix_modal(game_with_mocks: Mocks):
-    """Tests that _update calls update with dt on a non-MatrixRunView modal."""
+def test_game_update_sprites_with_non_matrix_modal(game_with_mocks: Mocks):
+    """Tests that update_sprites calls update with dt on a non-MatrixRunView modal."""
     game = game_with_mocks.game
 
     modal_view1 = Mock(spec=pygame.sprite.Sprite)
     modal_view2 = Mock(spec=pygame.sprite.Sprite)  # Not a MatrixRunView
     game._modal_stack = [modal_view1, modal_view2]
 
-    game._update(dt=16, total_seconds=123)
+    game.update_sprites(dt=0.016)
 
     modal_view1.update.assert_not_called()
     modal_view2.update.assert_called_once_with(16)
 
 
-def test_game_update_with_modal_without_update_method(game_with_mocks: Mocks):
-    """Tests that _update does not crash if a modal view has no update method."""
+def test_game_update_sprites_with_modal_without_update_method(game_with_mocks: Mocks):
+    """Tests that update_sprites does not crash if a modal view has no update method."""
     game = game_with_mocks.game
 
     # Create a mock view that does NOT have an update method
@@ -381,9 +382,11 @@ def test_game_update_with_modal_without_update_method(game_with_mocks: Mocks):
 
     # This should execute without raising an AttributeError
     try:
-        game._update(dt=16, total_seconds=123)
+        game.update_sprites(dt=0.016)
     except AttributeError:
-        pytest.fail("game._update crashed on a modal view without an update method")
+        pytest.fail(
+            "game.update_sprites crashed on a modal view without an update method"
+        )
 
 
 def test_toggle_view_manages_modal_stack(game_with_mocks: Mocks):
@@ -956,8 +959,8 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
 
     # Set up a mock deck_view to be removed
     game.deck_view = Mock(spec=DeckView)
-    game.all_sprites.add(game.deck_view)  # intro_view + deck_view
-    assert len(game.all_sprites) == 2
+    game.all_sprites.add(game.deck_view)  # message_view + intro_view + deck_view
+    assert len(game.all_sprites) == 3
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -986,7 +989,7 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
         )
         assert game.order_view is mock_order_view_class.return_value
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 2  # intro_view + order_view
+        assert len(game.all_sprites) == 3  # message_view + intro_view + order_view
 
 
 def test_on_order_deck_no_char_data(game_with_mocks: Mocks):
@@ -1030,8 +1033,8 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
     # Set up a mock order_view to be removed, simulating a refresh
     existing_order_view = Mock(spec=OrderView)
     game.order_view = existing_order_view
-    game.all_sprites.add(existing_order_view)  # intro_view + order_view
-    assert len(game.all_sprites) == 2
+    game.all_sprites.add(existing_order_view)  # message_view + intro_view + order_view
+    assert len(game.all_sprites) == 3
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -1052,7 +1055,7 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
         mock_order_view_class.assert_called_once()
         assert game.order_view is new_order_view_instance
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 2
+        assert len(game.all_sprites) == 3
 
 
 def test_on_contract_selected_opens_data_view(game_with_mocks: Mocks):
