@@ -2,6 +2,7 @@ import uuid
 from collections.abc import Generator
 from dataclasses import dataclass
 from functools import partial
+from typing import cast
 from unittest.mock import Mock, patch
 
 import pygame
@@ -69,15 +70,11 @@ from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
+from decker_pygame.presentation.states.game_states import BaseState, GameState
+from decker_pygame.presentation.states.states import (
+    IntroState,
+)
 from decker_pygame.settings import FPS
-
-
-@pytest.fixture(autouse=True)
-def pygame_context() -> Generator[None]:
-    """Fixture to automatically initialize and quit Pygame for each test."""
-    pygame.init()
-    yield
-    pygame.quit()
 
 
 @dataclass
@@ -194,6 +191,12 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.debug_actions, DebugActions)
     assert isinstance(game.character_id, uuid.UUID)
+    # State machine attributes
+    assert len(game.states) == 4
+    assert game.states[GameState.INTRO] is IntroState
+    assert isinstance(game.current_state, IntroState)
+    # The initial state should open the intro view
+    assert game.intro_view is not None
 
 
 def test_run_loop_calls_methods(game_with_mocks: Mocks):
@@ -238,6 +241,61 @@ def test_game_quit_method(game_with_mocks: Mocks):
     assert game.is_running is True
     game.quit()
     assert game.is_running is False
+
+
+def test_set_state_transitions_correctly(game_with_mocks: Mocks):
+    """Tests that set_state calls on_exit and on_enter on the correct states."""
+    game = game_with_mocks.game
+
+    # Create mock state classes
+    mock_state_a_instance = Mock(spec=BaseState)
+    mock_state_a_class = Mock(return_value=mock_state_a_instance)
+
+    mock_state_b_instance = Mock(spec=BaseState)
+    mock_state_b_class = Mock(return_value=mock_state_b_instance)
+
+    # Register the mock states
+    game.states = {
+        GameState.INTRO: cast(type[BaseState], mock_state_a_class),
+        GameState.HOME: cast(type[BaseState], mock_state_b_class),
+    }
+
+    # --- Transition 1: from None to State A ---
+    game.set_state(GameState.INTRO)
+
+    # Assert State A was created and entered
+    mock_state_a_class.assert_called_once_with(game)
+    assert game.current_state is mock_state_a_instance
+    mock_state_a_instance.on_enter.assert_called_once()
+    mock_state_a_instance.on_exit.assert_not_called()
+
+    # --- Transition 2: from State A to State B ---
+    game.set_state(GameState.HOME)
+
+    # Assert State A was exited
+    mock_state_a_instance.on_exit.assert_called_once()
+
+    # Assert State B was created and entered
+    mock_state_b_class.assert_called_once_with(game)
+    assert game.current_state is mock_state_b_instance
+    mock_state_b_instance.on_enter.assert_called_once()
+
+
+def test_set_state_to_quit(game_with_mocks: Mocks):
+    """Tests that setting the state to QUIT calls the game's quit method."""
+    game = game_with_mocks.game
+    with patch.object(game, "quit") as mock_quit:
+        game.set_state(GameState.QUIT)
+        mock_quit.assert_called_once()
+
+
+def test_set_state_to_unregistered_state_quits(game_with_mocks: Mocks):
+    """Tests that setting the state to an unregistered enum quits the game."""
+    game = game_with_mocks.game
+    game.states = {}  # Ensure the state is not registered
+    with patch.object(game, "quit") as mock_quit:
+        game.set_state(GameState.MATRIX_RUN)
+        mock_quit.assert_called_once()
 
 
 def test_game_update_no_modal(game_with_mocks: Mocks):

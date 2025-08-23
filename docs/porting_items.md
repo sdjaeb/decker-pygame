@@ -204,10 +204,10 @@ This group focuses on improving the core architecture of the presentation layer 
 
 **Phase 1: Implement Game State Machine**
 -   **Task H.1:** Define `GameState` enum and `BaseState` protocol. (Status: Complete)
--   **Task H.2:** Refactor `Game` class to manage a `current_state` and delegate main loop calls. (Status: To Do)
--   **Task H.2.1** update Game imports/attributes (Status: To Do)
--   **Task H.2.2** implement set_state  (Status: To Do)
--   **Task H.2.3** modify Game.__init__  (Status: To Do)
+-   **Task H.2:** Refactor `Game` class to manage a `current_state` and delegate main loop calls. (Status: In Progress)
+-   **Task H.2.1** update Game imports/attributes (Status: Complete)
+-   **Task H.2.2** implement set_state  (Status: Complete)
+-   **Task H.2.3** modify Game.__init__  (Status: Complete)
 -   **Task H.2.4** refactor Game.run()  (Status: To Do)
 -   **Task H.2.5** remove _update  (Status: To Do)
 -   **Task H.2.6** Relocate `toggle_*` functions to appropriate states or a dedicated view manager. (Status: To Do)

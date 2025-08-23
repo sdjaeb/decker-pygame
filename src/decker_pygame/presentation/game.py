@@ -71,6 +71,13 @@ from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.input_handler import PygameInputHandler
 from decker_pygame.presentation.protocols import Eventful
+from decker_pygame.presentation.states.game_states import BaseState, GameState
+from decker_pygame.presentation.states.states import (
+    HomeState,
+    IntroState,
+    MatrixRunState,
+    NewCharState,
+)
 from decker_pygame.settings import BLACK, FPS, UI_FACE
 
 V = TypeVar("V", bound=pygame.sprite.Sprite)
@@ -106,6 +113,9 @@ class Game:
         clock (pygame.time.Clock): The game clock for managing FPS.
         is_running (bool): Flag to control the main game loop.
         all_sprites (pygame.sprite.Group[pygame.sprite.Sprite]): Group for all sprites.
+        states (dict[GameState, type[BaseState]]): A mapping of game state enums
+            to their corresponding state classes.
+        current_state (BaseState | None): The currently active game state.
         player_service (PlayerServiceInterface): Service for player operations.
         character_service (CharacterServiceInterface): Service for character operations.
         contract_service (ContractServiceInterface): Service for contract operations.
@@ -157,6 +167,8 @@ class Game:
     clock: pygame.time.Clock
     is_running: bool
     all_sprites: pygame.sprite.Group[pygame.sprite.Sprite]
+    states: dict[GameState, type[BaseState]]
+    current_state: BaseState | None
     player_service: PlayerServiceInterface
     character_service: CharacterServiceInterface
     contract_service: ContractServiceInterface
@@ -238,16 +250,22 @@ class Game:
         self.character_id = character_id
         self.event_dispatcher = event_dispatcher
         self.logging_service = logging_service
+        self.states = {
+            GameState.INTRO: IntroState,
+            GameState.NEW_CHAR: NewCharState,
+            GameState.HOME: HomeState,
+            GameState.MATRIX_RUN: MatrixRunState,
+        }
+        self.current_state = None
         self._modal_stack = []
         self.debug_actions = DebugActions(self, self.event_dispatcher)
         self.input_handler = PygameInputHandler(
             self, logging_service, self.debug_actions
         )
-
         self.message_view = MessageView(
             position=(10, 600), size=(400, 150), background_color=UI_FACE
         )
-        self.toggle_intro_view()
+        self.set_state(GameState.INTRO)
 
     def _toggle_view(
         self,
@@ -283,6 +301,29 @@ class Game:
     def quit(self) -> None:
         """Signals the game to exit the main loop."""
         self.is_running = False
+
+    def set_state(self, new_state_enum: GameState) -> None:
+        """Transition to a new game state."""
+        if self.current_state:
+            self.current_state.on_exit()
+
+        if new_state_enum == GameState.QUIT:
+            self.quit()
+            return
+
+        state_class = self.states.get(new_state_enum)
+        if state_class:
+            self.current_state = state_class(self)
+            self.current_state.on_enter()
+        else:
+            # This case should ideally not be hit if all states are registered.
+            # For now, we can log an error or raise one.
+            # A more robust solution might be a fallback state.
+            self.logging_service.log(
+                "State Machine Error",
+                {"message": f"State {new_state_enum} not found."},
+            )
+            self.quit()
 
     def _continue_from_intro(self) -> None:
         """Closes the intro view and opens the new character view."""
