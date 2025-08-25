@@ -7,6 +7,7 @@ from decker_pygame.ports.service_interfaces import LoggingServiceInterface
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
+from decker_pygame.presentation.states.game_states import GameState
 
 
 @pytest.fixture
@@ -48,7 +49,6 @@ def test_handle_quit_event(
     "key, method_name, is_debug_action",
     [
         (pygame.K_h, "toggle_home_view", True),
-        (pygame.K_r, "toggle_matrix_run_view", False),
         (pygame.K_m, "log_matrix_event", True),
         (pygame.K_q, "quit", False),
     ],
@@ -75,6 +75,19 @@ def test_handle_keydown_events(
 
     method_to_check = getattr(target_mock, method_name)
     method_to_check.assert_called_once()
+
+
+def test_handle_keydown_r_sets_matrix_run_state(
+    mock_game: Mock, mock_logging_service: Mock, mock_debug_actions: Mock
+):
+    """Tests that pressing 'r' sets the game state to MATRIX_RUN."""
+    handler = PygameInputHandler(mock_game, mock_logging_service, mock_debug_actions)
+    key_event = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_r})
+
+    with patch("pygame.event.get", return_value=[key_event]):
+        handler.handle_events()
+
+    mock_game.set_state.assert_called_once_with(GameState.MATRIX_RUN)
 
 
 def test_handle_unmapped_keydown(

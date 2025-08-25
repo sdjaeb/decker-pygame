@@ -50,9 +50,7 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
-from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
-from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.matrix_run_view import (
     MatrixRunView,
 )
@@ -60,7 +58,6 @@ from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
 )
-from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.project_data_view import ProjectDataView
 from decker_pygame.presentation.components.rest_view import RestView
@@ -1133,126 +1130,20 @@ def test_on_move_program_up_and_down(game_with_mocks: Mocks):
         mock_refresh.assert_called_once()
 
 
-def test_game_toggles_home_view(game_with_mocks: Mocks):
-    """Tests that the toggle_home_view method opens and closes the view."""
+def test_continue_from_intro_sets_state(game_with_mocks: Mocks):
+    """Tests that _continue_from_intro transitions to the NEW_CHAR state."""
     game = game_with_mocks.game
-    assert game.home_view is None
-
-    # Toggle to open
-    with patch(
-        "decker_pygame.presentation.game.HomeView", spec=HomeView
-    ) as mock_view_class:
-        game.toggle_home_view()
-        mock_view_class.assert_called_once_with(
-            on_char=game.toggle_char_data_view,
-            on_deck=game.toggle_deck_view,
-            on_contracts=game.toggle_contract_list_view,
-            on_build=game.toggle_build_view,
-            on_shop=game.toggle_shop_view,
-            on_transfer=game.toggle_transfer_view,
-            on_projects=game.toggle_project_data_view,
-        )
-        assert game.home_view is not None
-
-    # Toggle to close
-    game.toggle_home_view()
-    assert game.home_view is None
-
-
-def test_game_toggles_intro_view(game_with_mocks: Mocks):
-    """Tests that the toggle_intro_view method opens and closes the view."""
-    game = game_with_mocks.game
-    # It starts open from __init__,
-    assert game.intro_view is not None
-
-    # Toggle to close
-    game.toggle_intro_view()
-    assert game.intro_view is None
-
-    # Toggle to open again
-    with patch(
-        "decker_pygame.presentation.game.IntroView", spec=IntroView
-    ) as mock_view_class:
-        game.toggle_intro_view()
-        mock_view_class.assert_called_once()
-        assert game.intro_view is not None
-
-
-def test_game_toggles_new_char_view(game_with_mocks: Mocks):
-    """Tests that the toggle_new_char_view method opens and closes the view."""
-    game = game_with_mocks.game
-    assert game.new_char_view is None
-
-    # Toggle to open
-    with patch(
-        "decker_pygame.presentation.game.NewCharView", spec=NewCharView
-    ) as mock_view_class:
-        game.toggle_new_char_view()
-        mock_view_class.assert_called_once()
-        assert game.new_char_view is not None
-
-    # Toggle to close
-    game.toggle_new_char_view()
-    assert game.new_char_view is None
-
-
-def test_continue_from_intro(game_with_mocks: Mocks):
-    """Tests the transition from the intro view."""
-    game = game_with_mocks.game
-    with (
-        patch.object(game, "toggle_intro_view") as mock_toggle_intro,
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-    ):
+    with patch.object(game, "set_state") as mock_set_state:
         game._continue_from_intro()
-        mock_toggle_intro.assert_called_once()
-        mock_toggle_new_char.assert_called_once()
+        mock_set_state.assert_called_once_with(GameState.NEW_CHAR)
 
 
-def test_handle_character_creation(game_with_mocks: Mocks):
-    """Tests the transition from the new character view."""
+def test_handle_character_creation_sets_state(game_with_mocks: Mocks):
+    """Tests that _handle_character_creation transitions to the HOME state."""
     game = game_with_mocks.game
-    # Simulate that the new character view is open before the handler is called.
-    game.new_char_view = Mock(spec=NewCharView)
-
-    with (
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-        patch.object(game, "toggle_home_view") as mock_toggle_home,
-    ):
+    with patch.object(game, "set_state") as mock_set_state:
         game._handle_character_creation("Decker")
-        mock_toggle_new_char.assert_called_once()
-        mock_toggle_home.assert_called_once()
-
-
-def test_handle_character_creation_without_view(game_with_mocks: Mocks):
-    """Tests the transition when new character view is already closed."""
-    game = game_with_mocks.game
-    # Ensure the new character view is None to test the `if` condition.
-    game.new_char_view = None
-
-    with (
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-        patch.object(game, "toggle_home_view") as mock_toggle_home,
-    ):
-        game._handle_character_creation("Decker")
-        # Since the view is already None, it should not be toggled again.
-        mock_toggle_new_char.assert_not_called()
-        mock_toggle_home.assert_called_once()
-
-
-def test_continue_from_intro_already_closed(game_with_mocks: Mocks):
-    """Tests the intro transition when the intro view is already closed."""
-    game = game_with_mocks.game
-    game.intro_view = None  # Manually close the view before calling the handler
-
-    with (
-        patch.object(game, "toggle_intro_view") as mock_toggle_intro,
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-    ):
-        game._continue_from_intro()
-
-        # The intro view should NOT be toggled again since it's already None.
-        mock_toggle_intro.assert_not_called()
-        mock_toggle_new_char.assert_called_once()
+        mock_set_state.assert_called_once_with(GameState.HOME)
 
 
 def test_on_rest_callback_no_view(game_with_mocks: Mocks):
@@ -2120,21 +2011,3 @@ def test_toggle_project_data_view_no_data(game_with_mocks: Mocks):
         mock_show_message.assert_called_once_with(
             "Error: Could not retrieve project data."
         )
-
-
-def test_game_toggles_matrix_run_view(game_with_mocks: Mocks):
-    """Tests that the toggle_matrix_run_view method opens and closes the view."""
-    game = game_with_mocks.game
-    assert game.matrix_run_view is None
-
-    # Toggle to open
-    with patch(
-        "decker_pygame.presentation.game.MatrixRunView", spec=MatrixRunView
-    ) as mock_view_class:
-        game.toggle_matrix_run_view()
-        mock_view_class.assert_called_once_with(asset_service=game.asset_service)
-        assert game.matrix_run_view is not None
-
-    # Toggle to close
-    game.toggle_matrix_run_view()
-    assert game.matrix_run_view is None

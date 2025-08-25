@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from decker_pygame.presentation.states.game_states import GameState
 from decker_pygame.settings import DEV_SETTINGS
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -33,7 +34,7 @@ class PygameInputHandler:
         self._key_map = {
             # Navigation
             pygame.K_h: self._debug_actions.toggle_home_view,
-            pygame.K_r: self._game.toggle_matrix_run_view,
+            pygame.K_r: lambda: self._game.set_state(GameState.MATRIX_RUN),
             pygame.K_m: self._debug_actions.log_matrix_event,
             # System
             pygame.K_q: self._game.quit,

@@ -337,59 +337,16 @@ class Game:
                     sprite.update(dt_ms)
 
     def _continue_from_intro(self) -> None:
-        """Closes the intro view and opens the new character view."""
-        if self.intro_view:
-            self.toggle_intro_view()
-        self.toggle_new_char_view()
+        """Transitions from the intro state to the new character state."""
+        self.set_state(GameState.NEW_CHAR)
 
     def _handle_character_creation(self, name: str) -> None:
         """Handles the creation of a new character, then transitions to home."""
         # This is where we would call the character_service to persist the new
         # character and update the game's character_id.
         self.logging_service.log("Character Creation", {"name": name})
-        if self.new_char_view:
-            self.toggle_new_char_view()
-        self.toggle_home_view()
-
-    def toggle_new_char_view(self) -> None:
-        """Opens or closes the new character view."""
-
-        def factory() -> NewCharView:
-            return NewCharView(on_create=self._handle_character_creation)
-
-        self.view_manager.toggle_view("new_char_view", factory)
-
-    def toggle_intro_view(self) -> None:
-        """Opens or closes the intro view."""
-
-        def factory() -> IntroView:
-            return IntroView(on_continue=self._continue_from_intro)
-
-        self.view_manager.toggle_view("intro_view", factory)
-
-    def toggle_home_view(self) -> None:
-        """Opens or closes the home view."""
-
-        def factory() -> HomeView:
-            return HomeView(
-                on_char=self.toggle_char_data_view,
-                on_deck=self.toggle_deck_view,
-                on_contracts=self.toggle_contract_list_view,
-                on_build=self.toggle_build_view,
-                on_shop=self.toggle_shop_view,
-                on_transfer=self.toggle_transfer_view,
-                on_projects=self.toggle_project_data_view,
-            )
-
-        self.view_manager.toggle_view("home_view", factory)
-
-    def toggle_matrix_run_view(self) -> None:
-        """Opens or closes the main matrix run view."""
-
-        def factory() -> MatrixRunView:
-            return MatrixRunView(asset_service=self.asset_service)
-
-        self.view_manager.toggle_view("matrix_run_view", factory)
+        # The state transition will handle closing the new_char_view.
+        self.set_state(GameState.HOME)
 
     def _on_purchase(self, item_name: str) -> None:
         """Callback to handle purchasing an item from the shop."""

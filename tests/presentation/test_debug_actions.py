@@ -8,6 +8,7 @@ from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.events import MatrixLogEntryCreated
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.game import Game
+from decker_pygame.presentation.states.game_states import GameState
 
 
 @pytest.fixture
@@ -41,4 +42,4 @@ def test_toggle_home_view(mock_game: Mock, mock_event_dispatcher: Mock):
     """Tests that toggle_home_view calls the game's method."""
     actions = DebugActions(game=mock_game, event_dispatcher=mock_event_dispatcher)
     actions.toggle_home_view()
-    mock_game.toggle_home_view.assert_called_once()
+    mock_game.set_state.assert_called_once_with(GameState.HOME)
