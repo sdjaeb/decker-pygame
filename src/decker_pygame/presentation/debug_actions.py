@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.events import MatrixLogEntryCreated
+from decker_pygame.presentation.states.game_states import GameState
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.presentation.game import Game
@@ -18,7 +19,7 @@ class DebugActions:
 
     def toggle_home_view(self) -> None:
         """Toggles the main home view."""
-        self._game.toggle_home_view()
+        self._game.set_state(GameState.HOME)
 
     def log_matrix_event(self) -> None:
         """Dispatches a sample matrix log event for debugging."""

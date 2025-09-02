@@ -199,6 +199,34 @@ Top-level application logic, main loop, graphics, sound, and file handling. Thes
 
 ---
 
+### Group H: Architectural Refactoring (Status: In Progress)
+This group focuses on improving the core architecture of the presentation layer to enhance maintainability and reduce complexity.
+
+**Phase 1: Implement Game State Machine**
+-   **Task H.1:** Define `GameState` enum and `BaseState` protocol. (Status: Complete)
+-   **Task H.2:** Refactor `Game` class to manage a `current_state` and delegate main loop calls. (Status: In Progress)
+-   **Task H.2.1** update Game imports/attributes (Status: Complete)
+-   **Task H.2.2** implement set_state  (Status: Complete)
+-   **Task H.2.3** modify Game.__init__  (Status: Complete)
+-   **Task H.2.4** refactor Game.run()  (Status: Complete)
+-   **Task H.2.5** remove _update  (Status: Complete)
+-   **Task H.2.6** Relocate `toggle_*` functions to appropriate states or a dedicated view manager. (Status: To Do)
+    -   **Task H.2.6.A:** Create a `ViewManager` class to encapsulate the `_toggle_view` logic and the `_modal_stack`. (Status: To Do)
+    -   **Task H.2.6.B:** Refactor `Game` to use the `ViewManager` for all view toggling. (Status: Complete)
+    -   **Task H.2.6.C:** Migrate `toggle_intro_view` logic from `Game` to `IntroState`. (Status: Complete)
+    -   **Task H.2.6.D:** Migrate `toggle_new_char_view` logic from `Game` to `NewCharState`. (Status: Complete)
+    -   **Task H.2.6.E:** Migrate `toggle_home_view` logic from `Game` to `HomeState`. (Status: Complete)
+    -   **Task H.2.6.F:** Migrate `toggle_matrix_run_view` logic from `Game` to `MatrixRunState`. (Status: Complete)
+    -   **Task H.2.6.G:** Refactor remaining `toggle_*_view` calls in `Game` to use the `ViewManager`. (Status: To Do)
+    -   **Task H.2.6.H:** Remove redundant `toggle_*_view` methods from `Game` once their logic has been fully migrated. (Status: To Do)
+-   **Task H.3:** Create `IntroState` and `NewCharState` by migrating logic from `Game`. (Status: To Do)
+-   **Task H.4:** Create `HomeState` to act as the central hub for the main game. (Status: To Do)
+-   **Task H.5:** Refactor `Game`'s modal view management (`_toggle_view`) to be called by the active state. (Status: To Do)
+-   **Task H.6:** Refactor `test_game.py` into smaller, state-focused test files. (Status: To Do)
+-   **Task H.7:** Document the Game State Machine architecture in `docs/architecture/game_state_machine.md`. (Status: To Do)
+
+---
+
 ### 5. Utility / Support (**Medium to Low Importance**)
 General helpers, global state, or constants. Port as needed to support other modules.
 

@@ -2,6 +2,7 @@ import uuid
 from collections.abc import Generator
 from dataclasses import dataclass
 from functools import partial
+from typing import cast
 from unittest.mock import Mock, patch
 
 import pygame
@@ -18,7 +19,6 @@ from decker_pygame.application.dtos import (
     IceDataViewDTO,
     MissionResultsDTO,
     NewProjectViewDTO,
-    PlayerStatusDTO,
     ProjectDataViewDTO,
     RestViewDTO,
     ShopItemViewDTO,
@@ -50,9 +50,7 @@ from decker_pygame.presentation.components.contract_list_view import ContractLis
 from decker_pygame.presentation.components.deck_view import DeckView
 from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
-from decker_pygame.presentation.components.home_view import HomeView
 from decker_pygame.presentation.components.ice_data_view import IceDataView
-from decker_pygame.presentation.components.intro_view import IntroView
 from decker_pygame.presentation.components.matrix_run_view import (
     MatrixRunView,
 )
@@ -60,7 +58,6 @@ from decker_pygame.presentation.components.message_view import MessageView
 from decker_pygame.presentation.components.mission_results_view import (
     MissionResultsView,
 )
-from decker_pygame.presentation.components.new_char_view import NewCharView
 from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.project_data_view import ProjectDataView
 from decker_pygame.presentation.components.rest_view import RestView
@@ -69,15 +66,12 @@ from decker_pygame.presentation.components.transfer_view import TransferView
 from decker_pygame.presentation.debug_actions import DebugActions
 from decker_pygame.presentation.game import Game
 from decker_pygame.presentation.input_handler import PygameInputHandler
+from decker_pygame.presentation.states.game_states import BaseState, GameState
+from decker_pygame.presentation.states.states import (
+    IntroState,
+)
+from decker_pygame.presentation.view_manager import ViewManager
 from decker_pygame.settings import FPS
-
-
-@pytest.fixture(autouse=True)
-def pygame_context() -> Generator[None]:
-    """Fixture to automatically initialize and quit Pygame for each test."""
-    pygame.init()
-    yield
-    pygame.quit()
 
 
 @dataclass
@@ -191,31 +185,35 @@ def test_game_initialization(game_with_mocks: Mocks):
     assert game.project_service is mocks.project_service
     assert game.logging_service is mocks.logging_service
     assert game.event_dispatcher is mocks.event_dispatcher
+    assert isinstance(game.view_manager, ViewManager)
     assert isinstance(game.player_id, uuid.UUID)
     assert isinstance(game.debug_actions, DebugActions)
     assert isinstance(game.character_id, uuid.UUID)
+    # State machine attributes
+    assert len(game.states) == 4
+    assert game.states[GameState.INTRO] is IntroState
+    assert isinstance(game.current_state, IntroState)
+    # The initial state should open the intro view
+    assert game.intro_view is not None
 
 
 def test_run_loop_calls_methods(game_with_mocks: Mocks):
     """Tests that the main loop calls its core methods."""
     game = game_with_mocks.game
 
-    # Configure mocks
-    # Configure the mock input handler to quit the game on the first call.
-    # We use `type: ignore` because Pylance cannot statically determine that
-    # the mock objects will have these attributes at runtime.
+    # Configure mock input handler to quit the game on the first call.
     game.input_handler.handle_events.side_effect = game.quit  # type: ignore[attr-defined]
-    game.player_service.get_player_status.return_value = PlayerStatusDTO(  # type: ignore[attr-defined]
-        current_health=100, max_health=100
-    )
+    game.clock.tick.return_value = 16  # type: ignore[attr-defined]
 
-    with patch.object(game, "_update", wraps=game._update) as spy_update:
-        with patch.object(game.all_sprites, "draw") as mock_draw:
-            game.run()
+    # Mock the current state to check for calls
+    mock_state = Mock(spec=BaseState)
+    game.current_state = mock_state
+
+    game.run()
 
     game.input_handler.handle_events.assert_called_once()  # type: ignore[attr-defined]
-    spy_update.assert_called_once()
-    mock_draw.assert_called_once_with(game.screen)
+    mock_state.update.assert_called_once_with(0.016)  # dt in seconds
+    mock_state.draw.assert_called_once_with(game.screen)
     game.clock.tick.assert_called_once_with(FPS)  # type: ignore[attr-defined]
 
 
@@ -240,11 +238,66 @@ def test_game_quit_method(game_with_mocks: Mocks):
     assert game.is_running is False
 
 
-def test_game_update_no_modal(game_with_mocks: Mocks):
-    """Tests that _update calls update on all sprites when no modal is active."""
+def test_set_state_transitions_correctly(game_with_mocks: Mocks):
+    """Tests that set_state calls on_exit and on_enter on the correct states."""
+    game = game_with_mocks.game
+
+    # Create mock state classes
+    mock_state_a_instance = Mock(spec=BaseState)
+    mock_state_a_class = Mock(return_value=mock_state_a_instance)
+
+    mock_state_b_instance = Mock(spec=BaseState)
+    mock_state_b_class = Mock(return_value=mock_state_b_instance)
+
+    # Register the mock states
+    game.states = {
+        GameState.INTRO: cast(type[BaseState], mock_state_a_class),
+        GameState.HOME: cast(type[BaseState], mock_state_b_class),
+    }
+
+    # --- Transition 1: from None to State A ---
+    game.set_state(GameState.INTRO)
+
+    # Assert State A was created and entered
+    mock_state_a_class.assert_called_once_with(game)
+    assert game.current_state is mock_state_a_instance
+    mock_state_a_instance.on_enter.assert_called_once()
+    mock_state_a_instance.on_exit.assert_not_called()
+
+    # --- Transition 2: from State A to State B ---
+    game.set_state(GameState.HOME)
+
+    # Assert State A was exited
+    mock_state_a_instance.on_exit.assert_called_once()
+
+    # Assert State B was created and entered
+    mock_state_b_class.assert_called_once_with(game)
+    assert game.current_state is mock_state_b_instance
+    mock_state_b_instance.on_enter.assert_called_once()
+
+
+def test_set_state_to_quit(game_with_mocks: Mocks):
+    """Tests that setting the state to QUIT calls the game's quit method."""
+    game = game_with_mocks.game
+    with patch.object(game, "quit") as mock_quit:
+        game.set_state(GameState.QUIT)
+        mock_quit.assert_called_once()
+
+
+def test_set_state_to_unregistered_state_quits(game_with_mocks: Mocks):
+    """Tests that setting the state to an unregistered enum quits the game."""
+    game = game_with_mocks.game
+    game.states = {}  # Ensure the state is not registered
+    with patch.object(game, "quit") as mock_quit:
+        game.set_state(GameState.MATRIX_RUN)
+        mock_quit.assert_called_once()
+
+
+def test_game_update_sprites_no_modal(game_with_mocks: Mocks):
+    """Tests that update_sprites calls update on all sprites when no modal is active."""
     mocks = game_with_mocks
     game = mocks.game
-    game._modal_stack = []  # Ensure no modal is active
+    game.view_manager.modal_stack.clear()
 
     # Create some mock sprites to iterate over
     mock_sprite1 = Mock(spec=pygame.sprite.Sprite)
@@ -256,35 +309,40 @@ def test_game_update_no_modal(game_with_mocks: Mocks):
     mock_dto = Mock()
     mocks.matrix_run_service.get_matrix_run_view_data.return_value = mock_dto
 
-    game._update(dt=16, total_seconds=123)
+    with patch(
+        "decker_pygame.presentation.game.pygame.time.get_ticks", return_value=123000
+    ):
+        game.update_sprites(dt=0.016)
 
     # Assert that the service was called
     mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
         game.character_id, game.player_id
     )
     # Assert that the DTO was updated
-    assert mock_dto.run_time_in_seconds == 123
+    assert mock_dto.run_time_in_seconds == 123  # 123000 ms / 1000
 
     # Assert that the update methods were called correctly
     mock_sprite1.update.assert_called_once_with(16)
     mock_sprite2.update.assert_called_once_with(mock_dto)
 
 
-def test_game_update_with_modal(game_with_mocks: Mocks):
-    """Tests that _update calls update only on the top modal view."""
+def test_game_update_sprites_with_modal(game_with_mocks: Mocks):
+    """Tests that update_sprites calls update only on the top modal view."""
     mocks = game_with_mocks
     game = mocks.game
 
     # Create mock views for the modal stack
     modal_view1 = Mock(spec=pygame.sprite.Sprite)
     modal_view2 = Mock(spec=MatrixRunView)
-    game._modal_stack = [modal_view1, modal_view2]
+    game.view_manager.modal_stack.extend([modal_view1, modal_view2])
 
-    # Configure the mock service to return a mock DTO
+    # Configure the mock service and time to return mock data
     mock_dto = Mock()
     mocks.matrix_run_service.get_matrix_run_view_data.return_value = mock_dto
-
-    game._update(dt=16, total_seconds=123)
+    with patch(
+        "decker_pygame.presentation.game.pygame.time.get_ticks", return_value=123000
+    ):
+        game.update_sprites(dt=0.016)
 
     # Assert that the service was called
     mocks.matrix_run_service.get_matrix_run_view_data.assert_called_once_with(
@@ -298,34 +356,36 @@ def test_game_update_with_modal(game_with_mocks: Mocks):
     modal_view2.update.assert_called_once_with(mock_dto)
 
 
-def test_game_update_with_non_matrix_modal(game_with_mocks: Mocks):
-    """Tests that _update calls update with dt on a non-MatrixRunView modal."""
+def test_game_update_sprites_with_non_matrix_modal(game_with_mocks: Mocks):
+    """Tests that update_sprites calls update with dt on a non-MatrixRunView modal."""
     game = game_with_mocks.game
 
     modal_view1 = Mock(spec=pygame.sprite.Sprite)
     modal_view2 = Mock(spec=pygame.sprite.Sprite)  # Not a MatrixRunView
-    game._modal_stack = [modal_view1, modal_view2]
+    game.view_manager.modal_stack.extend([modal_view1, modal_view2])
 
-    game._update(dt=16, total_seconds=123)
+    game.update_sprites(dt=0.016)
 
     modal_view1.update.assert_not_called()
     modal_view2.update.assert_called_once_with(16)
 
 
-def test_game_update_with_modal_without_update_method(game_with_mocks: Mocks):
-    """Tests that _update does not crash if a modal view has no update method."""
+def test_game_update_sprites_with_modal_without_update_method(game_with_mocks: Mocks):
+    """Tests that update_sprites does not crash if a modal view has no update method."""
     game = game_with_mocks.game
 
     # Create a mock view that does NOT have an update method
     # by using a spec of an object without one.
     modal_view = Mock(spec=object())
-    game._modal_stack = [modal_view]
+    game.view_manager.modal_stack.append(modal_view)
 
     # This should execute without raising an AttributeError
     try:
-        game._update(dt=16, total_seconds=123)
+        game.update_sprites(dt=0.016)
     except AttributeError:
-        pytest.fail("game._update crashed on a modal view without an update method")
+        pytest.fail(
+            "game.update_sprites crashed on a modal view without an update method"
+        )
 
 
 def test_toggle_view_manages_modal_stack(game_with_mocks: Mocks):
@@ -335,25 +395,29 @@ def test_toggle_view_manages_modal_stack(game_with_mocks: Mocks):
     mocks = game_with_mocks
     game = mocks.game
 
-    # Clear the stack from the default IntroView added in Game.__init__
-    game._modal_stack.clear()
-
     # Mock the DTO from the service
     shop_data = ShopViewDTO(shop_name="Test Shop", items=[])
     mocks.shop_service.get_shop_view_data.return_value = shop_data
 
-    assert not game._modal_stack, "Modal stack should be empty initially"
+    # The stack starts with the IntroView.
+    assert len(game.view_manager.modal_stack) == 1
 
     # --- Test Opening ---
     game.toggle_shop_view()
     assert game.shop_view is not None, "Shop view should be open"
-    assert len(game._modal_stack) == 1, "View should be added to modal stack"
-    assert game._modal_stack[0] is game.shop_view, "Correct view should be on stack"
+    assert len(game.view_manager.modal_stack) == 2, (
+        "ShopView should be added to modal stack"
+    )
+    assert isinstance(game.view_manager.modal_stack[1], ShopView), (
+        "ShopView should be on top of the stack"
+    )
 
     # --- Test Closing ---
     game.toggle_shop_view()
     assert game.shop_view is None, "Shop view should be closed"
-    assert not game._modal_stack, "View should be removed from modal stack"
+    assert len(game.view_manager.modal_stack) == 1, (
+        "ShopView should be removed from modal stack"
+    )
 
 
 def test_game_show_message(game_with_mocks: Mocks):
@@ -898,8 +962,8 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
 
     # Set up a mock deck_view to be removed
     game.deck_view = Mock(spec=DeckView)
-    game.all_sprites.add(game.deck_view)  # intro_view + deck_view
-    assert len(game.all_sprites) == 2
+    game.all_sprites.add(game.deck_view)  # message_view + intro_view + deck_view
+    assert len(game.all_sprites) == 3
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -928,7 +992,7 @@ def test_on_order_deck_success(game_with_mocks: Mocks):
         )
         assert game.order_view is mock_order_view_class.return_value
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 2  # intro_view + order_view
+        assert len(game.all_sprites) == 3  # message_view + intro_view + order_view
 
 
 def test_on_order_deck_no_char_data(game_with_mocks: Mocks):
@@ -972,8 +1036,8 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
     # Set up a mock order_view to be removed, simulating a refresh
     existing_order_view = Mock(spec=OrderView)
     game.order_view = existing_order_view
-    game.all_sprites.add(existing_order_view)  # intro_view + order_view
-    assert len(game.all_sprites) == 2
+    game.all_sprites.add(existing_order_view)  # message_view + intro_view + order_view
+    assert len(game.all_sprites) == 3
 
     # Configure services to return valid data
     mock_deck_id = DeckId(uuid.uuid4())
@@ -994,7 +1058,7 @@ def test_on_order_deck_refreshes_existing_order_view(game_with_mocks: Mocks):
         mock_order_view_class.assert_called_once()
         assert game.order_view is new_order_view_instance
         assert game.order_view in game.all_sprites
-        assert len(game.all_sprites) == 2
+        assert len(game.all_sprites) == 3
 
 
 def test_on_contract_selected_opens_data_view(game_with_mocks: Mocks):
@@ -1007,7 +1071,7 @@ def test_on_contract_selected_opens_data_view(game_with_mocks: Mocks):
         reward=1000,
     )
 
-    with patch.object(game, "_toggle_view") as mock_toggle:
+    with patch.object(game.view_manager, "toggle_view") as mock_toggle:
         game._on_contract_selected(contract_dto)
 
         mock_toggle.assert_called_once()
@@ -1026,7 +1090,7 @@ def test_on_contract_selected_with_none_closes_data_view(game_with_mocks: Mocks)
     """Tests that selecting None closes the contract data view."""
     game = game_with_mocks.game
 
-    with patch.object(game, "_toggle_view") as mock_toggle:
+    with patch.object(game.view_manager, "toggle_view") as mock_toggle:
         game._on_contract_selected(None)
 
         mock_toggle.assert_called_once()
@@ -1066,126 +1130,20 @@ def test_on_move_program_up_and_down(game_with_mocks: Mocks):
         mock_refresh.assert_called_once()
 
 
-def test_game_toggles_home_view(game_with_mocks: Mocks):
-    """Tests that the toggle_home_view method opens and closes the view."""
+def test_continue_from_intro_sets_state(game_with_mocks: Mocks):
+    """Tests that _continue_from_intro transitions to the NEW_CHAR state."""
     game = game_with_mocks.game
-    assert game.home_view is None
-
-    # Toggle to open
-    with patch(
-        "decker_pygame.presentation.game.HomeView", spec=HomeView
-    ) as mock_view_class:
-        game.toggle_home_view()
-        mock_view_class.assert_called_once_with(
-            on_char=game.toggle_char_data_view,
-            on_deck=game.toggle_deck_view,
-            on_contracts=game.toggle_contract_list_view,
-            on_build=game.toggle_build_view,
-            on_shop=game.toggle_shop_view,
-            on_transfer=game.toggle_transfer_view,
-            on_projects=game.toggle_project_data_view,
-        )
-        assert game.home_view is not None
-
-    # Toggle to close
-    game.toggle_home_view()
-    assert game.home_view is None
-
-
-def test_game_toggles_intro_view(game_with_mocks: Mocks):
-    """Tests that the toggle_intro_view method opens and closes the view."""
-    game = game_with_mocks.game
-    # It starts open from __init__,
-    assert game.intro_view is not None
-
-    # Toggle to close
-    game.toggle_intro_view()
-    assert game.intro_view is None
-
-    # Toggle to open again
-    with patch(
-        "decker_pygame.presentation.game.IntroView", spec=IntroView
-    ) as mock_view_class:
-        game.toggle_intro_view()
-        mock_view_class.assert_called_once()
-        assert game.intro_view is not None
-
-
-def test_game_toggles_new_char_view(game_with_mocks: Mocks):
-    """Tests that the toggle_new_char_view method opens and closes the view."""
-    game = game_with_mocks.game
-    assert game.new_char_view is None
-
-    # Toggle to open
-    with patch(
-        "decker_pygame.presentation.game.NewCharView", spec=NewCharView
-    ) as mock_view_class:
-        game.toggle_new_char_view()
-        mock_view_class.assert_called_once()
-        assert game.new_char_view is not None
-
-    # Toggle to close
-    game.toggle_new_char_view()
-    assert game.new_char_view is None
-
-
-def test_continue_from_intro(game_with_mocks: Mocks):
-    """Tests the transition from the intro view."""
-    game = game_with_mocks.game
-    with (
-        patch.object(game, "toggle_intro_view") as mock_toggle_intro,
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-    ):
+    with patch.object(game, "set_state") as mock_set_state:
         game._continue_from_intro()
-        mock_toggle_intro.assert_called_once()
-        mock_toggle_new_char.assert_called_once()
+        mock_set_state.assert_called_once_with(GameState.NEW_CHAR)
 
 
-def test_handle_character_creation(game_with_mocks: Mocks):
-    """Tests the transition from the new character view."""
+def test_handle_character_creation_sets_state(game_with_mocks: Mocks):
+    """Tests that _handle_character_creation transitions to the HOME state."""
     game = game_with_mocks.game
-    # Simulate that the new character view is open before the handler is called.
-    game.new_char_view = Mock(spec=NewCharView)
-
-    with (
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-        patch.object(game, "toggle_home_view") as mock_toggle_home,
-    ):
+    with patch.object(game, "set_state") as mock_set_state:
         game._handle_character_creation("Decker")
-        mock_toggle_new_char.assert_called_once()
-        mock_toggle_home.assert_called_once()
-
-
-def test_handle_character_creation_without_view(game_with_mocks: Mocks):
-    """Tests the transition when new character view is already closed."""
-    game = game_with_mocks.game
-    # Ensure the new character view is None to test the `if` condition.
-    game.new_char_view = None
-
-    with (
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-        patch.object(game, "toggle_home_view") as mock_toggle_home,
-    ):
-        game._handle_character_creation("Decker")
-        # Since the view is already None, it should not be toggled again.
-        mock_toggle_new_char.assert_not_called()
-        mock_toggle_home.assert_called_once()
-
-
-def test_continue_from_intro_already_closed(game_with_mocks: Mocks):
-    """Tests the intro transition when the intro view is already closed."""
-    game = game_with_mocks.game
-    game.intro_view = None  # Manually close the view before calling the handler
-
-    with (
-        patch.object(game, "toggle_intro_view") as mock_toggle_intro,
-        patch.object(game, "toggle_new_char_view") as mock_toggle_new_char,
-    ):
-        game._continue_from_intro()
-
-        # The intro view should NOT be toggled again since it's already None.
-        mock_toggle_intro.assert_not_called()
-        mock_toggle_new_char.assert_called_once()
+        mock_set_state.assert_called_once_with(GameState.HOME)
 
 
 def test_on_rest_callback_no_view(game_with_mocks: Mocks):
@@ -1308,9 +1266,6 @@ def test_game_toggles_shop_view(game_with_mocks: Mocks):
     """Tests that the toggle_shop_view method opens and closes the view."""
     mocks = game_with_mocks
     game = mocks.game
-
-    # Clear the stack from the default IntroView added in Game.__init__
-    game._modal_stack.clear()
 
     # Mock the DTO from the service
     shop_data = ShopViewDTO(shop_name="Test Shop", items=[])
@@ -2056,21 +2011,3 @@ def test_toggle_project_data_view_no_data(game_with_mocks: Mocks):
         mock_show_message.assert_called_once_with(
             "Error: Could not retrieve project data."
         )
-
-
-def test_game_toggles_matrix_run_view(game_with_mocks: Mocks):
-    """Tests that the toggle_matrix_run_view method opens and closes the view."""
-    game = game_with_mocks.game
-    assert game.matrix_run_view is None
-
-    # Toggle to open
-    with patch(
-        "decker_pygame.presentation.game.MatrixRunView", spec=MatrixRunView
-    ) as mock_view_class:
-        game.toggle_matrix_run_view()
-        mock_view_class.assert_called_once_with(asset_service=game.asset_service)
-        assert game.matrix_run_view is not None
-
-    # Toggle to close
-    game.toggle_matrix_run_view()
-    assert game.matrix_run_view is None
