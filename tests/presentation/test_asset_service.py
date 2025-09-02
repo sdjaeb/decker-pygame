@@ -1,6 +1,7 @@
 """Tests for the AssetService."""
 
 import json
+from collections.abc import Generator
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -11,17 +12,8 @@ import pytest
 from decker_pygame.presentation.asset_service import AssetService
 
 
-@pytest.fixture(autouse=True)
-def pygame_init_fixture():
-    """Fixture to initialize pygame for each test."""
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    yield
-    pygame.quit()
-
-
 @pytest.fixture
-def temp_asset_dir() -> str:
+def temp_asset_dir() -> Generator[str]:
     """Create a temporary directory for test asset files."""
     with TemporaryDirectory() as tmpdir:
         yield tmpdir
