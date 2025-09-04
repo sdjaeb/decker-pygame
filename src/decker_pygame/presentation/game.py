@@ -9,16 +9,12 @@ from typing import Optional, TypeVar
 
 import pygame
 
-from decker_pygame.application.crafting_service import CraftingError
 from decker_pygame.application.dtos import (
-    ContractSummaryDTO,
     EntryViewDTO,
     FileAccessViewDTO,
-    IceDataViewDTO,
     MissionResultsDTO,
     NewProjectViewDTO,
     RestViewDTO,
-    ShopItemViewDTO,
 )
 from decker_pygame.application.event_dispatcher import EventDispatcher
 from decker_pygame.domain.ids import CharacterId, PlayerId
@@ -348,46 +344,6 @@ class Game:
         # The state transition will handle closing the new_char_view.
         self.set_state(GameState.HOME)
 
-    def _on_purchase(self, item_name: str) -> None:
-        """Callback to handle purchasing an item from the shop."""
-
-        def action() -> None:
-            # For now, we assume a single, default shop.
-            self.shop_service.purchase_item(self.character_id, item_name, "DefaultShop")
-            self.show_message(f"Purchased {item_name}.")
-
-        self._execute_and_refresh_view(action, self.toggle_shop_view)
-
-    def toggle_shop_view(self) -> None:
-        """Opens or closes the shop view."""
-
-        def factory() -> Optional[ShopView]:
-            shop_data = self.shop_service.get_shop_view_data("DefaultShop")
-            if not shop_data:
-                self.show_message("Error: Could not load shop data.")
-                return None
-            return ShopView(
-                data=shop_data,
-                on_close=self.toggle_shop_view,
-                on_purchase=self._on_purchase,
-                on_view_details=self._on_show_item_details,
-            )
-
-        self.view_manager.toggle_view("shop_view", factory)
-
-    def toggle_shop_item_view(self, data: Optional["ShopItemViewDTO"] = None) -> None:
-        """Opens or closes the Shop Item details view."""
-
-        def factory() -> Optional["ShopItemView"]:
-            if data:
-                return ShopItemView(
-                    data=data,
-                    on_close=self.toggle_shop_item_view,
-                )
-            return None
-
-        self.view_manager.toggle_view("shop_item_view", factory)
-
     def _on_new_project(self) -> None:
         """Closes the project data view and opens the new project view."""
         self.toggle_project_data_view()
@@ -497,34 +453,6 @@ class Game:
 
         self.view_manager.toggle_view("mission_results_view", factory)
 
-    def toggle_build_view(self) -> None:
-        """Opens or closes the build view."""
-
-        def factory() -> Optional[BuildView]:
-            schematics = self.crafting_service.get_character_schematics(
-                self.character_id
-            )
-            if not schematics:
-                self.show_message("No schematics known.")
-                return None
-            return BuildView(
-                position=(200, 150),
-                size=(400, 300),
-                schematics=schematics,
-                on_build_click=self._handle_build_click,
-            )
-
-        self.view_manager.toggle_view("build_view", factory)
-
-    def _handle_build_click(self, schematic_name: str) -> None:
-        """Callback for when a build button is clicked in the BuildView."""
-        try:
-            self.crafting_service.craft_item(self.character_id, schematic_name)
-            # A success message is already handled by the ItemCrafted event handler
-            # in main.py, so no need to show a message here.
-        except CraftingError as e:
-            self.show_message(f"Crafting failed: {e}")
-
     def _execute_and_refresh_view(
         self, action: Callable[[], None], view_toggler: Callable[[], None]
     ) -> None:
@@ -535,195 +463,6 @@ class Game:
             view_toggler()  # open
         except Exception as e:
             self.show_message(f"Error: {e}")
-
-    def _on_increase_skill(self, skill_name: str) -> None:
-        """Callback to handle increasing a skill."""
-
-        def action() -> None:
-            self.character_service.increase_skill(self.character_id, skill_name)
-
-        self._execute_and_refresh_view(action, self.toggle_char_data_view)
-
-    def _on_decrease_skill(self, skill_name: str) -> None:
-        """Callback to handle decreasing a skill."""
-
-        def action() -> None:
-            self.character_service.decrease_skill(self.character_id, skill_name)
-
-        self._execute_and_refresh_view(action, self.toggle_char_data_view)
-
-    def toggle_char_data_view(self) -> None:
-        """Opens or closes the character data view."""
-
-        def factory() -> Optional["CharDataView"]:
-            view_data = self.character_service.get_character_view_data(
-                self.character_id, self.player_id
-            )
-            if not view_data:
-                self.show_message("Error: Could not retrieve character/player data.")
-                return None
-            return CharDataView(
-                position=(150, 100),
-                data=view_data,
-                on_close=self.toggle_char_data_view,
-                on_increase_skill=self._on_increase_skill,
-                on_decrease_skill=self._on_decrease_skill,
-            )
-
-        self.view_manager.toggle_view("char_data_view", factory)
-
-    def toggle_deck_view(self) -> None:
-        """Opens or closes the deck view."""
-
-        def factory() -> Optional["DeckView"]:
-            char_data = self.character_service.get_character_data(self.character_id)
-            if not char_data:
-                self.show_message(
-                    "Error: Could not retrieve character data to find deck."
-                )
-                return None
-
-            deck_data = self.deck_service.get_deck_view_data(char_data.deck_id)
-            if not deck_data:
-                self.show_message("Error: Could not retrieve deck data.")
-                return None
-
-            return DeckView(
-                data=deck_data,
-                on_close=self.toggle_deck_view,
-                on_order=self._on_order_deck,
-                on_program_click=self._on_program_click,
-            )
-
-        self.view_manager.toggle_view("deck_view", factory)
-
-    def _move_program_and_refresh(self, move_action: Callable[..., None]) -> None:
-        """Generic helper to move a program and refresh the order view."""
-        char_data = self.character_service.get_character_data(self.character_id)
-        if not char_data:
-            self.show_message("Error: Could not find character to modify deck.")
-            return
-        try:
-            move_action(char_data.deck_id)
-            self._on_order_deck()  # Refresh the order view
-        except Exception as e:
-            self.show_message(f"Error: {e}")
-
-    def _on_move_program_up(self, program_name: str) -> None:
-        """Callback to handle moving a program up in the deck order."""
-        self._move_program_and_refresh(
-            lambda deck_id: self.deck_service.move_program_up(deck_id, program_name)
-        )
-
-    def _on_move_program_down(self, program_name: str) -> None:
-        """Callback to handle moving a program down in the deck order."""
-        self._move_program_and_refresh(
-            lambda deck_id: self.deck_service.move_program_down(deck_id, program_name)
-        )
-
-    def _on_move_program_to_deck(self, program_name: str) -> None:
-        """Callback to handle moving a program to the deck."""
-        char_data = self.character_service.get_character_data(self.character_id)
-        if not char_data:
-            self.show_message("Error: Could not find character to modify deck.")
-            return
-
-        def action() -> None:
-            self.deck_service.move_program_to_deck(self.character_id, program_name)
-
-        self._execute_and_refresh_view(action, self.toggle_transfer_view)
-
-    def _on_move_program_to_storage(self, program_name: str) -> None:
-        """Callback to handle moving a program to storage."""
-        char_data = self.character_service.get_character_data(self.character_id)
-        if not char_data:
-            self.show_message("Error: Could not find character to modify deck.")
-            return
-
-        def action() -> None:
-            self.deck_service.move_program_to_storage(self.character_id, program_name)
-
-        self._execute_and_refresh_view(action, self.toggle_transfer_view)
-
-    def toggle_transfer_view(self) -> None:
-        """Opens or closes the program transfer view."""
-
-        def factory() -> Optional["TransferView"]:
-            view_data = self.deck_service.get_transfer_view_data(self.character_id)
-            if not view_data:
-                self.show_message("Error: Could not retrieve transfer data.")
-                return None
-            return TransferView(
-                data=view_data,
-                on_close=self.toggle_transfer_view,
-                on_move_to_deck=self._on_move_program_to_deck,
-                on_move_to_storage=self._on_move_program_to_storage,
-            )
-
-        self.view_manager.toggle_view("transfer_view", factory)
-
-    def _on_program_click(self, program_name: str) -> None:
-        """Callback for when a program is clicked, to show its details."""
-        ice_data = self.deck_service.get_ice_data(program_name)
-        if not ice_data:
-            self.show_message(f"No detailed data available for {program_name}.")
-            return
-        self.toggle_ice_data_view(ice_data)
-
-    def toggle_ice_data_view(self, data: Optional[IceDataViewDTO] = None) -> None:
-        """Opens or closes the ICE data view."""
-
-        def factory() -> Optional[IceDataView]:
-            if data:
-                return IceDataView(data=data, on_close=self.toggle_ice_data_view)
-            return None
-
-        self.view_manager.toggle_view("ice_data_view", factory)
-
-    def toggle_contract_list_view(self) -> None:
-        """Opens or closes the contract list view."""
-
-        def factory() -> Optional[ContractListView]:
-            contracts = self.contract_service.get_available_contracts()
-            if not contracts:
-                self.show_message("No contracts available.")
-                return None
-
-            view = ContractListView(
-                position=(200, 150),
-                size=(450, 300),
-                on_contract_selected=self._on_contract_selected,
-            )
-            view.set_contracts(contracts)
-            return view
-
-        self.view_manager.toggle_view("contract_list_view", factory)
-
-    def toggle_contract_data_view(self) -> None:
-        """Opens or closes the contract data view."""
-
-        def factory() -> ContractDataView:
-            return ContractDataView(
-                position=(200, 150), size=(400, 300), contract_name="Placeholder"
-            )
-
-        self.view_manager.toggle_view("contract_data_view", factory)
-
-    def _on_contract_selected(self, contract_dto: Optional[ContractSummaryDTO]) -> None:
-        """Callback for when a contract is selected in the list."""
-
-        def factory() -> Optional[ContractDataView]:
-            # If a contract is selected, pass its details to the ContractDataView
-            if contract_dto:
-                return ContractDataView(
-                    position=(200, 150),
-                    size=(400, 300),
-                    contract_name=contract_dto.title,
-                )
-            # Otherwise, return None to close the view if it's open
-            return None  # This is intentional for closing the view
-
-        self.view_manager.toggle_view("contract_data_view", factory)
 
     def _on_download_file(self, file_name: str) -> None:
         """Callback to handle downloading a file."""
@@ -914,45 +653,3 @@ class Game:
                 self.current_state.draw(self.screen)
 
             pygame.display.flip()
-
-        pygame.quit()
-
-    def _on_order_deck(self) -> None:
-        """Callback for when the 'Order' button is clicked in the DeckView.
-
-        Opens the OrderView.
-        """
-        char_data = self.character_service.get_character_data(self.character_id)
-        if not char_data:
-            self.show_message("Error: Could not retrieve character data to find deck.")
-            return
-
-        deck_data = self.deck_service.get_deck_view_data(char_data.deck_id)
-        if not deck_data:
-            self.show_message("Error: Could not retrieve deck data.")
-            return
-
-        # Close the current DeckView or OrderView before opening a new OrderView
-        if self.deck_view:
-            self.all_sprites.remove(self.deck_view)
-            self.deck_view = None
-        if self.order_view:
-            self.all_sprites.remove(self.order_view)
-            self.order_view = None
-
-        self.order_view = OrderView(
-            data=deck_data,
-            # Closing the OrderView should take you back to the DeckView
-            on_close=self.toggle_deck_view,
-            on_move_up=self._on_move_program_up,
-            on_move_down=self._on_move_program_down,
-        )
-        self.all_sprites.add(self.order_view)
-
-    def _on_show_item_details(self, item_name: str) -> None:
-        """Callback to handle displaying details for a specific shop item."""
-        item_details = self.shop_service.get_item_details("DefaultShop", item_name)
-        if item_details:
-            self.toggle_shop_item_view(item_details)
-        else:
-            self.show_message(f"Could not retrieve details for {item_name}.")

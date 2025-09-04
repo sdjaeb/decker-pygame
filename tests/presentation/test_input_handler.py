@@ -102,8 +102,6 @@ def test_handle_unmapped_keydown(
         handler.handle_events()
 
     # Assert that no game methods were called
-    mock_game.toggle_build_view.assert_not_called()
-    mock_game.toggle_char_data_view.assert_not_called()
     mock_game.quit.assert_not_called()
 
 

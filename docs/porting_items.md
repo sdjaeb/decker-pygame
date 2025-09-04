@@ -212,7 +212,15 @@ This group focuses on improving the core architecture of the presentation layer 
 
 **Phase 2: Decouple Modal Views**
 -   **Task H.2:** Refactor secondary (modal-only) views to be managed by the active state. (Status: To Do)
-    -   **Example:** The `HomeState` should be responsible for toggling the `ShopView`, `DeckView`, etc., not the `Game` class.
+    -   **Task H.2:** Refactor secondary (modal-only) views to be managed by the active state. (Status: Complete)
+        -   **Task H.2.A:** Migrate `toggle_char_data_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Task H.2.B:** Migrate `toggle_deck_view` and `toggle_order_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Task H.2.C:** Migrate `toggle_contract_list_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Task H.2.D:** Migrate `toggle_ice_data_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Task H.2.E:** Migrate `toggle_build_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Task H.2.F:** Migrate `toggle_shop_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Task H.2.G:** Migrate `toggle_transfer_view` logic from `Game` to `HomeState`. (Status: Complete)
+        -   **Summary:** The `HomeState` is now responsible for toggling all of its modal views. The `Game` class has been significantly simplified.
 -   **Task H.6:** Refactor `test_game.py` into smaller, state-focused test files. (Status: To Do)
 -   **Task H.7:** Document the Game State Machine architecture in `docs/architecture/game_state_machine.md`. (Status: To Do)
 
