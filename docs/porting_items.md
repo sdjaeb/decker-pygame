@@ -187,8 +187,8 @@ Top-level application logic, main loop, graphics, sound, and file handling. Thes
 -   **Task G.3: Port Core Engine Logic (Status: In Progress)**
     -   **`Decker.cpp/h`**: The application lifecycle logic (initialization, main loop, shutdown) is being ported to `src/decker_pygame/presentation/main.py` and `src/decker_pygame/presentation/game.py`.
 
--   **Task G.4: Finalize Utility Porting (Status: To Do)**
-    -   **`Global.cpp/h`**: Port any remaining constants and utility functions (like `DoDieRoll`) to `src/decker_pygame/settings.py` and `src/decker_pygame/utils.py`. The `DoDieRoll` logic should become part of a `DiceService` in the domain.
+-   **Task G.4: Finalize Utility Porting (Status: Complete)**
+    -   **`Global.cpp/h`**: The `DoDieRoll` function has been ported to a new `DiceService` in the domain layer. All other logic from this file has been ported or deemed obsolete.
 
 -   **Task G.5: Retire Obsolete Files (Status: Complete)**
     -   **`StdAfx.cpp/h`**: Precompiled headers are not used in Python. This file is obsolete.
@@ -226,7 +226,7 @@ This group focuses on improving the core architecture of the presentation layer 
 -   **Task H.7:** Document the Game State Machine architecture in `docs/architecture/game_state_machine.md`. (Status: Complete)
 
 ---
-
+**Group H Status: Complete.**
 ### 5. Utility / Support (**Medium to Low Importance**)
 General helpers, global state, or constants. Port as needed to support other modules.
 
