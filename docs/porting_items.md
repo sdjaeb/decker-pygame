@@ -221,7 +221,8 @@ This group focuses on improving the core architecture of the presentation layer 
         -   **Task H.2.F:** Migrate `toggle_shop_view` logic from `Game` to `HomeState`. (Status: Complete)
         -   **Task H.2.G:** Migrate `toggle_transfer_view` logic from `Game` to `HomeState`. (Status: Complete)
         -   **Summary:** The `HomeState` is now responsible for toggling all of its modal views. The `Game` class has been significantly simplified.
--   **Task H.6:** Refactor `test_game.py` into smaller, state-focused test files. (Status: To Do)
+-   **Task H.6:** Refactor `test_game.py` into smaller, state-focused test files. (Status: Complete)
+    -   **Summary:** The monolithic `test_game.py` has been split into `test_game_lifecycle.py`, `test_game_views.py`, and `test_game_helpers.py`. A shared `conftest.py` was created for presentation-layer fixtures.
 -   **Task H.7:** Document the Game State Machine architecture in `docs/architecture/game_state_machine.md`. (Status: To Do)
 
 ---
