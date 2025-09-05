@@ -68,6 +68,8 @@ Refactor the `Game` class to use a formal **State Machine**.
 -   State transitions will be handled explicitly, making the application flow clear and robust.
 -   Breaking the `Game` class into smaller, state-focused objects will naturally allow `test_game.py` to be split into smaller, more manageable test files (e.g., `test_home_state.py`, `test_shop_state.py`).
 
+**Resolution Status:** This has been largely addressed by the implementation of the Game State Machine (Task H.1) and the subsequent refactoring of `test_game.py` (Task H.6). The `Game` class is now much leaner, and the test suite is organized by functionality.
+
 ### Affected Components
 
 -   `presentation/game.py`

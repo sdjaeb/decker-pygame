@@ -1,3 +1,5 @@
+"""This file contains shared fixtures for the presentation layer tests."""
+
 import uuid
 from collections.abc import Generator
 from dataclasses import dataclass
