@@ -10,6 +10,7 @@ from decker_pygame.application.dtos import (
     IceDataViewDTO,
     ShopItemViewDTO,
 )
+from decker_pygame.domain.ids import ContractId
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.contract_data_view import ContractDataView
@@ -260,12 +261,20 @@ class HomeState(BaseState):
             # If a contract is selected, pass its details to the ContractDataView
             if contract_dto:
                 return ContractDataView(
-                    position=(200, 150), size=(400, 300), contract=contract_dto
+                    position=(200, 150),
+                    size=(400, 300),
+                    contract=contract_dto,
+                    on_accept=self._on_accept_contract,
                 )
             # Otherwise, return None to close the view if it's open
             return None  # This is intentional for closing the view
 
         self.game.view_manager.toggle_view("contract_data_view", factory)
+
+    def _on_accept_contract(self, contract_id: ContractId) -> None:
+        """Callback for when a contract is accepted."""
+        self.game.logging_service.log("Contract Accepted", {"id": str(contract_id)})
+        self.game.show_message(f"Contract {str(contract_id)[:8]}... accepted.")
 
     def _toggle_ice_data_view(self, data: Optional[IceDataViewDTO] = None) -> None:
         """Opens or closes the ICE data view."""
