@@ -2,6 +2,7 @@
 
 import pygame
 
+from decker_pygame.application.dtos import ContractSummaryDTO
 from decker_pygame.settings import UI_FACE, UI_FONT
 
 
@@ -13,7 +14,7 @@ class ContractDataView(pygame.sprite.Sprite):
     Args:
         position (tuple[int, int]): The top-left corner of the view.
         size (tuple[int, int]): The (width, height) of the view.
-        contract_name (str): The name of the contract to display.
+        contract (ContractSummaryDTO): The contract data to display.
 
     Attributes:
         image (pygame.Surface): The surface that represents the view.
@@ -27,12 +28,12 @@ class ContractDataView(pygame.sprite.Sprite):
         self,
         position: tuple[int, int],
         size: tuple[int, int],
-        contract_name: str,
+        contract: ContractSummaryDTO,
     ):
         super().__init__()
         self.image = pygame.Surface(size)
         self.rect = self.image.get_rect(topleft=position)
-        self._contract_name = contract_name
+        self._contract = contract
 
         self._font = pygame.font.Font(
             UI_FONT.default_font_name, UI_FONT.default_font_size
@@ -47,11 +48,19 @@ class ContractDataView(pygame.sprite.Sprite):
         """Renders the contract data onto the view's surface."""
         self.image.fill(self._background_color)
 
-        text = f"Contract: {self._contract_name}"
-        text_surface = self._font.render(text, True, self._font_color)
-        text_rect = text_surface.get_rect(topleft=(self._padding, self._padding))
+        y_offset = self._padding
 
-        self.image.blit(text_surface, text_rect)
+        lines = [
+            f"Title: {self._contract.title}",
+            f"Client: {self._contract.client}",
+            f"Reward: ${self._contract.reward}",
+        ]
+
+        for line in lines:
+            text_surface = self._font.render(line, True, self._font_color)
+            text_rect = text_surface.get_rect(topleft=(self._padding, y_offset))
+            self.image.blit(text_surface, text_rect)
+            y_offset += text_surface.get_height() + 5
 
     def handle_event(self, event: pygame.event.Event) -> None:
         """Handles events passed from the input handler."""

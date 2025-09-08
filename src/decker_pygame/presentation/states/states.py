@@ -260,9 +260,7 @@ class HomeState(BaseState):
             # If a contract is selected, pass its details to the ContractDataView
             if contract_dto:
                 return ContractDataView(
-                    position=(200, 150),
-                    size=(400, 300),
-                    contract_name=contract_dto.title,
+                    position=(200, 150), size=(400, 300), contract=contract_dto
                 )
             # Otherwise, return None to close the view if it's open
             return None  # This is intentional for closing the view
