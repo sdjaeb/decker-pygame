@@ -25,7 +25,7 @@ from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.shop_item_view import ShopItemView
 from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
-from decker_pygame.presentation.states.game_states import BaseState
+from decker_pygame.presentation.states.game_states import BaseState, GameState
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.presentation.game import Game
@@ -273,8 +273,14 @@ class HomeState(BaseState):
 
     def _on_accept_contract(self, contract_id: ContractId) -> None:
         """Callback for when a contract is accepted."""
-        self.game.logging_service.log("Contract Accepted", {"id": str(contract_id)})
-        self.game.show_message(f"Contract {str(contract_id)[:8]}... accepted.")
+        try:
+            self.game.contract_service.accept_contract(
+                self.game.character_id, contract_id
+            )
+            self.game.logging_service.log("Contract Accepted", {"id": str(contract_id)})
+            self.game.set_state(GameState.MATRIX_RUN)
+        except Exception as e:
+            self.game.show_message(f"Error accepting contract: {e}")
 
     def _toggle_ice_data_view(self, data: Optional[IceDataViewDTO] = None) -> None:
         """Opens or closes the ICE data view."""

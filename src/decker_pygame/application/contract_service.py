@@ -6,6 +6,7 @@ available contracts.
 
 from decker_pygame.application.dtos import ContractSummaryDTO
 from decker_pygame.application.event_dispatcher import EventDispatcher
+from decker_pygame.domain.ids import CharacterId, ContractId
 from decker_pygame.ports.repository_interfaces import ContractRepositoryInterface
 from decker_pygame.ports.service_interfaces import ContractServiceInterface
 
@@ -25,3 +26,11 @@ class ContractService(ContractServiceInterface):
         """Retrieves a list of summaries for all available contracts."""
         contracts = self.contract_repo.get_all()
         return [ContractSummaryDTO.from_domain(c) for c in contracts]
+
+    def accept_contract(
+        self, character_id: CharacterId, contract_id: ContractId
+    ) -> None:
+        """Marks a contract as accepted by a character."""
+        # This is a placeholder implementation.
+        # In the future, this would update the state of the contract and character.
+        pass
