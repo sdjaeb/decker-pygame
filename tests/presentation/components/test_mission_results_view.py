@@ -124,3 +124,44 @@ def test_mission_results_view_event_handling(success_data):
             )
             view.handle_event(event)
             mock_button_handler.assert_called_once()
+
+
+def test_mission_results_view_mouse_up_converts_coords(success_data):
+    """Ensure MOUSEBUTTONUP events are converted to local component coords.
+
+    This exercises the MOUSEBUTTONUP branch in handle_event and ensures the
+    delegated event uses coordinates local to the view's surface.
+    """
+    mock_on_close = Mock()
+
+    with (
+        patch("pygame.font.Font") as mock_font_class,
+        patch(
+            "decker_pygame.presentation.components.mission_results_view.Button"
+        ) as mock_button_class,
+    ):
+        mock_font_instance = Mock()
+        mock_font_instance.render.return_value = pygame.Surface((100, 20))
+        mock_font_instance.get_linesize.return_value = 20
+        mock_font_class.return_value = mock_font_instance
+
+        mock_button_instance = Mock(spec=Button)
+        mock_button_instance.image = pygame.Surface((10, 10))
+        mock_button_instance.rect = pygame.Rect(0, 0, 10, 10)
+        mock_button_instance.handle_event = Mock()
+        mock_button_class.return_value = mock_button_instance
+
+        view = MissionResultsView(data=success_data, on_close=mock_on_close)
+
+        # Create an absolute position that lies within the view's rect and
+        # ensure the delegated event receives local coordinates.
+        abs_pos = (view.rect.x + 5, view.rect.y + 6)
+        event = pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": abs_pos})
+
+        view.handle_event(event)
+
+        # Called once and the passed event should have local coordinates
+        mock_button_instance.handle_event.assert_called_once()
+        delegated_event = mock_button_instance.handle_event.call_args[0][0]
+        assert hasattr(delegated_event, "pos")
+        assert delegated_event.pos == (5, 6)

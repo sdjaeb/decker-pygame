@@ -28,7 +28,13 @@ if TYPE_CHECKING:  # pragma: no cover
         TransferViewDTO,
     )
     from decker_pygame.domain.crafting import Schematic
-    from decker_pygame.domain.ids import CharacterId, DeckId, DSFileId, PlayerId
+    from decker_pygame.domain.ids import (
+        CharacterId,
+        ContractId,
+        DeckId,
+        DSFileId,
+        PlayerId,
+    )
 
 
 class CharacterServiceInterface(ABC):  # pragma: no cover
@@ -66,6 +72,12 @@ class ContractServiceInterface(ABC):  # pragma: no cover
     def get_available_contracts(self) -> list["ContractSummaryDTO"]:
         """Retrieves a list of currently available contracts."""
         raise NotImplementedError  # pragma: no cover
+
+    @abstractmethod
+    def accept_contract(
+        self, character_id: "CharacterId", contract_id: "ContractId"
+    ) -> None:
+        """Marks a contract as accepted by a character."""
 
 
 class CraftingServiceInterface(ABC):  # pragma: no cover

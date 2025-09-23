@@ -10,6 +10,7 @@ from decker_pygame.application.dtos import (
     IceDataViewDTO,
     ShopItemViewDTO,
 )
+from decker_pygame.domain.ids import ContractId
 from decker_pygame.presentation.components.build_view import BuildView
 from decker_pygame.presentation.components.char_data_view import CharDataView
 from decker_pygame.presentation.components.contract_data_view import ContractDataView
@@ -24,7 +25,7 @@ from decker_pygame.presentation.components.order_view import OrderView
 from decker_pygame.presentation.components.shop_item_view import ShopItemView
 from decker_pygame.presentation.components.shop_view import ShopView
 from decker_pygame.presentation.components.transfer_view import TransferView
-from decker_pygame.presentation.states.game_states import BaseState
+from decker_pygame.presentation.states.game_states import BaseState, GameState
 
 if TYPE_CHECKING:  # pragma: no cover
     from decker_pygame.presentation.game import Game
@@ -262,12 +263,24 @@ class HomeState(BaseState):
                 return ContractDataView(
                     position=(200, 150),
                     size=(400, 300),
-                    contract_name=contract_dto.title,
+                    contract=contract_dto,
+                    on_accept=self._on_accept_contract,
                 )
             # Otherwise, return None to close the view if it's open
             return None  # This is intentional for closing the view
 
         self.game.view_manager.toggle_view("contract_data_view", factory)
+
+    def _on_accept_contract(self, contract_id: ContractId) -> None:
+        """Callback for when a contract is accepted."""
+        try:
+            self.game.contract_service.accept_contract(
+                self.game.character_id, contract_id
+            )
+            self.game.logging_service.log("Contract Accepted", {"id": str(contract_id)})
+            self.game.set_state(GameState.MATRIX_RUN)
+        except Exception as e:
+            self.game.show_message(f"Error accepting contract: {e}")
 
     def _toggle_ice_data_view(self, data: Optional[IceDataViewDTO] = None) -> None:
         """Opens or closes the ICE data view."""

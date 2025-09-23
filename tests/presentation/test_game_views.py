@@ -16,10 +16,6 @@ from decker_pygame.application.dtos import (
 )
 from decker_pygame.presentation.components.entry_view import EntryView
 from decker_pygame.presentation.components.file_access_view import FileAccessView
-from decker_pygame.presentation.components.mission_results_view import (
-    MissionResultsView,
-)
-from decker_pygame.presentation.components.project_data_view import ProjectDataView
 from decker_pygame.presentation.components.rest_view import RestView
 from tests.presentation.conftest import Mocks
 
@@ -53,7 +49,7 @@ def test_game_toggles_mission_results_view(game_with_mocks: Mocks):
 
     # Toggle to open
     with patch(
-        "decker_pygame.presentation.game.MissionResultsView", spec=MissionResultsView
+        "decker_pygame.presentation.game.MissionResultsView", autospec=True
     ) as mock_view_class:
         game.toggle_mission_results_view(results_data)
         mock_view_class.assert_called_once_with(
@@ -502,7 +498,7 @@ def test_game_toggles_project_data_view(game_with_mocks: Mocks):
 
     # Call the public method to open the view
     with patch(
-        "decker_pygame.presentation.game.ProjectDataView", spec=ProjectDataView
+        "decker_pygame.presentation.game.ProjectDataView", autospec=True
     ) as mock_view_class:
         game.toggle_project_data_view()
 
