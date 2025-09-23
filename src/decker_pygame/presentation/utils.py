@@ -68,9 +68,38 @@ def render_text_wrapped(
         else:
             lines.append(current_line)
             current_line = word
-    lines.append(current_line)
 
-    for i, line in enumerate(lines):
+            # If the new word itself is too long, we must break it.
+            while font.size(current_line)[0] > max_width:
+                # Find the character where the line breaks
+                for i in range(1, len(current_line)):
+                    if font.size(current_line[:i])[0] > max_width:
+                        # If the break happens at i == 1, taking the
+                        # previous slice yields an empty string and no
+                        # progress is made. In that case, force a chunk
+                        # of the first character so we make progress.
+                        if i == 1:
+                            lines.append(current_line[0])
+                            current_line = current_line[1:]
+                        else:
+                            # The break happens at the previous character
+                            lines.append(current_line[: i - 1])
+                            current_line = current_line[i - 1 :]
+                        break
+                else:
+                    # If we didn't break out of the loop, the first
+                    # character is already wider than max_width. To avoid
+                    # an infinite loop, force a break at the first
+                    # character so progress is made.
+                    lines.append(current_line[0])
+                    current_line = current_line[1:]
+    if current_line:
+        lines.append(current_line)
+
+    # Remove any empty lines introduced by splitting/chunking logic so we
+    # don't call font.render with an empty string. Keep original order.
+    filtered_lines = [ln for ln in lines if ln]
+    for i, line in enumerate(filtered_lines):
         rendered_text = font.render(line, True, color)
         surface.blit(
             rendered_text, (rect.x + padding, rect.y + padding + i * line_height)

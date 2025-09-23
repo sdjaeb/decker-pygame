@@ -514,6 +514,7 @@ def test_home_state_contract_view_logic() -> None:
     mock_game.reset_mock()
     mock_dto = Mock(spec=ContractSummaryDTO)
     mock_dto.title = "Test Heist"
+    mock_dto.id = "test_contract_id"
     with patch(
         "decker_pygame.presentation.states.states.ContractDataView",
         spec=ContractDataView,
@@ -524,7 +525,8 @@ def test_home_state_contract_view_logic() -> None:
         mock_data_view_class.assert_called_once_with(
             position=(200, 150),
             size=(400, 300),
-            contract_name="Test Heist",
+            contract=mock_dto,
+            on_accept=state._on_accept_contract,
         )
         assert created_view is mock_data_view_class.return_value
 
@@ -533,6 +535,23 @@ def test_home_state_contract_view_logic() -> None:
     state._on_contract_selected(None)
     factory = mock_game.view_manager.toggle_view.call_args.args[1]
     assert factory() is None
+
+    # --- Test _on_accept_contract success ---
+    mock_game.reset_mock()
+    state._on_accept_contract(mock_dto.id)
+    mock_game.contract_service.accept_contract.assert_called_once_with(
+        mock_game.character_id, mock_dto.id
+    )
+    mock_game.set_state.assert_called_once()
+
+    # --- Test _on_accept_contract failure ---
+    mock_game.reset_mock()
+    mock_game.contract_service.accept_contract.side_effect = Exception("Test Error")
+    state._on_accept_contract(mock_dto.id)
+    mock_game.show_message.assert_called_once_with(
+        "Error accepting contract: Test Error"
+    )
+    mock_game.set_state.assert_not_called()
 
 
 def test_home_state_ice_data_view_logic() -> None:

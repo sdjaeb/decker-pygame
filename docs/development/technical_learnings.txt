@@ -92,3 +92,28 @@ preflight() {
 }
 ```
 *********
+
+    Enforcing 100% coverage
+    -----------------------
+
+    We added a `scripts/preflight.sh` helper that runs pre-commit and then runs pytest with
+    `--cov-fail-under=100`. This causes the command to return non-zero if the total measured
+    coverage for the `decker_pygame` package is less than 100%. The script reads `.coveragerc`
+    for coverage configuration (omit rules). To use it:
+
+    ```bash
+    ./scripts/preflight.sh   # runs hooks, tests, and enforces 100% coverage
+    ```
+
+    In CI prefer explicit failure handling and an editable install:
+
+    ```yaml
+    - run: pip install -e .
+    - run: pre-commit run --all-files
+    - run: pytest --cov=decker_pygame --cov-report=xml --cov-fail-under=100
+    ```
+
+    If you want selective or per-agent exceptions, prefer using `# pragma: no cover` on small
+    implementation lines that are intentionally unreachable in tests, and document the reason
+    near the code. Avoid globally relaxing coverage for the package; per-line or per-file
+    exceptions are clearer and auditable.

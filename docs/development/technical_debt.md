@@ -430,3 +430,39 @@ This would provide a powerful safety net for catching visual regressions and bug
 ### Affected Components
 -   A new test harness, likely living in `tests/integration/harness.py`.
 -   A new test suite, likely in a `tests/integration/` directory.
+
+CI job example for coverage exceptions
+-------------------------------------
+
+When you reimplement CI pipelines, include a job that generates the coverage-exceptions
+report and enforces coverage. Example GitHub Actions job (add under `jobs:`):
+
+```yaml
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Set up Python
+                uses: actions/setup-python@v4
+                with:
+                    python-version: '3.11'
+            - name: Install deps
+                run: |
+                    python -m pip install --upgrade pip
+                    pip install -e .
+                    pip install pre-commit pytest pytest-cov
+            - name: Generate coverage exceptions report
+                run: |
+                    python3 scripts/generate_coverage_exceptions.py
+            - name: Run pre-commit
+                run: pre-commit run --all-files
+            - name: Run tests and enforce coverage
+                run: pytest --maxfail=1 --disable-warnings --cov=decker_pygame --cov-report=xml --cov-fail-under=100
+```
+
+Notes:
+- The generator step writes `docs/development/coverage_exceptions.md`; you can choose to fail the job
+    if the generated report differs from the committed file (to prevent silent drift).
+- If you prefer the generator to be audited only, omit the failure condition and store the report
+    as an artifact for reviewers.

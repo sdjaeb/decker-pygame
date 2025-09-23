@@ -1,6 +1,6 @@
 import types
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 from unittest.mock import MagicMock, call
 
 import pygame
@@ -34,7 +34,7 @@ def asset_directory(tmp_path: Path) -> Path:
 
 def test_load_images(mock_pygame_image: types.ModuleType, asset_directory: Path):
     """Test loading images from a directory, ensuring correct order and filtering."""
-    images = load_images("programs", base_path=asset_directory)
+    images = load_images(base_path=asset_directory, subdirectory="programs")
     assert len(images) == 2
     expected_calls = [
         call(str(asset_directory / "programs" / "prog_a.png")),
@@ -48,23 +48,11 @@ def test_load_images_with_resize(
 ):
     """Test loading images with resizing."""
     size = (64, 64)
-    load_images("programs", size=size, base_path=asset_directory)
+    load_images(base_path=asset_directory, subdirectory="programs", size=size)
     assert mock_pygame_image.transform.scale.call_count == 2  # Two images loaded
     mock_pygame_image.transform.scale.assert_called_with(
         mock_pygame_image.image.load.return_value, size
     )
-
-
-def test_load_images_default_path(mocker: MockerFixture):
-    """Test that load_images uses the default GFX.asset_folder."""
-    mock_iterdir = mocker.patch("pathlib.Path.iterdir", return_value=[])
-    mocker.patch("pygame.image.load")
-
-    # Call without base_path to test the default path logic
-    load_images("programs")
-
-    # Assert that the default path logic was triggered
-    mock_iterdir.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -85,14 +73,15 @@ def test_load_spritesheet(
     # Mock the main sheet loaded from disk
     mock_sheet = MagicMock(spec=pygame.Surface)
     mock_sheet.get_size.return_value = (sheet_width, sheet_height)
-    mock_sheet.convert.return_value = mock_sheet
+    # The function uses convert_alpha(), so we must mock that.
+    mock_sheet.convert_alpha.return_value = mock_sheet
     mocker.patch("pygame.image.load", return_value=mock_sheet)
 
     # Mock the Surface class to intercept the creation of new sprite surfaces
-    mock_surface_instance = MagicMock(spec=pygame.Surface)
+    # The side_effect ensures a new mock is created for each sprite.
     mock_surface_class = mocker.patch(
         "decker_pygame.presentation.asset_loader.pygame.Surface",
-        return_value=mock_surface_instance,
+        side_effect=[MagicMock(spec=pygame.Surface, autospec=True) for _ in range(2)],
     )
 
     # 2. Act
@@ -106,17 +95,24 @@ def test_load_spritesheet(
 
     # 3. Assert
     assert len(sprites) == 2
-    assert all(s is mock_surface_instance for s in sprites)
+    # Check that two distinct mock surfaces were created and returned
+    assert sprites[0] is not sprites[1]
     assert dimensions == (sheet_width, sheet_height)
-    mock_surface_class.assert_has_calls([call((32, 32)), call((32, 32))])
-    mock_surface_instance.blit.assert_has_calls(
-        [
-            call(mock_sheet, (0, 0), pygame.Rect(0, 0, 32, 32)),
-            call(mock_sheet, (0, 0), pygame.Rect(32, 0, 32, 32)),
-        ]
+
+    # Check that the Surface constructor was called correctly for each sprite
+    mock_surface_class.assert_has_calls(
+        [call((32, 32), pygame.SRCALPHA), call((32, 32), pygame.SRCALPHA)]
+    )
+    # Check that blit was called on each of the created sprite surfaces
+    cast(MagicMock, sprites[0].blit).assert_called_once_with(
+        mock_sheet, (0, 0), pygame.Rect(0, 0, 32, 32)
+    )
+    cast(MagicMock, sprites[1].blit).assert_called_once_with(
+        mock_sheet, (0, 0), pygame.Rect(32, 0, 32, 32)
     )
     if expect_colorkey_call:
-        assert mock_surface_instance.set_colorkey.call_count == 2
-        mock_surface_instance.set_colorkey.assert_called_with(colorkey)
+        cast(MagicMock, sprites[0].set_colorkey).assert_called_once_with(colorkey)
+        cast(MagicMock, sprites[1].set_colorkey).assert_called_once_with(colorkey)
     else:
-        mock_surface_instance.set_colorkey.assert_not_called()
+        cast(MagicMock, sprites[0].set_colorkey).assert_not_called()
+        cast(MagicMock, sprites[1].set_colorkey).assert_not_called()
