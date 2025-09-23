@@ -466,3 +466,42 @@ Notes:
     if the generated report differs from the committed file (to prevent silent drift).
 - If you prefer the generator to be audited only, omit the failure condition and store the report
     as an artifact for reviewers.
+
+## Audit: docs & repository (2025-09-23)
+
+I reviewed the `docs/` tree and development notes and produced the following checklist of documentation updates, accuracy checks, and low-risk follow-ups. None of these changes modify the code; they are suggested actionable items to capture the current state and help prioritize follow-up work.
+
+High priority (blockers for contributors / CI)
+- [ ] Validate CI and preflight instructions across `README.md`, `docs/development/*`, and `.github/workflows/*`:
+  - Confirm the Python version used in CI and local `./scripts/preflight.sh` matches supported runtimes (project uses a `.venv` with 3.13.x locally; CI currently exampled with 3.11 in docs). Update docs or CI to align.
+  - Ensure `scripts/generate_coverage_exceptions.py` output path and the recommendation to fail CI on mismatches are accurate.
+
+- [ ] Update `docs/development/coverage_exceptions.md` generation note to explain how to re-generate and when to accept changes (e.g., developer vs. maintainer review).
+
+Documentation accuracy and freshness
+- [ ] Sync `README.md` and top-level docs to reflect current run instructions, including how to activate the project's venv (there is a `.venv/` in the repo root) and how to run the game for manual testing.
+- [ ] Confirm the `docs/development/technical_learnings.txt` examples (e.g., the `preflight` bash function, `functools.partial` notes) still match the project's preferred workflows. If the project relies on `scripts/preflight.sh` prefer documenting the script usage rather than a shell snippet users must paste.
+- [ ] Add a short “How to run the game locally” section: activation of `.venv`, installing deps (`pip install -e .`), and recommended runtime flags for headless testing (SDL env vars) and CI.
+
+Docs structure and discoverability
+- [ ] Add an index in `docs/` or top-level `README.md` describing the purpose of `docs/architecture/`, `docs/development/`, and `docs/tech_debt/` so new contributors know where to look.
+- [ ] Move or link transient files from `docs/tmp/` out of the main docs area or mark them clearly as drafts.
+
+Testing & coverage
+- [ ] Document how to run the preflight locally (what it runs exactly: pre-commit, ruff/format, mypy, pydoclint, pytest with coverage) and explain how the `--cov-fail-under=100` requirement affects contributors.
+- [ ] Add a short troubleshooting section for common local problems (example: `ModuleNotFoundError` unless `PYTHONPATH=src` or editable install is used; activating `.venv`).
+
+Architectural and technical-debt cross-checks
+- [ ] Cross-reference the existing `technical_debt.md` entries with actual code locations and unit tests. For each item in this file, add a pointer to the owning module/file and an approximate effort estimate (small/medium/large) so prioritization is possible.
+- [ ] Add an explicit backlog item for adding integration harness documentation (see the last section of `technical_debt.md`) and a minimal example harness that can be run manually by contributors.
+
+Low-hanging improvements (nice-to-have)
+- [ ] Add CONTRIBUTING.md or extend `README.md` with repository conventions (coding style, test expectations, running formatters). Link to `pyproject.toml` and `pre-commit` config.
+- [ ] Add a short developer checklist for common workflows: create feature branch, run `./scripts/preflight.sh`, update docs/technical_debt.md when adding `# pragma: no cover` exceptions.
+
+Next steps (suggested owners/actions)
+- Document maintainer who owns CI/doc updates and assign a small PR to reconcile CI runtime and docs.
+- Create `docs/development/audit_checklist.md` from this section if you prefer separate tracking (I can create it on request).
+- Run the game locally and capture a short runbook listing missing runtime assets, environment variables, and predictable failure modes (I can help run this in your active environment when you're ready).
+
+Status: recorded on 2025-09-23; this is an audit-only change (no code edits).
