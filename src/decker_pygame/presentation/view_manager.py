@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Optional, TypeVar, cast
 
 import pygame
 
+from decker_pygame.presentation.logging import log as plog
 from decker_pygame.presentation.protocols import Eventful
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -33,6 +34,7 @@ class ViewManager:
         """Generic method to open or close a view."""
         current_view = getattr(self._game, view_attr)
         if current_view:
+            plog(f"Closing view {view_attr}", category="view", level="DEBUG")
             self._game.all_sprites.remove(current_view)
             setattr(self._game, view_attr, None)
             if hasattr(current_view, "handle_event"):
@@ -42,6 +44,7 @@ class ViewManager:
         else:
             new_view = view_factory()
             if new_view:
+                plog(f"Opening view {view_attr}", category="view", level="DEBUG")
                 setattr(self._game, view_attr, new_view)
                 self._game.all_sprites.add(new_view)
                 if hasattr(new_view, "handle_event"):
