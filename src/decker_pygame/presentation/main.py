@@ -37,7 +37,7 @@ from decker_pygame.domain.events import (
     MatrixLogEntryCreated,
     PlayerCreated,
 )
-from decker_pygame.domain.ids import CharacterId, SchematicId
+from decker_pygame.domain.ids import CharacterId, NodeId, SchematicId, SystemId
 from decker_pygame.domain.project import ProjectType
 from decker_pygame.domain.system import Node, System
 from decker_pygame.infrastructure.in_memory_system_repository import (
@@ -58,6 +58,7 @@ from decker_pygame.infrastructure.json_ds_file_repository import (
 from decker_pygame.infrastructure.json_player_repository import JsonFilePlayerRepository
 from decker_pygame.presentation.asset_service import AssetService
 from decker_pygame.presentation.game import Game
+from decker_pygame.presentation.logging import log as plog
 from decker_pygame.settings import (
     DEV_SETTINGS,
     PATHS,
@@ -76,7 +77,7 @@ def main() -> None:
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption(TITLE)
 
-    print("--- Decker Game Initializing ---")
+    plog("--- Decker Game Initializing ---", category="lifecycle")
 
     # 1. Set up infrastructure
     storage_path = os.path.join(tempfile.gettempdir(), "decker_pygame")
@@ -144,12 +145,11 @@ def main() -> None:
 
     # 4. Create game entities for the session (example use case)
     player_id = player_service.create_new_player(name="Deckard")
-    print(f"Initialized player {player_id} in {storage_path}")
+    plog(f"Initialized player {player_id} in {storage_path}", category="lifecycle")
     # Create a second player that will trigger the conditional handler
     player_service.create_new_player(name="Rynn")
 
     # Create a dummy system for the matrix run
-    from decker_pygame.domain.ids import NodeId, SystemId
 
     cpu_id = NodeId(uuid.uuid4())
     data_store_id = NodeId(uuid.uuid4())
@@ -188,7 +188,11 @@ def main() -> None:
     character.schematics.append(schematic)
 
     if DEV_SETTINGS.enabled:
-        print("--- DEV MODE ENABLED: Applying debug settings. ---")
+        plog(
+            "--- DEV MODE ENABLED: Applying debug settings. ---",
+            category="lifecycle",
+            level="DEBUG",
+        )
         # Give the character more money for testing shops
         character.credits += 5000
         # Add another schematic for testing crafting
@@ -204,7 +208,9 @@ def main() -> None:
         character.schematics.append(debug_schematic)
 
     character_repo.save(character)
-    print(f"Initialized character {character_id} in {storage_path}")
+    plog(
+        f"Initialized character {character_id} in {storage_path}", category="lifecycle"
+    )
 
     # 5. Compose the presentation layer, injecting dependencies
     game = Game(
