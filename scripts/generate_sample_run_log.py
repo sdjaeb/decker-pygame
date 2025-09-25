@@ -5,6 +5,7 @@ structured logs (initialization, event dispatch, view opens, input logs) without
 blocking indefinitely. The output is saved to docs/run_logs/sample_run.log.
 """
 
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -31,9 +32,12 @@ if __name__ == "__main__":
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "sample_run.log"
 
-    # Patch Game.run with our short_run wrapper
-    with patch("decker_pygame.presentation.game.Game.run", new=short_run):
-        # Run the composition root; plog writes to stdout by default
-        main()
+    # Patch Game.run with our short_run wrapper and capture stdout/stderr
+    with open(out_path, "w", encoding="utf-8") as out_f:
+        with redirect_stdout(out_f), redirect_stderr(out_f):
+            with patch("decker_pygame.presentation.game.Game.run", new=short_run):
+                # Run the composition root; plog writes to stdout by default
+                main()
 
+    # Informational message goes to the real stdout
     print(f"Sample run log written to {out_path}")

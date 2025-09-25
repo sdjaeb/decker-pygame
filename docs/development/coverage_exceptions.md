@@ -215,7 +215,7 @@ The following `# pragma: no cover` occurrences were found:
 - **src/decker_pygame/presentation/debug_actions.py**:9
   - `if TYPE_CHECKING:  # pragma: no cover`
 
-- **src/decker_pygame/presentation/input_handler.py**:11
+- **src/decker_pygame/presentation/input_handler.py**:12
   - `if TYPE_CHECKING:  # pragma: no cover`
 
 - **src/decker_pygame/presentation/protocols.py**:17
@@ -245,5 +245,5 @@ The following `# pragma: no cover` occurrences were found:
 - **src/decker_pygame/presentation/states/states.py**:30
   - `if TYPE_CHECKING:  # pragma: no cover`
 
-- **src/decker_pygame/presentation/view_manager.py**:10
+- **src/decker_pygame/presentation/view_manager.py**:11
   - `if TYPE_CHECKING:  # pragma: no cover`

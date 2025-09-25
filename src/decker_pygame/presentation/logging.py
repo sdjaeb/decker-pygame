@@ -7,7 +7,7 @@ can be grepped and parsed. Keep dependencies minimal to avoid coupling.
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -21,7 +21,9 @@ def log(
     human-reviewable and machine-parseable output during runs and tests.
     """
     entry = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        # Use timezone-aware UTC timestamp to avoid DeprecationWarning
+        # from datetime.utcnow(). See Python docs for timezone-aware datetimes.
+        "timestamp": datetime.now(UTC).isoformat(),
         "level": level,
         "category": category,
         "message": message,
