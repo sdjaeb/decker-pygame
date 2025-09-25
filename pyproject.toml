@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "decker-pygame"
-version = "0.13.0"
+version = "0.14.0"
 description = "A modern Python port of the classic 2001 Cyberspace RPG, Decker."
 authors = [
     { name = "Stephen Jaeb", email = "sdjaeb@gmail.com" },
