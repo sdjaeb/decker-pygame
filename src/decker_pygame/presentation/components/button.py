@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 import pygame
 
+from decker_pygame.presentation.logging import log as plog
 from decker_pygame.settings import (
     UI_BORDER,
     UI_BORDER_WIDTH,
@@ -90,12 +91,22 @@ class Button(Clickable):
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
+                plog(f"Button down: {self.name}", category="ui", level="DEBUG")
                 self._is_pressed = True
                 self._render()
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             # Only trigger the click if the mouse is released over the button
             if self.rect.collidepoint(event.pos) and self._is_pressed:
-                self._on_click()
+                plog(f"Button click: {self.name}", category="ui", level="INFO")
+                try:
+                    self._on_click()
+                except Exception:
+                    plog(
+                        f"Exception in button on_click: {self.name}",
+                        category="ui",
+                        level="ERROR",
+                    )
+                    raise
 
             # Always reset state on mouse up
             self._is_pressed = False

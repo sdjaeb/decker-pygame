@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from decker_pygame.presentation.logging import log as plog
 from decker_pygame.presentation.states.game_states import GameState
 from decker_pygame.settings import DEV_SETTINGS
 
@@ -44,6 +45,7 @@ class PygameInputHandler:
         """Process the event queue and delegate to appropriate handlers."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                plog("Received QUIT event", category="input", level="INFO")
                 self._game.quit()
                 return  # Exit early if quitting
 
@@ -55,9 +57,20 @@ class PygameInputHandler:
                     self._logging_service.log(
                         "Key Press", {"key": pygame.key.name(event.key)}
                     )
+                # Also emit a structured log for replay/debug review
+                plog(
+                    f"KeyDown: {pygame.key.name(event.key)}",
+                    category="input",
+                    level="DEBUG",
+                )
 
             # If a modal view is open, it gets exclusive event handling.
             # This prevents underlying views from receiving events.
             if self._game.view_manager.modal_stack:
                 # Send event to the top-most modal view
+                plog(
+                    "Dispatching event to modal",
+                    category="input",
+                    level="DEBUG",
+                )
                 self._game.view_manager.modal_stack[-1].handle_event(event)
